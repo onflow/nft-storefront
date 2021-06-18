@@ -14,7 +14,7 @@ contract for trading NFTs on Flow.
 |----|-------|-------|
 |`NFTStorefront`|`TBD`|`TBD`|
 
-## Description
+## Usage
 
 Each account that wants to offer NFTs for sale installs a `Storefront`,
 and then lists individual sales within that `Storefront` as `SaleOffer` resources.
@@ -22,9 +22,9 @@ and then lists individual sales within that `Storefront` as `SaleOffer` resource
 There is one `Storefront` per account that handles sales of all NFT types
 for that account.
 
-Each `SaleOffer` can list one or more "cut"s of the sale price that
-goes to one or more addresses. Cuts can be used to pay listing fees
-or other considerations.
+Each `SaleOffer` can list one or more cut percentages. 
+Each cut is delivered to a predefined address. 
+Cuts can be used to pay listing fees or other considerations.
 
 Each NFT may be listed in one or more `SaleOffer`. 
 The validity of each `SaleOffer` can easily be checked.
