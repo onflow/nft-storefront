@@ -26,7 +26,7 @@ Each `SaleOffer` can list one or more cut percentages.
 Each cut is delivered to a predefined address. 
 Cuts can be used to pay listing fees or other considerations.
 
-Each NFT may be listed in one or more `SaleOffer`. 
+Each NFT may be listed in one or more `SaleOffer` resources. 
 The validity of each `SaleOffer` can easily be checked.
 
 Purchasers can watch for `SaleOffer` events and check the NFT type and
