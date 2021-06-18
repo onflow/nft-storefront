@@ -5,8 +5,8 @@ contract for trading NFTs on Flow.
 
 ## Features 
 
-- A single storefront can combine listings for multiple NFTs of any type
-- NFTs can be exchanged for any `FungibleToken` implementation (e.g. `FLOW`, `FUSD`)
+- :shopping: A single storefront can combine listings for multiple NFTs of any type
+- :currency_exchange:	NFTs can be exchanged for any `FungibleToken` implementation (e.g. `FLOW`, `FUSD`)
 
 ## Contract Addresses 
 
