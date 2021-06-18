@@ -1,4 +1,3 @@
-
 import NFTStorefront from 0xNFTSTOREFRONT
 
 transaction(saleOfferResourceID: UInt64, storefrontAddress: Address) {

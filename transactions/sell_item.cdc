@@ -1,27 +1,27 @@
 import FungibleToken from 0xFUNGIBLETOKENADDRESS
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
-import Kibble from 0xKIBBLE
-import KittyItems from 0xKITTYITEMS
+import FlowToken from 0xFLOWTOKEN
+import ExampleNFT from 0xEXAMPLENFT
 import NFTStorefront from 0xNFTSTOREFRONT
 
 transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
-    let kibbleReceiver: Capability<&Kibble.Vault{FungibleToken.Receiver}>
-    let kittyItemsProvider: Capability<&KittyItems.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
+    let flowReceiver: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
+    let exampleNFTProvider: Capability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
     let storefront: &NFTStorefront.Storefront
 
     prepare(acct: AuthAccount) {
         // We need a provider capability, but one is not provided by default so we create one if needed.
-        let KittyItemsCollectionProviderPrivatePath = /private/KittyItemsCollectionProviderForNFTStorefront
+        let exampleNFTCollectionProviderPrivatePath = /private/exampleNFTCollectionProviderForNFTStorefront
 
-        self.kibbleReceiver = acct.getCapability<&Kibble.Vault{FungibleToken.Receiver}>(Kibble.ReceiverPublicPath)!
-        assert(self.kibbleReceiver.borrow() != nil, message: "Missing or mis-typed Kibble receiver")
+        self.flowReceiver = acct.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
+        assert(self.flowReceiver.borrow() != nil, message: "Missing or mis-typed FlowToken receiver")
 
-        if !acct.getCapability<&KittyItems.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(KittyItemsCollectionProviderPrivatePath)!.check() {
-            acct.link<&KittyItems.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(KittyItemsCollectionProviderPrivatePath, target: KittyItems.CollectionStoragePath)
+        if !acct.getCapability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath)!.check() {
+                acct.link<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath, target: /storage/NFTCollection)
         }
 
-        self.kittyItemsProvider = acct.getCapability<&KittyItems.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(KittyItemsCollectionProviderPrivatePath)!
-        assert(self.kittyItemsProvider.borrow() != nil, message: "Missing or mis-typed KittyItemsCollection provider")
+        self.exampleNFTProvider = acct.getCapability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath)!
+        assert(self.exampleNFTProvider.borrow() != nil, message: "Missing or mis-typed ExampleNFT.Collection provider")
 
         self.storefront = acct.borrow<&NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath)
             ?? panic("Missing or mis-typed NFTStorefront Storefront")
@@ -29,14 +29,14 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
 
     execute {
         let saleCut = NFTStorefront.SaleCut(
-            receiver: self.kibbleReceiver,
+            receiver: self.flowReceiver,
             amount: saleItemPrice
         )
         self.storefront.createSaleOffer(
-            nftProviderCapability: self.kittyItemsProvider,
-            nftType: Type<@KittyItems.NFT>(),
+            nftProviderCapability: self.exampleNFTProvider,
+            nftType: Type<@ExampleNFT.NFT>(),
             nftID: saleItemID,
-            salePaymentVaultType: Type<@Kibble.Vault>(),
+            salePaymentVaultType: Type<@FlowToken.Vault>(),
             saleCuts: [saleCut]
         )
     }
