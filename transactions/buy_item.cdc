@@ -1,12 +1,12 @@
 import FungibleToken from 0xFUNGIBLETOKENADDRESS
 import NonFungibleToken from 0xNONFUNGIBLETOKEN
-import Kibble from 0xKIBBLE
-import KittyItems from 0xKITTYITEMS
+import FlowToken from 0xFLOWTOKEN
+import ExampleNFT from 0xEXAMPLENFT
 import NFTStorefront from 0xNFTSTOREFRONT
 
 transaction(saleOfferResourceID: UInt64, storefrontAddress: Address) {
     let paymentVault: @FungibleToken.Vault
-    let kittyItemsCollection: &KittyItems.Collection{NonFungibleToken.Receiver}
+    let exampleNFTCollection: &ExampleNFT.Collection{NonFungibleToken.Receiver}
     let storefront: &NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}
     let saleOffer: &NFTStorefront.SaleOffer{NFTStorefront.SaleOfferPublic}
 
@@ -22,21 +22,21 @@ transaction(saleOfferResourceID: UInt64, storefrontAddress: Address) {
                     ?? panic("No Offer with that ID in Storefront")
         let price = self.saleOffer.getDetails().salePrice
 
-        let mainKibbleVault = acct.borrow<&Kibble.Vault>(from: Kibble.VaultStoragePath)
-            ?? panic("Cannot borrow Kibble vault from acct storage")
-        self.paymentVault <- mainKibbleVault.withdraw(amount: price)
+        let mainFlowVault = acct.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
+            ?? panic("Cannot borrow FlowToken vault from acct storage")
+        self.paymentVault <- mainFlowVault.withdraw(amount: price)
 
-        self.kittyItemsCollection = acct.borrow<&KittyItems.Collection{NonFungibleToken.Receiver}>(
-            from: KittyItems.CollectionStoragePath
-        ) ?? panic("Cannot borrow KittyItems collection receiver from acct")
+        self.exampleNFTCollection = acct.borrow<&ExampleNFT.Collection{NonFungibleToken.Receiver}>(
+            from: /storage/NFTCollection
+        ) ?? panic("Cannot borrow NFT collection receiver from account")
     }
 
     execute {
-        let kittyItem <- self.saleOffer.accept(
+        let item <- self.saleOffer.accept(
             payment: <-self.paymentVault
         )
 
-        self.kittyItemsCollection.deposit(token: <-kittyItem)
+        self.exampleNFTCollection.deposit(token: <-item)
 
         /* //-
         error: Execution failed:

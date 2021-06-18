@@ -9,81 +9,148 @@ import (
 
 	"github.com/onflow/cadence"
 	emulator "github.com/onflow/flow-emulator"
+	fttemplates "github.com/onflow/flow-ft/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	sdk "github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	sdktemplates "github.com/onflow/flow-go-sdk/templates"
 	"github.com/onflow/flow-go-sdk/test"
-	"github.com/stretchr/testify/assert"
+	nftcontracts "github.com/onflow/flow-nft/lib/go/contracts"
+	nfttemplates "github.com/onflow/flow-nft/lib/go/templates"
+	"github.com/stretchr/testify/require"
 )
 
 const (
-	nftStorefrontRootPath            = "../../../cadence/nftStorefront"
-	nftStorefrontNftStorefrontPath   = nftStorefrontRootPath + "/contracts/nftStorefront.cdc"
-	nftStorefrontSetupAccountPath    = nftStorefrontRootPath + "/transactions/setup_account.cdc"
-	nftStorefrontSellItemPath        = nftStorefrontRootPath + "/transactions/sell_item.cdc"
-	nftStorefrontBuyItemPath         = nftStorefrontRootPath + "/transactions/buy_item.cdc"
-	nftStorefrontRemoveItemPath      = nftStorefrontRootPath + "/transactions/remove_item.cdc"
+	nftStorefrontNftStorefrontPath   = "../../../contracts/nftStorefront.cdc"
+	nftStorefrontRootPath            = "../../../transactions"
+	nftStorefrontSetupAccountPath    = nftStorefrontRootPath + "/setup_account.cdc"
+	nftStorefrontSellItemPath        = nftStorefrontRootPath + "/sell_item.cdc"
+	nftStorefrontBuyItemPath         = nftStorefrontRootPath + "/buy_item.cdc"
+	nftStorefrontRemoveItemPath      = nftStorefrontRootPath + "/remove_item.cdc"
 	nftStorefrontGetIDsPath          = nftStorefrontRootPath + "/scripts/read_storefront_ids.cdc"
 	nftStorefrontGetOfferDetailsPath = nftStorefrontRootPath + "/scripts/read_sale_offer_details.cdc"
 )
 
-type TestNftContractsInfo struct {
-	FTAddr              flow.Address
-	KibbleAddr          flow.Address
-	KibbleSigner        crypto.Signer
-	NFTAddr             flow.Address
-	KittyItemsAddr      flow.Address
-	KittyItemsSigner    crypto.Signer
-	NFTStorefrontAddr   flow.Address
-	NFTStorefrontSigner crypto.Signer
+const (
+	flowTokenName         = "FlowToken"
+	nonFungibleTokenName  = "NonFungibleToken"
+	defaultAccountFunding = "1000.0"
+
+	ftAddressPlaceholder            = "0xFUNGIBLETOKENADDRESS"
+	flowTokenAddressPlaceHolder     = "0xFLOWTOKEN"
+	nftAddressPlaceholder           = "0xNONFUNGIBLETOKEN"
+	exampleNFTAddressPlaceHolder    = "0xEXAMPLENFT"
+	nftStorefrontAddressPlaceholder = "0xNFTSTOREFRONT"
+)
+
+var (
+	ftAddress        = flow.HexToAddress("ee82856bf20e2aa6")
+	flowTokenAddress = flow.HexToAddress("0ae53cb6e3f42a79")
+)
+
+type Contracts struct {
+	NFTAddress           flow.Address
+	ExampleNFTAddress    flow.Address
+	ExampleNFTSigner     crypto.Signer
+	NFTStorefrontAddress flow.Address
+	NFTStorefrontSigner  crypto.Signer
 }
 
-func nftStorefrontDeployContracts(b *emulator.Blockchain, t *testing.T) TestNftContractsInfo {
-	accountKeys := test.AccountKeyGenerator()
-
-	ftAddr, kibbleAddr, kibbleSigner := KibbleDeployContracts(b, t)
-	nftAddr, kittyItemsAddr, kittyItemsSigner := KittyItemsDeployContracts(b, t)
-
-	// Should be able to deploy a contract as a new account with one key.
-	nftStorefrontAccountKey, nftStorefrontSigner := accountKeys.NewWithSigner()
-	nftStorefrontCode := loadNftStorefront(
-		ftAddr.String(),
-		nftAddr.String(),
-	)
-
-	nftStorefrontAddr, err := b.CreateAccount(
-		[]*flow.AccountKey{nftStorefrontAccountKey},
+func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flow.Address, crypto.Signer) {
+	nftCode := nftcontracts.NonFungibleToken()
+	nftAddress, err := b.CreateAccount(nil,
 		[]sdktemplates.Contract{
 			{
-				Name:   "NFTStorefront",
-				Source: string(nftStorefrontCode),
+				Name:   nonFungibleTokenName,
+				Source: string(nftCode),
 			},
-		})
-	if !assert.NoError(t, err) {
-		t.Log(err.Error())
-	}
+		},
+	)
+	require.NoError(t, err)
+
 	_, err = b.CommitBlock()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	// Simplify the workflow by having contract addresses also be our initial test collections.
-	KibbleSetupAccount(t, b, kibbleAddr, kibbleSigner, ftAddr, kibbleAddr)
-	KittyItemsSetupAccount(t, b, kittyItemsAddr, kittyItemsSigner, nftAddr, kittyItemsAddr)
-	nftStorefrontSetupAccount(b, t, nftStorefrontAddr, nftStorefrontSigner, nftStorefrontAddr)
+	accountKeys := test.AccountKeyGenerator()
 
-	return TestNftContractsInfo{
-		ftAddr,
-		kibbleAddr,
-		kibbleSigner,
-		nftAddr,
-		kittyItemsAddr,
-		kittyItemsSigner,
-		nftStorefrontAddr,
+	exampleNFTAccountKey, exampleNFTSigner := accountKeys.NewWithSigner()
+
+	exampleNFTCode := nftcontracts.ExampleNFT(nftAddress.String())
+	exampleNFTAddress, err := b.CreateAccount(
+		[]*flow.AccountKey{exampleNFTAccountKey},
+		[]sdktemplates.Contract{
+			{
+				Name:   "ExampleNFT",
+				Source: string(exampleNFTCode),
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	_, err = b.CommitBlock()
+	require.NoError(t, err)
+
+	return nftAddress, exampleNFTAddress, exampleNFTSigner
+}
+
+func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contracts {
+	accountKeys := test.AccountKeyGenerator()
+
+	nftAddress, exampleNFTAddress, exampleNFTSigner := deployNFTContracts(t, b)
+
+	nftStorefrontAccountKey, nftStorefrontSigner := accountKeys.NewWithSigner()
+	nftStorefrontCode := loadNFTStorefront(
+		ftAddress.String(),
+		nftAddress.String(),
+	)
+
+	nftStorefrontAddress, err := b.CreateAccount(
+		[]*flow.AccountKey{nftStorefrontAccountKey},
+		nil,
+	)
+	require.NoError(t, err)
+
+	fundAccount(t, b, nftStorefrontAddress, defaultAccountFunding)
+
+	tx := sdktemplates.AddAccountContract(
+		nftStorefrontAddress,
+		sdktemplates.Contract{
+			Name:   "NFTStorefront",
+			Source: string(nftStorefrontCode),
+		},
+	)
+
+	tx.
+		SetGasLimit(100).
+		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
+		SetPayer(b.ServiceKey().Address)
+
+	signAndSubmit(
+		t, b, tx,
+		[]flow.Address{b.ServiceKey().Address, nftStorefrontAddress},
+		[]crypto.Signer{b.ServiceKey().Signer(), exampleNFTSigner},
+		false,
+	)
+
+	_, err = b.CommitBlock()
+	require.NoError(t, err)
+
+	return Contracts{
+		nftAddress,
+		exampleNFTAddress,
+		exampleNFTSigner,
+		nftStorefrontAddress,
 		nftStorefrontSigner,
 	}
 }
 
-func nftStorefrontSetupAccount(b *emulator.Blockchain, t *testing.T, userAddress sdk.Address, userSigner crypto.Signer, nftStorefrontAddr sdk.Address) {
+func setupNFTStorefront(
+	t *testing.T,
+	b *emulator.Blockchain,
+	userAddress sdk.Address,
+	userSigner crypto.Signer,
+	nftStorefrontAddr sdk.Address,
+) {
 	tx := flow.NewTransaction().
 		SetScript(nftStorefrontGenerateSetupAccountScript(nftStorefrontAddr.String())).
 		SetGasLimit(100).
@@ -99,24 +166,31 @@ func nftStorefrontSetupAccount(b *emulator.Blockchain, t *testing.T, userAddress
 	)
 }
 
-// Create a new account with the Kibble and KittyItems resources set up BUT no Storefront resource.
-func nftStorefrontCreatePurchaserAccount(b *emulator.Blockchain, t *testing.T, contracts TestNftContractsInfo) (sdk.Address, crypto.Signer) {
+// Create a new account with the Kibble, nftStorefront, and nftStorefront resources set up.
+func nftStorefrontCreateAccount(
+	b *emulator.Blockchain,
+	t *testing.T,
+	contracts Contracts,
+) (sdk.Address, crypto.Signer) {
 	userAddress, userSigner, _ := createAccount(t, b)
 
-	KibbleSetupAccount(t, b, userAddress, userSigner, contracts.FTAddr, contracts.KibbleAddr)
-	KittyItemsSetupAccount(t, b, userAddress, userSigner, contracts.NFTAddr, contracts.KittyItemsAddr)
+	setupNFTStorefront(t, b, userAddress, userSigner, contracts.NFTStorefrontAddress)
+	setupExampleNFTCollection(t, b, userAddress, userSigner, contracts.NFTAddress, contracts.ExampleNFTAddress)
+	fundAccount(t, b, userAddress, defaultAccountFunding)
 
 	return userAddress, userSigner
 }
 
-// Create a new account with the Kibble, nftStorefront, and nftStorefront resources set up.
-func nftStorefrontCreateAccount(b *emulator.Blockchain, t *testing.T, contracts TestNftContractsInfo) (sdk.Address, crypto.Signer) {
-	userAddress, userSigner := nftStorefrontCreatePurchaserAccount(b, t, contracts)
-	nftStorefrontSetupAccount(b, t, userAddress, userSigner, contracts.NFTStorefrontAddr)
-	return userAddress, userSigner
-}
-
-func nftStorefrontSellItem(b *emulator.Blockchain, t *testing.T, contracts TestNftContractsInfo, userAddress sdk.Address, userSigner crypto.Signer, tokenID uint64, price string, shouldFail bool) uint64 {
+func nftStorefrontSellItem(
+	t *testing.T,
+	b *emulator.Blockchain,
+	contracts Contracts,
+	userAddress sdk.Address,
+	userSigner crypto.Signer,
+	tokenID uint64,
+	price string,
+	shouldFail bool,
+) uint64 {
 	tx := flow.NewTransaction().
 		SetScript(nftStorefrontGenerateSellItemScript(contracts)).
 		SetGasLimit(100).
@@ -125,7 +199,7 @@ func nftStorefrontSellItem(b *emulator.Blockchain, t *testing.T, contracts TestN
 		AddAuthorizer(userAddress)
 
 	tx.AddArgument(cadence.NewUInt64(tokenID))
-	tx.AddArgument(CadenceUFix64(price))
+	tx.AddArgument(cadenceUFix64(price))
 
 	signAndSubmit(
 		t, b, tx,
@@ -135,7 +209,7 @@ func nftStorefrontSellItem(b *emulator.Blockchain, t *testing.T, contracts TestN
 	)
 
 	// Get the most recently created SaleOfferAvailable event resource ID
-	eventType := fmt.Sprintf("A.%s.NFTStorefront.SaleOfferAvailable", contracts.NFTStorefrontAddr.Hex())
+	eventType := fmt.Sprintf("A.%s.NFTStorefront.SaleOfferAvailable", contracts.NFTStorefrontAddress.Hex())
 	saleOfferResourceID := uint64(0)
 
 	var i uint64
@@ -156,7 +230,7 @@ func nftStorefrontSellItem(b *emulator.Blockchain, t *testing.T, contracts TestN
 func nftStorefrontBuyItem(
 	b *emulator.Blockchain,
 	t *testing.T,
-	contracts TestNftContractsInfo,
+	contracts Contracts,
 	userAddress sdk.Address,
 	userSigner crypto.Signer,
 	marketCollectionAddress sdk.Address,
@@ -165,7 +239,7 @@ func nftStorefrontBuyItem(
 ) {
 	tx := flow.NewTransaction().
 		SetScript(nftStorefrontGenerateBuyItemScript(contracts)).
-		SetGasLimit(100).
+		SetGasLimit(200).
 		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
 		SetPayer(b.ServiceKey().Address).
 		AddAuthorizer(userAddress)
@@ -184,10 +258,9 @@ func nftStorefrontBuyItem(
 func nftStorefrontRemoveItem(
 	b *emulator.Blockchain,
 	t *testing.T,
-	contracts TestNftContractsInfo,
+	contracts Contracts,
 	userAddress sdk.Address,
 	userSigner crypto.Signer,
-	marketCollectionAddress sdk.Address,
 	offerResourceID uint64,
 	shouldFail bool,
 ) {
@@ -197,6 +270,7 @@ func nftStorefrontRemoveItem(
 		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
 		SetPayer(b.ServiceKey().Address).
 		AddAuthorizer(userAddress)
+
 	tx.AddArgument(cadence.NewUInt64(offerResourceID))
 
 	signAndSubmit(
@@ -207,57 +281,46 @@ func nftStorefrontRemoveItem(
 	)
 }
 
-func TestNftStorefrontDeployContracts(t *testing.T) {
+func TestNFTStorefrontDeployContracts(t *testing.T) {
 	b := newEmulator()
-	nftStorefrontDeployContracts(b, t)
+	nftStorefrontDeployContracts(t, b)
 }
 
-func TestNftStorefrontSetupAccount(t *testing.T) {
+func TestNFTStorefrontSetupAccount(t *testing.T) {
 	b := newEmulator()
 
-	contracts := nftStorefrontDeployContracts(b, t)
+	contracts := nftStorefrontDeployContracts(t, b)
 
 	t.Run("Should be able to create an empty Collection", func(t *testing.T) {
 		userAddress, userSigner, _ := createAccount(t, b)
-		nftStorefrontSetupAccount(b, t, userAddress, userSigner, contracts.NFTStorefrontAddr)
+		setupNFTStorefront(t, b, userAddress, userSigner, contracts.NFTStorefrontAddress)
 	})
 }
 
-func TestNftStorefrontCreateSaleSell(t *testing.T) {
+func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 	b := newEmulator()
 
-	contracts := nftStorefrontDeployContracts(b, t)
+	contracts := nftStorefrontDeployContracts(t, b)
 
 	t.Run("Should be able to list a sale offer", func(t *testing.T) {
 		tokenToList := uint64(0)
 		tokenPrice := "1.11"
 		userAddress, userSigner := nftStorefrontCreateAccount(b, t, contracts)
 
-		// Contract mints item
-		KittyItemsMintItem(
-			b,
+		// Contract mints item to user account
+		mintExampleNFT(
 			t,
-			contracts.NFTAddr,
-			contracts.KittyItemsAddr,
-			contracts.KittyItemsSigner,
-			typeID1337,
+			b,
+			userAddress,
+			contracts.NFTAddress,
+			contracts.ExampleNFTAddress,
+			contracts.ExampleNFTSigner,
 		)
 
-		// Contract transfers item to another seller account (we don't need to do this)
-		KittyItemsTransferItem(
-			b,
-			t,
-			contracts.NFTAddr,
-			contracts.KittyItemsAddr,
-			contracts.KittyItemsSigner,
-			tokenToList,
-			userAddress,
-			false,
-		)
-		// Other seller account lists the item
+		// User account lists the item
 		nftStorefrontSellItem(
-			b,
 			t,
+			b,
 			contracts,
 			userAddress,
 			userSigner,
@@ -272,32 +335,20 @@ func TestNftStorefrontCreateSaleSell(t *testing.T) {
 		tokenPrice := "1.11"
 		userAddress, userSigner := nftStorefrontCreateAccount(b, t, contracts)
 
-		// Contract mints item
-		KittyItemsMintItem(
-			b,
+		// Contract mints item to user account
+		mintExampleNFT(
 			t,
-			contracts.NFTAddr,
-			contracts.KittyItemsAddr,
-			contracts.KittyItemsSigner,
-			typeID1337,
-		)
-
-		// Contract transfers item to another seller account (we don't need to do this)
-		KittyItemsTransferItem(
 			b,
-			t,
-			contracts.NFTAddr,
-			contracts.KittyItemsAddr,
-			contracts.KittyItemsSigner,
-			tokenToList,
 			userAddress,
-			false,
+			contracts.NFTAddress,
+			contracts.ExampleNFTAddress,
+			contracts.ExampleNFTSigner,
 		)
 
-		// Other seller account lists the item
+		// User account lists the item
 		saleOfferResourceID := nftStorefrontSellItem(
-			b,
 			t,
+			b,
 			contracts,
 			userAddress,
 			userSigner,
@@ -306,19 +357,7 @@ func TestNftStorefrontCreateSaleSell(t *testing.T) {
 			false,
 		)
 
-		buyerAddress, buyerSigner := nftStorefrontCreatePurchaserAccount(b, t, contracts)
-
-		// Fund the purchase
-		KibbleMint(
-			t,
-			b,
-			contracts.FTAddr,
-			contracts.KibbleAddr,
-			contracts.KibbleSigner,
-			buyerAddress,
-			"100.0",
-			false,
-		)
+		buyerAddress, buyerSigner := nftStorefrontCreateAccount(b, t, contracts)
 
 		// Make the purchase
 		nftStorefrontBuyItem(
@@ -338,32 +377,20 @@ func TestNftStorefrontCreateSaleSell(t *testing.T) {
 		tokenPrice := "1.11"
 		userAddress, userSigner := nftStorefrontCreateAccount(b, t, contracts)
 
-		// Contract mints item
-		KittyItemsMintItem(
-			b,
+		// Contract mints item to user account
+		mintExampleNFT(
 			t,
-			contracts.NFTAddr,
-			contracts.KittyItemsAddr,
-			contracts.KittyItemsSigner,
-			typeID1337,
-		)
-
-		// Contract transfers item to another seller account (we don't need to do this)
-		KittyItemsTransferItem(
 			b,
-			t,
-			contracts.NFTAddr,
-			contracts.KittyItemsAddr,
-			contracts.KittyItemsSigner,
-			tokenToList,
 			userAddress,
-			false,
+			contracts.NFTAddress,
+			contracts.ExampleNFTAddress,
+			contracts.ExampleNFTSigner,
 		)
 
-		// Other seller account lists the item
+		// User account lists the item
 		saleOfferResourceID := nftStorefrontSellItem(
-			b,
 			t,
+			b,
 			contracts,
 			userAddress,
 			userSigner,
@@ -379,26 +406,25 @@ func TestNftStorefrontCreateSaleSell(t *testing.T) {
 			contracts,
 			userAddress,
 			userSigner,
-			userAddress,
 			saleOfferResourceID,
 			false,
 		)
 	})
 }
 
-func replaceNftStorefrontAddressPlaceholders(codeBytes []byte, contracts TestNftContractsInfo) []byte {
+func replaceNFTStorefrontAddressPlaceholders(codeBytes []byte, contracts Contracts) []byte {
 	code := string(codeBytes)
 
-	code = strings.ReplaceAll(code, ftAddressPlaceholder, "0x"+contracts.FTAddr.String())
-	code = strings.ReplaceAll(code, kibbleAddressPlaceHolder, "0x"+contracts.KibbleAddr.String())
-	code = strings.ReplaceAll(code, nftAddressPlaceholder, "0x"+contracts.NFTAddr.String())
-	code = strings.ReplaceAll(code, kittyItemsAddressPlaceHolder, "0x"+contracts.KittyItemsAddr.String())
-	code = strings.ReplaceAll(code, nftStorefrontAddressPlaceholder, "0x"+contracts.NFTStorefrontAddr.String())
+	code = strings.ReplaceAll(code, ftAddressPlaceholder, "0x"+ftAddress.String())
+	code = strings.ReplaceAll(code, flowTokenAddressPlaceHolder, "0x"+flowTokenAddress.String())
+	code = strings.ReplaceAll(code, nftAddressPlaceholder, "0x"+contracts.NFTAddress.String())
+	code = strings.ReplaceAll(code, exampleNFTAddressPlaceHolder, "0x"+contracts.ExampleNFTAddress.String())
+	code = strings.ReplaceAll(code, nftStorefrontAddressPlaceholder, "0x"+contracts.NFTStorefrontAddress.String())
 
 	return []byte(code)
 }
 
-func loadNftStorefront(ftAddr, nftAddr string) []byte {
+func loadNFTStorefront(ftAddr, nftAddr string) []byte {
 	code := string(readFile(nftStorefrontNftStorefrontPath))
 
 	code = strings.ReplaceAll(code, ftAddressPlaceholder, "0x"+ftAddr)
@@ -415,37 +441,120 @@ func nftStorefrontGenerateSetupAccountScript(nftStorefrontAddr string) []byte {
 	return []byte(code)
 }
 
-func nftStorefrontGenerateSellItemScript(contracts TestNftContractsInfo) []byte {
-	return replaceNftStorefrontAddressPlaceholders(
+func nftStorefrontGenerateSellItemScript(contracts Contracts) []byte {
+	return replaceNFTStorefrontAddressPlaceholders(
 		readFile(nftStorefrontSellItemPath),
 		contracts,
 	)
 }
 
-func nftStorefrontGenerateBuyItemScript(contracts TestNftContractsInfo) []byte {
-	return replaceNftStorefrontAddressPlaceholders(
+func nftStorefrontGenerateBuyItemScript(contracts Contracts) []byte {
+	return replaceNFTStorefrontAddressPlaceholders(
 		readFile(nftStorefrontBuyItemPath),
 		contracts,
 	)
 }
 
-func nftStorefrontGenerateRemoveItemScript(contracts TestNftContractsInfo) []byte {
-	return replaceNftStorefrontAddressPlaceholders(
+func nftStorefrontGenerateRemoveItemScript(contracts Contracts) []byte {
+	return replaceNFTStorefrontAddressPlaceholders(
 		readFile(nftStorefrontRemoveItemPath),
 		contracts,
 	)
 }
 
-func nftStorefrontGenerateGetIDsScript(contracts TestNftContractsInfo) []byte {
-	return replaceNftStorefrontAddressPlaceholders(
+func nftStorefrontGenerateGetIDsScript(contracts Contracts) []byte {
+	return replaceNFTStorefrontAddressPlaceholders(
 		readFile(nftStorefrontGetIDsPath),
 		contracts,
 	)
 }
 
-func nftStorefrontGenerateGetOfferDetailsScript(contracts TestNftContractsInfo) []byte {
-	return replaceNftStorefrontAddressPlaceholders(
+func nftStorefrontGenerateGetOfferDetailsScript(contracts Contracts) []byte {
+	return replaceNFTStorefrontAddressPlaceholders(
 		readFile(nftStorefrontGetOfferDetailsPath),
 		contracts,
+	)
+}
+
+func setupExampleNFTCollection(
+	t *testing.T,
+	b *emulator.Blockchain,
+	userAddress flow.Address,
+	userSigner crypto.Signer,
+	nftAddress, exampleNFTAddress flow.Address,
+) {
+	script := nfttemplates.GenerateCreateCollectionScript(
+		nftAddress.String(),
+		exampleNFTAddress.String(),
+		"ExampleNFT",
+		"exampleNFTCollection",
+	)
+
+	tx := flow.NewTransaction().
+		SetScript(script).
+		SetGasLimit(100).
+		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
+		SetPayer(b.ServiceKey().Address).
+		AddAuthorizer(userAddress)
+
+	signAndSubmit(
+		t, b, tx,
+		[]flow.Address{b.ServiceKey().Address, userAddress},
+		[]crypto.Signer{b.ServiceKey().Signer(), userSigner},
+		false,
+	)
+}
+
+func mintExampleNFT(
+	t *testing.T,
+	b *emulator.Blockchain,
+	receiverAddress flow.Address,
+	nftAddress, exampleNFTAddress flow.Address,
+	exampleNFTSigner crypto.Signer,
+) {
+	script := nfttemplates.GenerateMintNFTScript(nftAddress, exampleNFTAddress, receiverAddress)
+
+	tx := flow.NewTransaction().
+		SetScript(script).
+		SetGasLimit(100).
+		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
+		SetPayer(b.ServiceKey().Address).
+		AddAuthorizer(exampleNFTAddress)
+
+	signAndSubmit(
+		t, b, tx,
+		[]flow.Address{b.ServiceKey().Address, exampleNFTAddress},
+		[]crypto.Signer{b.ServiceKey().Signer(), exampleNFTSigner},
+		false,
+	)
+}
+
+func fundAccount(
+	t *testing.T,
+	b *emulator.Blockchain,
+	receiverAddress flow.Address,
+	amount string,
+) {
+	script := fttemplates.GenerateMintTokensScript(
+		ftAddress,
+		flowTokenAddress,
+		flowTokenName,
+	)
+
+	tx := flow.NewTransaction().
+		SetScript(script).
+		SetGasLimit(100).
+		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
+		SetPayer(b.ServiceKey().Address).
+		AddAuthorizer(b.ServiceKey().Address)
+
+	tx.AddArgument(cadence.NewAddress(receiverAddress))
+	tx.AddArgument(cadenceUFix64(amount))
+
+	signAndSubmit(
+		t, b, tx,
+		[]flow.Address{b.ServiceKey().Address},
+		[]crypto.Signer{b.ServiceKey().Signer()},
+		false,
 	)
 }

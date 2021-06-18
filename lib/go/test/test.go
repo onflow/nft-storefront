@@ -2,8 +2,6 @@ package test
 
 import (
 	"io/ioutil"
-	"os"
-	"strings"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -14,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/cadence/runtime/cmd"
 	sdk "github.com/onflow/flow-go-sdk"
 )
 
@@ -77,7 +74,6 @@ func submit(
 	} else {
 		if !assert.True(t, result.Succeeded()) {
 			t.Log(result.Error.Error())
-			cmd.PrettyPrintError(os.Stdout, result.Error, "", map[string]string{"": ""})
 		}
 	}
 
@@ -106,29 +102,14 @@ func readFile(path string) []byte {
 	return contents
 }
 
-// CadenceUFix64 returns a UFix64 value
-func CadenceUFix64(value string) cadence.Value {
+// cadenceUFix64 returns a UFix64 value
+func cadenceUFix64(value string) cadence.Value {
 	newValue, err := cadence.NewUFix64(value)
-
 	if err != nil {
 		panic(err)
 	}
 
 	return newValue
-}
-
-func replaceStrings(
-	source string,
-	substitutions map[string]string,
-) string {
-	for find, replace := range substitutions {
-		source = strings.ReplaceAll(
-			source,
-			find,
-			replace,
-		)
-	}
-	return source
 }
 
 // Simple error-handling wrapper for Flow account creation.

@@ -36,11 +36,11 @@ pub contract NFTStorefront {
 
     // StorefrontStoragePath
     // The location in storage that a Storefront resource should be located.
-    pub let StorefrontStoragePath: Path
+    pub let StorefrontStoragePath: StoragePath
 
-    // StorefrontStoragePath
+    // StorefrontPublicPath
     // The public location for a Storefront link.
-    pub let StorefrontPublicPath: Path
+    pub let StorefrontPublicPath: PublicPath
 
 
     // SaleCut
