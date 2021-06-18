@@ -8,12 +8,124 @@ import (
 	emulator "github.com/onflow/flow-emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
+	sdktemplates "github.com/onflow/flow-go-sdk/templates"
 	"github.com/onflow/flow-go-sdk/test"
+	nftcontracts "github.com/onflow/flow-nft/lib/go/contracts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/onflow/flow-go-sdk"
 )
+
+const (
+	flowTokenName         = "FlowToken"
+	nonFungibleTokenName  = "NonFungibleToken"
+	defaultAccountFunding = "1000.0"
+
+	ftAddressPlaceholder            = "0xFUNGIBLETOKENADDRESS"
+	flowTokenAddressPlaceHolder     = "0xFLOWTOKEN"
+	nftAddressPlaceholder           = "0xNONFUNGIBLETOKEN"
+	exampleNFTAddressPlaceHolder    = "0xEXAMPLENFT"
+	nftStorefrontAddressPlaceholder = "0xNFTSTOREFRONT"
+)
+
+var (
+	ftAddress        = flow.HexToAddress("ee82856bf20e2aa6")
+	flowTokenAddress = flow.HexToAddress("0ae53cb6e3f42a79")
+)
+
+type Contracts struct {
+	NFTAddress           flow.Address
+	ExampleNFTAddress    flow.Address
+	ExampleNFTSigner     crypto.Signer
+	NFTStorefrontAddress flow.Address
+	NFTStorefrontSigner  crypto.Signer
+}
+
+func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flow.Address, crypto.Signer) {
+	nftCode := nftcontracts.NonFungibleToken()
+	nftAddress, err := b.CreateAccount(nil,
+		[]sdktemplates.Contract{
+			{
+				Name:   nonFungibleTokenName,
+				Source: string(nftCode),
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	_, err = b.CommitBlock()
+	require.NoError(t, err)
+
+	accountKeys := test.AccountKeyGenerator()
+
+	exampleNFTAccountKey, exampleNFTSigner := accountKeys.NewWithSigner()
+
+	exampleNFTCode := nftcontracts.ExampleNFT(nftAddress.String())
+	exampleNFTAddress, err := b.CreateAccount(
+		[]*flow.AccountKey{exampleNFTAccountKey},
+		[]sdktemplates.Contract{
+			{
+				Name:   "ExampleNFT",
+				Source: string(exampleNFTCode),
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	_, err = b.CommitBlock()
+	require.NoError(t, err)
+
+	return nftAddress, exampleNFTAddress, exampleNFTSigner
+}
+
+func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contracts {
+	accountKeys := test.AccountKeyGenerator()
+
+	nftAddress, exampleNFTAddress, exampleNFTSigner := deployNFTContracts(t, b)
+
+	nftStorefrontAccountKey, nftStorefrontSigner := accountKeys.NewWithSigner()
+	nftStorefrontCode := loadNFTStorefront(ftAddress, nftAddress)
+
+	nftStorefrontAddress, err := b.CreateAccount(
+		[]*flow.AccountKey{nftStorefrontAccountKey},
+		nil,
+	)
+	require.NoError(t, err)
+
+	fundAccount(t, b, nftStorefrontAddress, defaultAccountFunding)
+
+	tx := sdktemplates.AddAccountContract(
+		nftStorefrontAddress,
+		sdktemplates.Contract{
+			Name:   "NFTStorefront",
+			Source: string(nftStorefrontCode),
+		},
+	)
+
+	tx.
+		SetGasLimit(100).
+		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
+		SetPayer(b.ServiceKey().Address)
+
+	signAndSubmit(
+		t, b, tx,
+		[]flow.Address{b.ServiceKey().Address, nftStorefrontAddress},
+		[]crypto.Signer{b.ServiceKey().Signer(), exampleNFTSigner},
+		false,
+	)
+
+	_, err = b.CommitBlock()
+	require.NoError(t, err)
+
+	return Contracts{
+		nftAddress,
+		exampleNFTAddress,
+		exampleNFTSigner,
+		nftStorefrontAddress,
+		nftStorefrontSigner,
+	}
+}
 
 // newEmulator returns a emulator object for testing
 func newEmulator() *emulator.Blockchain {
@@ -113,10 +225,48 @@ func cadenceUFix64(value string) cadence.Value {
 }
 
 // Simple error-handling wrapper for Flow account creation.
-func createAccount(t *testing.T, b *emulator.Blockchain) (sdk.Address, crypto.Signer, *sdk.AccountKey) {
+func createAccount(t *testing.T, b *emulator.Blockchain) (sdk.Address, crypto.Signer) {
 	accountKeys := test.AccountKeyGenerator()
 	accountKey, signer := accountKeys.NewWithSigner()
+
 	address, err := b.CreateAccount([]*sdk.AccountKey{accountKey}, nil)
 	require.NoError(t, err)
-	return address, signer, accountKey
+
+	return address, signer
+}
+
+func setupNFTStorefront(
+	t *testing.T,
+	b *emulator.Blockchain,
+	userAddress sdk.Address,
+	userSigner crypto.Signer,
+	contracts Contracts,
+) {
+	tx := flow.NewTransaction().
+		SetScript(nftStorefrontGenerateSetupAccountScript(contracts)).
+		SetGasLimit(100).
+		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
+		SetPayer(b.ServiceKey().Address).
+		AddAuthorizer(userAddress)
+
+	signAndSubmit(
+		t, b, tx,
+		[]flow.Address{b.ServiceKey().Address, userAddress},
+		[]crypto.Signer{b.ServiceKey().Signer(), userSigner},
+		false,
+	)
+}
+
+func setupAccount(
+	t *testing.T,
+	b *emulator.Blockchain,
+	address flow.Address,
+	signer crypto.Signer,
+	contracts Contracts,
+) (sdk.Address, crypto.Signer) {
+	setupNFTStorefront(t, b, address, signer, contracts)
+	setupExampleNFTCollection(t, b, address, signer, contracts.NFTAddress, contracts.ExampleNFTAddress)
+	fundAccount(t, b, address, defaultAccountFunding)
+
+	return address, signer
 }
