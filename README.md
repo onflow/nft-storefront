@@ -6,7 +6,7 @@ contract for trading NFTs on Flow.
 ## Features 
 
 - :shopping: A single storefront can combine listings for multiple NFTs of any type
-- :currency_exchange:	NFTs can be exchanged for any `FungibleToken` implementation (e.g. `FLOW`, `FUSD`)
+- :currency_exchange:	NFTs can be exchanged for any fungible token that [implements the standard](https://github.com/onflow/flow-ft) (e.g. `FLOW`, `FUSD`)
 
 ## Contract Addresses 
 
