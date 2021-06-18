@@ -12,7 +12,7 @@ contract for trading NFTs on Flow.
 
 |Name|Testnet|Mainnet|
 |----|-------|-------|
-|`NFTStorefront`|`TBD`|`TBD`|
+|[NFTStorefront](contracts/NFTStorefront.cdc)|`TBD`|`TBD`|
 
 ## Usage
 
