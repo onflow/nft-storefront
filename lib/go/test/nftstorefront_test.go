@@ -1,6 +1,6 @@
 package test
 
-// go test -timeout 30s . -run ^TestNftStorefront -v
+// go test -timeout 30s . -run ^TestNFTStorefront -v
 
 import (
 	"testing"
