@@ -3,10 +3,10 @@
 The NFT storefront is a general-purpose Cadence 
 contract for trading NFTs on Flow.
 
-## Features 
-
-- :shopping: A single storefront can combine listings for multiple NFTs of any type
-- :currency_exchange:	NFTs can be exchanged for any fungible token that [implements the standard](https://github.com/onflow/flow-ft) (e.g. `FLOW`, `FUSD`)
+`NFTStorefront` uses modern Cadence [run-time type](https://docs.onflow.org/cadence/language/run-time-types/)
+facilities to implement a marketplace that can take any currency in order to vend any token in a safe and secure way. 
+This means that only one instance of the contract is needed (see below for its address on Testnet and Mainnet), 
+and its resources, transactions, and scripts can be used by any account to create any marketplace.
 
 ## Contract Addresses 
 
