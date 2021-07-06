@@ -193,6 +193,16 @@ pub contract NFTStorefront {
             // Make sure the offer cannot be accepted again.
             self.details.accepted = true
 
+            // Fetch the token to return to the purchaser.
+            let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
+            // Neither receivers nor providers are trustworthy, they must implement the correct
+            // interface but beyond complying with its pre/post conditions they are not gauranteed
+            // to implement the functionality behind the interface in any given way.
+            // Therefore we cannot trust the Collection resource behind the interface,
+            // and we must check the NFT resource it gives us to make sure that it is the correct one.
+            assert(nft.isInstance(self.details.nftType), message: "withdrawn NFT is not of specified type")
+            assert(nft.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
+
             // Rather than aborting the transaction if any receiver is absent when we try to pay it,
             // we send the cut to the first valid receiver.
             // The first receiver should therefore either be the seller, or an agreed recipient for
@@ -215,16 +225,6 @@ pub contract NFTStorefront {
             // At this point, if all recievers were active and availabile, then the payment Vault will have
             // zero tokens left, and this will functionally be a no-op that consumes the empty vault
             residualReceiver!.deposit(from: <-payment)
-
-            // Fetch the token to return to the purchaser.
-            let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
-            // Neither receivers nor providers are trustworthy, they must implement the correct
-            // interface but beyond complying with its pre/post conditions they are not gauranteed
-            // to implement the functionality behind the interface in any given way.
-            // Therefore we cannot trust the Collection resource behind the interface,
-            // and we must check the NFT resource it gives us to make sure that it is the correct one.
-            assert(nft.isInstance(self.details.nftType), message: "withdrawn NFT is not of specified type")
-            assert(nft.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
 
             return <-nft
         }
