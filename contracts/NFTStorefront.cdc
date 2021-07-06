@@ -102,7 +102,7 @@ pub contract NFTStorefront {
             assert(saleCuts.length > 0, message: "SaleOffer must have at least one payment cut recipient")
             self.saleCuts = saleCuts
 
-            // Calculate the total price form the cuts
+            // Calculate the total price from the cuts
             var salePrice = 0.0
             // Perform initial check on capabilities, and calculate sale price from cut amounts.
             for cut in self.saleCuts {
