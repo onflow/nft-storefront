@@ -13,7 +13,6 @@ transaction(saleOfferResourceID: UInt64, storefrontAddress: Address) {
     }
 
     execute {
-        
         // Be kind and recycle
         self.storefront.cleanup(saleOfferResourceID: saleOfferResourceID)
     }

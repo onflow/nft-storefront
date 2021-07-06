@@ -369,7 +369,6 @@ pub contract NFTStorefront {
         pub fun cleanup(saleOfferResourceID: UInt64) {
             pre {
                 self.saleOffers[saleOfferResourceID] != nil: "could not find offer with given id"
-                //- DETE DID THIS!  self.saleOffers[saleOfferResourceID]!.isAccepted(): "offer is not accepted, only admin can remove"
             }
 
             let offer <- self.saleOffers.remove(key: saleOfferResourceID)!
