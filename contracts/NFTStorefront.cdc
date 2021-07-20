@@ -22,17 +22,52 @@ import NonFungibleToken from 0xNONFUNGIBLETOKEN
 // and list items of interest.
 //
 pub contract NFTStorefront {
+    // NFTStorefrontInitialized
+    // This contract has been deployed.
+    // Event consumers can now expect events from this contract.
+    //
+    pub event NFTStorefrontInitialized()
+
+    // StorefrontInitialized
+    // A Storefront resource has been created.
+    // Event consumers can now expect events from this Storefront.
+    // Note that we do not specify an address: we cannot and should not.
+    // Created resources do not have an owner address, and may be moved
+    // after creation in ways we cannot check.
+    // SaleOfferAvailable events can be used to determine the address
+    // of the owner of the Storefront (...its location) at the time of
+    // the offer but only at that precise moment in that precise transaction.
+    // If the offerer moves the Storefront while the offer is valid, that
+    // is on them.
+    //
+    pub event StorefrontInitialized(storefrontResourceID: UInt64)
+
+    // StorefrontDestroyed
+    // A Storefront has been destroyed.
+    // Event consumers can now stop processing events from this Storefront.
+    // Note that we do not specify an address.
+    //
+    pub event StorefrontDestroyed(storefrontResourceID: UInt64)
+
     // SaleOfferAvailable
     // A sale offer has been created and added to a Storefront resource.
+    // The Address values here are valid when the event is emitted, but
+    // the state of the accounts they refer to may be changed outside of the
+    // NFTStorefront workflow, so be careful to check when using them.
     //
-    pub event SaleOfferAvailable(saleOfferResourceID: UInt64, availableAt: Address)
+    pub event SaleOfferAvailable(
+        storefrontAddress: Address,
+        saleOfferResourceID: UInt64,
+        nftType: Type,
+        nftID: UInt64,
+        ftVaultType: Type,
+        price: UFix64
+    )
 
     // SaleOfferCompleted
-    // A sale offer has been removed from a Storefront resource and destroyed,
-    // with or without being accepted (sold).
+    // The sale offer has been resolved. It has either been accepted, or removed and destroyed.
     //
-    pub event SaleOfferCompleted(saleOfferResourceID: UInt64, accepted: Bool)
-
+    pub event SaleOfferCompleted(saleOfferResourceID: UInt64, storefrontResourceID: UInt64, accepted: Bool)
 
     // StorefrontStoragePath
     // The location in storage that a Storefront resource should be located.
@@ -72,8 +107,13 @@ pub contract NFTStorefront {
     // A struct containing a SaleOffer's data.
     //
     pub struct SaleOfferDetails {
+        // The Storefront that the SaleOffer is stored in.
+        // Note that this resource cannot be moved to a different Storefront,
+        // so this is OK. If we ever make it so that it *can* be moved,
+        // this should be revisited.
+        pub var storefrontID: UInt64
         // Whether this offer has been accepted or not.
-        pub(set) var accepted: Bool
+        pub var accepted: Bool
         // The Type of the NonFungibleToken.NFT that is being offered.
         pub let nftType: Type
         // The ID of the NFT within that type.
@@ -85,14 +125,23 @@ pub contract NFTStorefront {
         // This specifies the division of payment between recipients.
         pub let saleCuts: [SaleCut]
 
+        // setToAccepted
+        // Irreversibly set this offer as accepted.
+        //
+        access(contract) fun setToAccepted() {
+            self.accepted = true
+        }
+
         // initializer
         //
         init (
             nftType: Type,
             nftID: UInt64,
             salePaymentVaultType: Type,
-            saleCuts: [SaleCut]
+            saleCuts: [SaleCut],
+            storefrontID: UInt64
         ) {
+            self.storefrontID = storefrontID
             self.accepted = false
             self.nftType = nftType
             self.nftID = nftID
@@ -191,7 +240,7 @@ pub contract NFTStorefront {
             }
 
             // Make sure the offer cannot be accepted again.
-            self.details.accepted = true
+            self.details.setToAccepted()
 
             // Fetch the token to return to the purchaser.
             let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
@@ -226,7 +275,32 @@ pub contract NFTStorefront {
             // zero tokens left, and this will functionally be a no-op that consumes the empty vault
             residualReceiver!.deposit(from: <-payment)
 
+            // If the offer is accepted, we regard it as completed here.
+            // Otherwise we regard it as completed in the destructor.
+            emit SaleOfferCompleted(
+                saleOfferResourceID: self.uuid,
+                storefrontResourceID: self.details.storefrontID,
+                accepted: self.details.accepted
+            )
+
             return <-nft
+        }
+
+        // destructor
+        //
+        destroy () {
+            // If the offer has not been accepted, we regard it as completed here.
+            // Otherwise we regard it as completed in accept().
+            // This is because we destroy the offer in Storefront.removeSaleOffer()
+            // or Storefront.cleanup() .
+            // If we change this destructor, revisit those functions.
+            if !self.details.accepted {
+                emit SaleOfferCompleted(
+                    saleOfferResourceID: self.uuid,
+                    storefrontResourceID: self.details.storefrontID,
+                    accepted: self.details.accepted
+                )
+            }
         }
 
         // initializer
@@ -236,14 +310,16 @@ pub contract NFTStorefront {
             nftType: Type,
             nftID: UInt64,
             salePaymentVaultType: Type,
-            saleCuts: [SaleCut]
+            saleCuts: [SaleCut],
+            storefrontID: UInt64
         ) {
             // Store the sale information
             self.details = SaleOfferDetails(
                 nftType: nftType,
                 nftID: nftID,
                 salePaymentVaultType: salePaymentVaultType,
-                saleCuts: saleCuts
+                saleCuts: saleCuts,
+                storefrontID: storefrontID
             )
 
             // Store the NFT provider
@@ -316,17 +392,26 @@ pub contract NFTStorefront {
                 nftType: nftType,
                 nftID: nftID,
                 salePaymentVaultType: salePaymentVaultType,
-                saleCuts: saleCuts
+                saleCuts: saleCuts,
+                storefrontID: self.uuid
             )
 
             let saleOfferResourceID = saleOffer.uuid
+            let saleOfferPrice = saleOffer.getDetails().salePrice
 
             // Add the new offer to the dictionary.
             let oldOffer <- self.saleOffers[saleOfferResourceID] <- saleOffer
             // Note that oldOffer will always be nil, but we have to handle it.
             destroy oldOffer
 
-            emit SaleOfferAvailable(saleOfferResourceID: saleOfferResourceID, availableAt: self.owner?.address!)
+            emit SaleOfferAvailable(
+                storefrontAddress: self.owner?.address!,
+                saleOfferResourceID: saleOfferResourceID,
+                nftType: nftType,
+                nftID: nftID,
+                ftVaultType: salePaymentVaultType,
+                price: saleOfferPrice
+            )
 
             return saleOfferResourceID
         }
@@ -338,8 +423,7 @@ pub contract NFTStorefront {
             let offer <- self.saleOffers.remove(key: saleOfferResourceID)
                 ?? panic("missing SaleOffer")
     
-            emit SaleOfferCompleted(saleOfferResourceID: offer.uuid, accepted: false)
-    
+            // This will emit a SaleOfferCompleted event.
             destroy offer
         }
 
@@ -380,12 +464,18 @@ pub contract NFTStorefront {
         //
         destroy () {
             destroy self.saleOffers
+
+            // Let event consumers know that this storefront will no longer exist
+            emit StorefrontDestroyed(storefrontResourceID: self.uuid)
         }
 
         // constructor
         //
         init () {
             self.saleOffers <- {}
+
+            // Let event consumers know that this storefront exists
+            emit StorefrontInitialized(storefrontResourceID: self.uuid)
         }
     }
 
@@ -399,5 +489,7 @@ pub contract NFTStorefront {
     init () {
         self.StorefrontStoragePath = /storage/NFTStorefront
         self.StorefrontPublicPath = /public/NFTStorefront
+
+        emit NFTStorefrontInitialized()
     }
 }

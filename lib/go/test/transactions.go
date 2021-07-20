@@ -133,7 +133,7 @@ func sellItem(
 		results, _ := b.GetEventsByHeight(i, eventType)
 		for _, event := range results {
 			if event.Type == eventType {
-				saleOfferResourceID = event.Value.Fields[0].(cadence.UInt64).ToGoValue().(uint64)
+				saleOfferResourceID = event.Value.Fields[1].(cadence.UInt64).ToGoValue().(uint64)
 			}
 		}
 		i = i + 1
