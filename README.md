@@ -17,20 +17,20 @@ and its resources, transactions, and scripts can be used by any account to creat
 ## Usage
 
 Each account that wants to offer NFTs for sale installs a `Storefront`,
-and then lists individual sales within that `Storefront` as `SaleOffer` resources.
+and then lists individual sales within that `Storefront` as `Listing` resources.
 
 There is one `Storefront` per account that handles sales of all NFT types
 for that account.
 
-Each `SaleOffer` can list one or more cut percentages. 
+Each `Listing` can list one or more cut percentages.
 Each cut is delivered to a predefined address. 
 Cuts can be used to pay listing fees or other considerations.
 
-Each NFT may be listed in one or more `SaleOffer` resources. 
-The validity of each `SaleOffer` can easily be checked.
+Each NFT may be listed in one or more `Listing` resources.
+The validity of each `Listing` can easily be checked.
 
-Purchasers can watch for `SaleOffer` events and check the NFT type and
+Purchasers can watch for `Listing` events and check the NFT type and
 ID to see if they wish to buy the offered item.
 
-Marketplaces and other aggregators can watch for `SaleOffer` events
+Marketplaces and other aggregators can watch for `Listing` events
 and list items of interest.

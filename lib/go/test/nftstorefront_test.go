@@ -73,7 +73,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		)
 
 		// Seller account lists the item
-		saleOfferResourceID := sellItem(
+		listingResourceID := sellItem(
 			t,
 			b,
 			contracts,
@@ -95,7 +95,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			buyerAddress,
 			buyerSigner,
 			sellerAddress,
-			saleOfferResourceID,
+			listingResourceID,
 			false,
 		)
 	})
@@ -118,7 +118,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		)
 
 		// Seller account lists the item
-		saleOfferResourceID := sellItem(
+		listingResourceID := sellItem(
 			t,
 			b,
 			contracts,
@@ -136,7 +136,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			contracts,
 			sellerAddress,
 			sellerSigner,
-			saleOfferResourceID,
+			listingResourceID,
 			false,
 		)
 	})

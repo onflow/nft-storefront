@@ -2,7 +2,7 @@ import NFTStorefront from 0xNFTSTOREFRONT
 
 // This script returns the details for a sale offer within a storefront
 
-pub fun main(account: Address, saleOfferResourceID: UInt64): [UInt64] {
+pub fun main(account: Address, listingResourceID: UInt64): [UInt64] {
     let storefrontRef = account
         .getCapability<&NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}>(
             NFTStorefront.StorefrontPublicPath
@@ -10,8 +10,8 @@ pub fun main(account: Address, saleOfferResourceID: UInt64): [UInt64] {
         .borrow()
         ?? panic("Could not borrow public storefront from address")
 
-    let saleOffer = storefrontRef.borrowSaleOffer(saleOfferResourceID: saleOfferResourceID)
+    let listing = storefrontRef.borrowListing(listingResourceID: listingResourceID)
         ?? panic("No item with that ID")
     
-    return saleOffer.getDetails()
+    return listing.getDetails()
 }
