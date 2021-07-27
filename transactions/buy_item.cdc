@@ -32,7 +32,7 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address) {
     }
 
     execute {
-        let item <- self.listing.accept(
+        let item <- self.listing.purchase(
             payment: <-self.paymentVault
         )
 

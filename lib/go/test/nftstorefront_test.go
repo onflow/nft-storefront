@@ -55,7 +55,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		)
 	})
 
-	t.Run("Should be able to accept a sale offer", func(t *testing.T) {
+	t.Run("Should be able to purchase a sale offer", func(t *testing.T) {
 		tokenToList := uint64(1)
 		tokenPrice := "1.11"
 

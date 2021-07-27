@@ -1,6 +1,6 @@
 import NFTStorefront from 0xNFTSTOREFRONT
 
-// This script returns the details for a sale offer within a storefront
+// This script returns the details for a listing within a storefront
 
 pub fun main(account: Address, listingResourceID: UInt64): [UInt64] {
     let storefrontRef = account

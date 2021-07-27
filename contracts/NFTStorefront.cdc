@@ -65,9 +65,9 @@ pub contract NFTStorefront {
     )
 
     // ListingCompleted
-    // The listing has been resolved. It has either been accepted, or removed and destroyed.
+    // The listing has been resolved. It has either been purchased, or removed and destroyed.
     //
-    pub event ListingCompleted(listingResourceID: UInt64, storefrontResourceID: UInt64, accepted: Bool)
+    pub event ListingCompleted(listingResourceID: UInt64, storefrontResourceID: UInt64, purchased: Bool)
 
     // StorefrontStoragePath
     // The location in storage that a Storefront resource should be located.
@@ -112,8 +112,8 @@ pub contract NFTStorefront {
         // so this is OK. If we ever make it so that it *can* be moved,
         // this should be revisited.
         pub var storefrontID: UInt64
-        // Whether this listing has been accepted or not.
-        pub var accepted: Bool
+        // Whether this listing has been purchased or not.
+        pub var purchased: Bool
         // The Type of the NonFungibleToken.NFT that is being listed.
         pub let nftType: Type
         // The ID of the NFT within that type.
@@ -125,11 +125,11 @@ pub contract NFTStorefront {
         // This specifies the division of payment between recipients.
         pub let saleCuts: [SaleCut]
 
-        // setToAccepted
-        // Irreversibly set this listing as accepted.
+        // setToPurchased
+        // Irreversibly set this listing as purchased.
         //
-        access(contract) fun setToAccepted() {
-            self.accepted = true
+        access(contract) fun setToPurchased() {
+            self.purchased = true
         }
 
         // initializer
@@ -142,7 +142,7 @@ pub contract NFTStorefront {
             storefrontID: UInt64
         ) {
             self.storefrontID = storefrontID
-            self.accepted = false
+            self.purchased = false
             self.nftType = nftType
             self.nftID = nftID
             self.salePaymentVaultType = salePaymentVaultType
@@ -180,11 +180,11 @@ pub contract NFTStorefront {
         //
         pub fun borrowNFT(): &NonFungibleToken.NFT
 
-        // accept
-        // Accept the listing, buying the token.
+        // purchase
+        // Purchase the listing, buying the token.
         // This pays the beneficiaries and returns the token to the buyer.
         //
-        pub fun accept(payment: @FungibleToken.Vault): @NonFungibleToken.NFT
+        pub fun purchase(payment: @FungibleToken.Vault): @NonFungibleToken.NFT
 
         // getDetails
         //
@@ -228,19 +228,19 @@ pub contract NFTStorefront {
             return self.details
         }
 
-        // accept
-        // Accept the listing, buying the token.
+        // purchase
+        // Purchase the listing, buying the token.
         // This pays the beneficiaries and returns the token to the buyer.
         //
-        pub fun accept(payment: @FungibleToken.Vault): @NonFungibleToken.NFT {
+        pub fun purchase(payment: @FungibleToken.Vault): @NonFungibleToken.NFT {
             pre {
-                self.details.accepted == false: "listing has already been accepted"
+                self.details.purchased == false: "listing has already been purchased"
                 payment.isInstance(self.details.salePaymentVaultType): "payment vault is not requested fungible token"
                 payment.balance == self.details.salePrice: "payment vault does not contain requested price"
             }
 
-            // Make sure the listing cannot be accepted again.
-            self.details.setToAccepted()
+            // Make sure the listing cannot be purchased again.
+            self.details.setToPurchased()
 
             // Fetch the token to return to the purchaser.
             let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
@@ -275,12 +275,12 @@ pub contract NFTStorefront {
             // zero tokens left, and this will functionally be a no-op that consumes the empty vault
             residualReceiver!.deposit(from: <-payment)
 
-            // If the listing is accepted, we regard it as completed here.
+            // If the listing is purchased, we regard it as completed here.
             // Otherwise we regard it as completed in the destructor.
             emit ListingCompleted(
                 listingResourceID: self.uuid,
                 storefrontResourceID: self.details.storefrontID,
-                accepted: self.details.accepted
+                purchased: self.details.purchased
             )
 
             return <-nft
@@ -289,16 +289,16 @@ pub contract NFTStorefront {
         // destructor
         //
         destroy () {
-            // If the listing has not been accepted, we regard it as completed here.
-            // Otherwise we regard it as completed in accept().
+            // If the listing has not been purchased, we regard it as completed here.
+            // Otherwise we regard it as completed in purchase().
             // This is because we destroy the listing in Storefront.removeListing()
             // or Storefront.cleanup() .
             // If we change this destructor, revisit those functions.
-            if !self.details.accepted {
+            if !self.details.purchased {
                 emit ListingCompleted(
                     listingResourceID: self.uuid,
                     storefrontResourceID: self.details.storefrontID,
-                    accepted: self.details.accepted
+                    purchased: self.details.purchased
                 )
             }
         }
@@ -417,7 +417,7 @@ pub contract NFTStorefront {
         }
 
         // removeListing
-        // Remove a Listing that has not yet been accepted from the collection and destroy it.
+        // Remove a Listing that has not yet been purchased from the collection and destroy it.
         //
         pub fun removeListing(listingResourceID: UInt64) {
             let listing <- self.listings.remove(key: listingResourceID)
@@ -446,7 +446,7 @@ pub contract NFTStorefront {
         }
 
         // cleanup
-        // Remove an listing *if* it has been accepted.
+        // Remove an listing *if* it has been purchased.
         // Anyone can call, but at present it only benefits the account owner to do so.
         // Kind purchasers can however call it if they like.
         //
@@ -456,7 +456,7 @@ pub contract NFTStorefront {
             }
 
             let listing <- self.listings.remove(key: listingResourceID)!
-            assert(listing.getDetails().accepted == true, message: "listing is not accepted, only admin can remove")
+            assert(listing.getDetails().purchased == true, message: "listing is not purchased, only admin can remove")
             destroy listing
         }
 

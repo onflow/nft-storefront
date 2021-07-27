@@ -7,14 +7,14 @@ import (
 )
 
 const (
-	nftStorefrontNftStorefrontPath   = "../../../contracts/NFTStorefront.cdc"
-	nftStorefrontRootPath            = "../../../transactions"
-	nftStorefrontSetupAccountPath    = nftStorefrontRootPath + "/setup_account.cdc"
-	nftStorefrontSellItemPath        = nftStorefrontRootPath + "/sell_item.cdc"
-	nftStorefrontBuyItemPath         = nftStorefrontRootPath + "/buy_item.cdc"
-	nftStorefrontRemoveItemPath      = nftStorefrontRootPath + "/remove_item.cdc"
-	nftStorefrontGetIDsPath          = nftStorefrontRootPath + "/scripts/read_storefront_ids.cdc"
-	nftStorefrontGetOfferDetailsPath = nftStorefrontRootPath + "/scripts/read_sale_offer_details.cdc"
+	nftStorefrontNftStorefrontPath     = "../../../contracts/NFTStorefront.cdc"
+	nftStorefrontRootPath              = "../../../transactions"
+	nftStorefrontSetupAccountPath      = nftStorefrontRootPath + "/setup_account.cdc"
+	nftStorefrontSellItemPath          = nftStorefrontRootPath + "/sell_item.cdc"
+	nftStorefrontBuyItemPath           = nftStorefrontRootPath + "/buy_item.cdc"
+	nftStorefrontRemoveItemPath        = nftStorefrontRootPath + "/remove_item.cdc"
+	nftStorefrontGetIDsPath            = nftStorefrontRootPath + "/scripts/read_storefront_ids.cdc"
+	nftStorefrontGetListingDetailsPath = nftStorefrontRootPath + "/scripts/read_listing_details.cdc"
 )
 
 func replaceAddresses(codeBytes []byte, contracts Contracts) []byte {
@@ -73,9 +73,9 @@ func nftStorefrontGenerateGetIDsScript(contracts Contracts) []byte {
 	)
 }
 
-func nftStorefrontGenerateGetOfferDetailsScript(contracts Contracts) []byte {
+func nftStorefrontGenerateGetListingDetailsScript(contracts Contracts) []byte {
 	return replaceAddresses(
-		readFile(nftStorefrontGetOfferDetailsPath),
+		readFile(nftStorefrontGetListingDetailsPath),
 		contracts,
 	)
 }
