@@ -4,11 +4,11 @@ import FlowToken from 0xFLOWTOKEN
 import ExampleNFT from 0xEXAMPLENFT
 import NFTStorefront from 0xNFTSTOREFRONT
 
-transaction(saleOfferResourceID: UInt64, storefrontAddress: Address) {
+transaction(listingResourceID: UInt64, storefrontAddress: Address) {
     let paymentVault: @FungibleToken.Vault
     let exampleNFTCollection: &ExampleNFT.Collection{NonFungibleToken.Receiver}
     let storefront: &NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}
-    let saleOffer: &NFTStorefront.SaleOffer{NFTStorefront.SaleOfferPublic}
+    let listing: &NFTStorefront.Listing{NFTStorefront.ListingPublic}
 
     prepare(acct: AuthAccount) {
         self.storefront = getAccount(storefrontAddress)
@@ -18,9 +18,9 @@ transaction(saleOfferResourceID: UInt64, storefrontAddress: Address) {
             .borrow()
             ?? panic("Could not borrow Storefront from provided address")
 
-        self.saleOffer = self.storefront.borrowSaleOffer(saleOfferResourceID: saleOfferResourceID)
+        self.listing = self.storefront.borrowListing(listingResourceID: listingResourceID)
                     ?? panic("No Offer with that ID in Storefront")
-        let price = self.saleOffer.getDetails().salePrice
+        let price = self.listing.getDetails().salePrice
 
         let mainFlowVault = acct.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
             ?? panic("Cannot borrow FlowToken vault from acct storage")
@@ -32,7 +32,7 @@ transaction(saleOfferResourceID: UInt64, storefrontAddress: Address) {
     }
 
     execute {
-        let item <- self.saleOffer.accept(
+        let item <- self.listing.purchase(
             payment: <-self.paymentVault
         )
 
@@ -43,7 +43,7 @@ transaction(saleOfferResourceID: UInt64, storefrontAddress: Address) {
         computation limited exceeded: 100
         */
         // Be kind and recycle
-        //self.storefront.cleanup(saleOfferResourceID: saleOfferResourceID)
+        //self.storefront.cleanup(listingResourceID: listingResourceID)
     }
 
     //- Post to check item is in collection?

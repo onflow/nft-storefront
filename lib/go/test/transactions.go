@@ -123,9 +123,9 @@ func sellItem(
 		shouldFail,
 	)
 
-	// Get the most recently created SaleOfferAvailable event resource ID
-	eventType := fmt.Sprintf("A.%s.NFTStorefront.SaleOfferAvailable", contracts.NFTStorefrontAddress.Hex())
-	saleOfferResourceID := uint64(0)
+	// Get the most recently created ListingAvailable event resource ID
+	eventType := fmt.Sprintf("A.%s.NFTStorefront.ListingAvailable", contracts.NFTStorefrontAddress.Hex())
+	listingResourceID := uint64(0)
 
 	var i uint64
 	i = 0
@@ -133,13 +133,13 @@ func sellItem(
 		results, _ := b.GetEventsByHeight(i, eventType)
 		for _, event := range results {
 			if event.Type == eventType {
-				saleOfferResourceID = event.Value.Fields[1].(cadence.UInt64).ToGoValue().(uint64)
+				listingResourceID = event.Value.Fields[1].(cadence.UInt64).ToGoValue().(uint64)
 			}
 		}
 		i = i + 1
 	}
 
-	return saleOfferResourceID
+	return listingResourceID
 }
 
 func buyItem(

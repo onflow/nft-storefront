@@ -55,7 +55,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		)
 	})
 
-	t.Run("Should be able to accept a sale offer", func(t *testing.T) {
+	t.Run("Should be able to purchase a sale offer", func(t *testing.T) {
 		tokenToList := uint64(1)
 		tokenPrice := "1.11"
 
@@ -73,7 +73,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		)
 
 		// Seller account lists the item
-		saleOfferResourceID := sellItem(
+		listingResourceID := sellItem(
 			t,
 			b,
 			contracts,
@@ -95,7 +95,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			buyerAddress,
 			buyerSigner,
 			sellerAddress,
-			saleOfferResourceID,
+			listingResourceID,
 			false,
 		)
 	})
@@ -118,7 +118,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		)
 
 		// Seller account lists the item
-		saleOfferResourceID := sellItem(
+		listingResourceID := sellItem(
 			t,
 			b,
 			contracts,
@@ -136,7 +136,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			contracts,
 			sellerAddress,
 			sellerSigner,
-			saleOfferResourceID,
+			listingResourceID,
 			false,
 		)
 	})

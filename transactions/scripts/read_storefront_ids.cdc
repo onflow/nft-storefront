@@ -10,6 +10,6 @@ pub fun main(account: Address): [UInt64] {
         .borrow()
         ?? panic("Could not borrow public storefront from address")
     
-    return storefrontRef.getSaleOfferIDs()
+    return storefrontRef.getListingIDs()
 }
  
