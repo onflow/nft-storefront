@@ -2,6 +2,7 @@ package test
 
 import (
 	"io/ioutil"
+	"regexp"
 	"testing"
 
 	"github.com/onflow/cadence"
@@ -21,12 +22,14 @@ const (
 	flowTokenName         = "FlowToken"
 	nonFungibleTokenName  = "NonFungibleToken"
 	defaultAccountFunding = "1000.0"
+)
 
-	ftAddressPlaceholder            = "0xFUNGIBLETOKENADDRESS"
-	flowTokenAddressPlaceHolder     = "0xFLOWTOKEN"
-	nftAddressPlaceholder           = "0xNONFUNGIBLETOKEN"
-	exampleNFTAddressPlaceHolder    = "0xEXAMPLENFT"
-	nftStorefrontAddressPlaceholder = "0xNFTSTOREFRONT"
+var (
+	ftAddressPlaceholder            = regexp.MustCompile(`"[^"\s].*/FungibleToken.cdc"`)
+	flowTokenAddressPlaceHolder     = regexp.MustCompile(`"[^"\s].*/FlowToken.cdc"`)
+	nftAddressPlaceholder           = regexp.MustCompile(`"[^"\s].*/NonFungibleToken.cdc"`)
+	exampleNFTAddressPlaceHolder    = regexp.MustCompile(`"[^"\s].*/ExampleNFT.cdc"`)
+	nftStorefrontAddressPlaceholder = regexp.MustCompile(`"[^"\s].*/NFTStorefront.cdc"`)
 )
 
 var (

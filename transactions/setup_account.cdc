@@ -1,4 +1,4 @@
-import NFTStorefront from 0xNFTSTOREFRONT
+import NFTStorefront from "../contracts/NFTStorefront.cdc"
 
 // This transaction installs the Storefront ressource in an account.
 

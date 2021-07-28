@@ -1,8 +1,8 @@
-import FungibleToken from 0xFUNGIBLETOKENADDRESS
-import NonFungibleToken from 0xNONFUNGIBLETOKEN
-import FlowToken from 0xFLOWTOKEN
-import ExampleNFT from 0xEXAMPLENFT
-import NFTStorefront from 0xNFTSTOREFRONT
+import FungibleToken from "../contracts/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/NonFungibleToken.cdc"
+import FlowToken from "../contracts/FlowToken.cdc"
+import ExampleNFT from "../contracts/ExampleNFT.cdc"
+import NFTStorefront from "../contracts/NFTStorefront.cdc"
 
 transaction(listingResourceID: UInt64, storefrontAddress: Address) {
     let paymentVault: @FungibleToken.Vault

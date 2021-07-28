@@ -1,0 +1,15 @@
+{
+  "accounts": {
+    "nft-storefront-testnet": {
+      "address": "0x94b06cfca1d8a476",
+      "key": "${NFT_STOREFRONT_TESTNET_PRIVATE_KEY}"
+    }
+  },
+  "deployments": {
+    "testnet": {
+      "nft-storefront-testnet": [
+        "NFTStorefront"
+      ]
+    }
+  }
+}
