@@ -1,8 +1,6 @@
 package test
 
 import (
-	"strings"
-
 	"github.com/onflow/flow-go-sdk"
 )
 
@@ -20,11 +18,11 @@ const (
 func replaceAddresses(codeBytes []byte, contracts Contracts) []byte {
 	code := string(codeBytes)
 
-	code = strings.ReplaceAll(code, ftAddressPlaceholder, "0x"+ftAddress.String())
-	code = strings.ReplaceAll(code, flowTokenAddressPlaceHolder, "0x"+flowTokenAddress.String())
-	code = strings.ReplaceAll(code, nftAddressPlaceholder, "0x"+contracts.NFTAddress.String())
-	code = strings.ReplaceAll(code, exampleNFTAddressPlaceHolder, "0x"+contracts.ExampleNFTAddress.String())
-	code = strings.ReplaceAll(code, nftStorefrontAddressPlaceholder, "0x"+contracts.NFTStorefrontAddress.String())
+	code = ftAddressPlaceholder.ReplaceAllString(code, "0x"+ftAddress.String())
+	code = flowTokenAddressPlaceHolder.ReplaceAllString(code, "0x"+flowTokenAddress.String())
+	code = nftAddressPlaceholder.ReplaceAllString(code, "0x"+contracts.NFTAddress.String())
+	code = exampleNFTAddressPlaceHolder.ReplaceAllString(code, "0x"+contracts.ExampleNFTAddress.String())
+	code = nftStorefrontAddressPlaceholder.ReplaceAllString(code, "0x"+contracts.NFTStorefrontAddress.String())
 
 	return []byte(code)
 }
@@ -32,8 +30,8 @@ func replaceAddresses(codeBytes []byte, contracts Contracts) []byte {
 func loadNFTStorefront(ftAddr, nftAddr flow.Address) []byte {
 	code := string(readFile(nftStorefrontNftStorefrontPath))
 
-	code = strings.ReplaceAll(code, ftAddressPlaceholder, "0x"+ftAddr.String())
-	code = strings.ReplaceAll(code, nftAddressPlaceholder, "0x"+nftAddr.String())
+	code = ftAddressPlaceholder.ReplaceAllString(code, "0x"+ftAddr.String())
+	code = nftAddressPlaceholder.ReplaceAllString(code, "0x"+nftAddr.String())
 
 	return []byte(code)
 }

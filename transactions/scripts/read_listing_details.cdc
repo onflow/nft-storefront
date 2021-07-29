@@ -1,4 +1,4 @@
-import NFTStorefront from 0xNFTSTOREFRONT
+import NFTStorefront from "../../contracts/NFTStorefront.cdc"
 
 // This script returns the details for a listing within a storefront
 

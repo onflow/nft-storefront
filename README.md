@@ -12,7 +12,7 @@ and its resources, transactions, and scripts can be used by any account to creat
 
 |Name|Testnet|Mainnet|
 |----|-------|-------|
-|[NFTStorefront](contracts/NFTStorefront.cdc)|`TBD`|`TBD`|
+|[NFTStorefront](contracts/NFTStorefront.cdc)|[0x94b06cfca1d8a476](https://flow-view-source.com/testnet/account/0x94b06cfca1d8a476/contract/NFTStorefront)|[0x4eb8a10cb9f87357](https://flowscan.org/contract/A.4eb8a10cb9f87357.NFTStorefront)|
 
 ## Usage
 
