@@ -2,8 +2,8 @@ import NFTStorefront from "../../contracts/NFTStorefront.cdc"
 
 // This script returns the details for a listing within a storefront
 
-pub fun main(account: Address, listingResourceID: UInt64): [UInt64] {
-    let storefrontRef = account
+pub fun main(account: Address, listingResourceID: UInt64): NFTStorefront.ListingDetails {
+    let storefrontRef = getAccount(account)
         .getCapability<&NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}>(
             NFTStorefront.StorefrontPublicPath
         )
