@@ -6,11 +6,11 @@ import (
 
 const (
 	nftStorefrontNftStorefrontPath     = "../../../contracts/NFTStorefront.cdc"
-	nftStorefrontRootPath              = "../../../transactions"
-	nftStorefrontSetupAccountPath      = nftStorefrontRootPath + "/setup_account.cdc"
-	nftStorefrontSellItemPath          = nftStorefrontRootPath + "/sell_item.cdc"
-	nftStorefrontBuyItemPath           = nftStorefrontRootPath + "/buy_item.cdc"
-	nftStorefrontRemoveItemPath        = nftStorefrontRootPath + "/remove_item.cdc"
+	nftStorefrontRootPath              = "../../.."
+	nftStorefrontSetupAccountPath      = nftStorefrontRootPath + "/transactions/setup_account.cdc"
+	nftStorefrontSellItemPath          = nftStorefrontRootPath + "/transactions/sell_item.cdc"
+	nftStorefrontBuyItemPath           = nftStorefrontRootPath + "/transactions/buy_item.cdc"
+	nftStorefrontRemoveItemPath        = nftStorefrontRootPath + "/transactions/remove_item.cdc"
 	nftStorefrontGetIDsPath            = nftStorefrontRootPath + "/scripts/read_storefront_ids.cdc"
 	nftStorefrontGetListingDetailsPath = nftStorefrontRootPath + "/scripts/read_listing_details.cdc"
 )

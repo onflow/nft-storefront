@@ -1,4 +1,4 @@
-import NFTStorefront from "../../contracts/NFTStorefront.cdc"
+import NFTStorefront from "../contracts/NFTStorefront.cdc"
 
 // This script returns an array of all the nft uuids for sale through a Storefront
 
