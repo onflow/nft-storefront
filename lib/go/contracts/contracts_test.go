@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	addrA          = "0x0A"
-	addrB          = "0x0B"
-	addrStorefront = "0x0EEE"
+	addressA          = "0x0A"
+	addressB          = "0x0B"
+	addressStorefront = "0x0EEE"
 )
 
 func TestNFTStorefrontContract(t *testing.T) {
