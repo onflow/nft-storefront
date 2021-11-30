@@ -245,7 +245,7 @@ pub contract NFTStorefront {
             // Fetch the token to return to the purchaser.
             let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
             // Neither receivers nor providers are trustworthy, they must implement the correct
-            // interface but beyond complying with its pre/post conditions they are not gauranteed
+            // interface but beyond complying with its pre/post conditions they are not guaranteed
             // to implement the functionality behind the interface in any given way.
             // Therefore we cannot trust the Collection resource behind the interface,
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
@@ -271,7 +271,7 @@ pub contract NFTStorefront {
 
             assert(residualReceiver != nil, message: "No valid payment receivers")
 
-            // At this point, if all recievers were active and availabile, then the payment Vault will have
+            // At this point, if all receivers were active and available, then the payment Vault will have
             // zero tokens left, and this will functionally be a no-op that consumes the empty vault
             residualReceiver!.deposit(from: <-payment)
 
@@ -354,7 +354,7 @@ pub contract NFTStorefront {
             saleCuts: [SaleCut]
         ): UInt64
         // removeListing
-        // Allows the Storefront owner to remove any sale listing, acepted or not.
+        // Allows the Storefront owner to remove any sale listing, accepted or not.
         //
         pub fun removeListing(listingResourceID: UInt64)
     }
