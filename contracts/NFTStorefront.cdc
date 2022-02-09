@@ -58,10 +58,10 @@ pub contract NFTStorefront {
     pub event ListingAvailable(
         storefrontAddress: Address,
         listingResourceID: UInt64,
-        nftType: Type, //TODO emit on listing completed!
+        nftType: Type,
         nftID: UInt64,
         ftVaultType: Type,
-        price: UFix64,
+        price: UFix64
     )
 
     // ListingCompleted
@@ -72,7 +72,7 @@ pub contract NFTStorefront {
         storefrontResourceID: UInt64, 
         purchased: Bool,
         nftType: Type,
-        nftID: UInt64,
+        nftID: UInt64
     )
 
     // StorefrontStoragePath
@@ -146,7 +146,7 @@ pub contract NFTStorefront {
             nftID: UInt64,
             salePaymentVaultType: Type,
             saleCuts: [SaleCut],
-            storefrontID: UInt64,
+            storefrontID: UInt64
         ) {
             self.storefrontID = storefrontID
             self.purchased = false
@@ -206,7 +206,7 @@ pub contract NFTStorefront {
     // 
     pub resource Listing: ListingPublic {
         // The simple (non-Capability, non-complex) details of the sale
-        access(contract) let details: ListingDetails
+        access(self) let details: ListingDetails
 
         // A capability allowing this resource to withdraw the NFT with the given ID from its collection.
         // This capability allows the resource to withdraw *any* NFT, so you should be careful when giving
@@ -235,7 +235,6 @@ pub contract NFTStorefront {
         pub fun getDetails(): ListingDetails {
             return self.details
         }
-        //TODO: new function that cleans up existing listings for the item being purchased...the params would need to include a collection,
         
         // purchase
         // Purchase the listing, buying the token.
@@ -299,7 +298,6 @@ pub contract NFTStorefront {
                 purchased: self.details.purchased,
                 nftType: self.details.nftType,
                 nftID: self.details.nftID
-                //we cannot assume this field exists 
             )
 
             return <-nft
