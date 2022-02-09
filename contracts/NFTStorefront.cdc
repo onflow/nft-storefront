@@ -196,7 +196,6 @@ pub contract NFTStorefront {
         //
         pub fun getDetails(): ListingDetails
 
-        //pub fun cleanupIfSameToken(purchasedResourceID: UInt64, otherResourceIDs: [UInt64])
     }
 
 
@@ -285,12 +284,7 @@ pub contract NFTStorefront {
             residualReceiver!.deposit(from: <-payment)
 
             // If the listing is purchased, we regard it as completed here.
-            // Otherwise we regard it as completed in the destructor.
-
-            // Remove all listings for this specific token
-        
-            //let refStorefront <- contract.       
-            //contractstorefront.cleanup(self.uuid)
+            // Otherwise we regard it as completed in the destructor.        
 
             emit ListingCompleted(
                 listingResourceID: self.uuid,
@@ -370,7 +364,7 @@ pub contract NFTStorefront {
             nftType: Type,
             nftID: UInt64,
             salePaymentVaultType: Type,
-            saleCuts: [SaleCut],
+            saleCuts: [SaleCut]
         ): UInt64
 
         // removeListing
@@ -413,7 +407,7 @@ pub contract NFTStorefront {
                 nftID: nftID,
                 salePaymentVaultType: salePaymentVaultType,
                 saleCuts: saleCuts,
-                storefrontID: self.uuid,
+                storefrontID: self.uuid
             )
 
             let listingResourceID = listing.uuid
@@ -431,7 +425,7 @@ pub contract NFTStorefront {
                 nftType: nftType,
                 nftID: nftID,
                 ftVaultType: salePaymentVaultType,
-                price: listingPrice,
+                price: listingPrice
             )
 
             return listingResourceID
