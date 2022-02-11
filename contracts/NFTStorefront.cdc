@@ -130,7 +130,6 @@ pub contract NFTStorefront {
         pub let salePrice: UFix64
         // This specifies the division of payment between recipients.
         pub let saleCuts: [SaleCut]
-        // This lets teams using this contract easily distinguish events that are relevent to them
 
         // setToPurchased
         // Irreversibly set this listing as purchased.
