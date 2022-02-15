@@ -365,7 +365,6 @@ pub contract NFTStorefront {
             salePaymentVaultType: Type,
             saleCuts: [SaleCut]
         ): UInt64
-
         // removeListing
         // Allows the Storefront owner to remove any sale listing, acepted or not.
         //
