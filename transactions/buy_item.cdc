@@ -1,7 +1,7 @@
-import FungibleToken from "../contracts/FungibleToken.cdc"
-import NonFungibleToken from "../contracts/NonFungibleToken.cdc"
-import FlowToken from "../contracts/FlowToken.cdc"
-import ExampleNFT from "../contracts/ExampleNFT.cdc"
+import FlowToken from 0x0ae53cb6e3f42a79
+import FungibleToken from "../contracts/utility/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
+import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
 import NFTStorefront from "../contracts/NFTStorefront.cdc"
 
 transaction(listingResourceID: UInt64, storefrontAddress: Address) {

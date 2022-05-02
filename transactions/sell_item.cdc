@@ -1,15 +1,15 @@
-import FungibleToken from "../contracts/FungibleToken.cdc"
-import NonFungibleToken from "../contracts/NonFungibleToken.cdc"
-import FlowToken from "../contracts/FlowToken.cdc"
-import ExampleNFT from "../contracts/ExampleNFT.cdc"
+import FlowToken from 0x0ae53cb6e3f42a79
+import FungibleToken from "../contracts/utility/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
+import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
+import MetadataViews from "../contracts/utility/MetadataViews.cdc"
 import NFTStorefront from "../contracts/NFTStorefront.cdc"
-import MetadataViews from "../contracts/MetadataViews.cdc"
 
 transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commissionAmount: UFix64, expiry: UInt64, marketplacesCap: [Capability<&AnyResource{FungibleToken.Receiver}>]?) {
-    let flowReceiver: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
-    let exampleNFTProvider: Capability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
+    let flowReceiver: Capability<&AnyResource{FungibleToken.Receiver}>
+    let exampleNFTProvider: Capability<&AnyResource{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
     let storefront: &NFTStorefront.Storefront
-    let saleCuts: [NFTStorefront.SaleCut]
+    var saleCuts: [NFTStorefront.SaleCut]
 
     prepare(acct: AuthAccount) {
         // We need a provider capability, but one is not provided by default so we create one if needed.
@@ -35,7 +35,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
                 for royalty in royalties {
                     // TODO - Verify the type of the valut and it should exists
                     saleCuts.append(NFTStorefront.SaleCut(receiver: royalty.receiver, amount: royalty.cut * effectiveSaleItemPrice))
-                    totalRoyaltyCut += royalty.cut * effectiveSaleItemPrice
+                    totalRoyaltyCut = totalRoyaltyCut + royalty.cut * effectiveSaleItemPrice
                 }
             }
         }
@@ -56,7 +56,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
             nftID: saleItemID,
             salePaymentVaultType: Type<@FlowToken.Vault>(),
             saleCuts: [saleCut],
-            marketplacesCap: marketplacesCap
+            marketplacesCap: marketplacesCap,
             customID: customID,
             commissionAmount: commissionAmount,
             expiry: expiry
