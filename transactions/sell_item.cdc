@@ -5,7 +5,7 @@ import ExampleNFT from "../contracts/ExampleNFT.cdc"
 import NFTStorefront from "../contracts/NFTStorefront.cdc"
 import MetadataViews from "../contracts/MetadataViews.cdc"
 
-transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String, commissionAmount: UFix64, expiry: UInt64) {
+transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commissionAmount: UFix64, expiry: UInt64, marketplacesCap: [Capability<&AnyResource{FungibleToken.Receiver}>]?) {
     let flowReceiver: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
     let exampleNFTProvider: Capability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
     let storefront: &NFTStorefront.Storefront
@@ -56,6 +56,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String, commiss
             nftID: saleItemID,
             salePaymentVaultType: Type<@FlowToken.Vault>(),
             saleCuts: [saleCut],
+            marketplacesCap: marketplacesCap
             customID: customID,
             commissionAmount: commissionAmount,
             expiry: expiry
