@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -13,8 +13,10 @@
     "@babel/core": "^7.17.10",
     "@babel/preset-env": "^7.17.10",
     "babel-jest": "^28.0.3",
-    "flow-js-testing": "^0.2.3-alpha.5",
+    "child_process": "^1.0.2",
+    "flow-js-testing": "^0.2.3-alpha.6",
     "jest": "^28.0.3",
-    "jest-environment-node": "^28.0.2"
+    "jest-environment-node": "^28.0.2",
+    "util": "^0.12.4"
   }
 }

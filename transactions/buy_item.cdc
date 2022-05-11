@@ -2,18 +2,19 @@ import FlowToken from 0x0ae53cb6e3f42a79
 import FungibleToken from "../contracts/utility/FungibleToken.cdc"
 import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
 import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
-import NFTStorefront from "../contracts/NFTStorefront.cdc"
+import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 
-transaction(listingResourceID: UInt64, storefrontAddress: Address) {
+transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRecipient: Address) {
     let paymentVault: @FungibleToken.Vault
     let exampleNFTCollection: &ExampleNFT.Collection{NonFungibleToken.Receiver}
-    let storefront: &NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}
-    let listing: &NFTStorefront.Listing{NFTStorefront.ListingPublic}
+    let storefront: &NFTStorefrontV2.Storefront{NFTStorefrontV2.StorefrontPublic}
+    let listing: &NFTStorefrontV2.Listing{NFTStorefrontV2.ListingPublic}
+    let commissionRecipientCap: Capability<&{FungibleToken.Receiver}>
 
     prepare(acct: AuthAccount) {
         self.storefront = getAccount(storefrontAddress)
-            .getCapability<&NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}>(
-                NFTStorefront.StorefrontPublicPath
+            .getCapability<&NFTStorefrontV2.Storefront{NFTStorefrontV2.StorefrontPublic}>(
+                NFTStorefrontV2.StorefrontPublicPath
             )!
             .borrow()
             ?? panic("Could not borrow Storefront from provided address")
@@ -27,23 +28,19 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address) {
         self.paymentVault <- mainFlowVault.withdraw(amount: price)
 
         self.exampleNFTCollection = acct.borrow<&ExampleNFT.Collection{NonFungibleToken.Receiver}>(
-            from: /storage/NFTCollection
+            from: ExampleNFT.CollectionStoragePath
         ) ?? panic("Cannot borrow NFT collection receiver from account")
+        self.commissionRecipientCap = getAccount(commissionRecipient).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+        assert(self.commissionRecipientCap.check(), message: "Commission Recipient doesn't have flowtoken receiving capability")
     }
 
     execute {
         let item <- self.listing.purchase(
-            payment: <-self.paymentVault
+            payment: <-self.paymentVault,
+            commissionRecipient: self.commissionRecipientCap
         )
 
         self.exampleNFTCollection.deposit(token: <-item)
-
-        /* //-
-        error: Execution failed:
-        computation limited exceeded: 100
-        */
-        // Be kind and recycle
-        //self.storefront.cleanup(listingResourceID: listingResourceID)
     }
 
     //- Post to check item is in collection?

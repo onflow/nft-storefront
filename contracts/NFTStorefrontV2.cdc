@@ -1,5 +1,5 @@
-import FungibleToken from "./utility/FungibleToken.cdc"
-import NonFungibleToken from "./utility/NonFungibleToken.cdc"
+import FungibleToken from "./FungibleToken.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
 
 // NFTStorefrontV2
 //
@@ -180,7 +180,7 @@ pub contract NFTStorefrontV2 {
 
             pre {
                 // Validate the expiry
-                expiry > (getCurrentBlock().timestamp as! UInt64): "Expiry should be in future"
+                expiry > UInt64(getCurrentBlock().timestamp) : "Expiry should be in future"
                 // Validate the length of the sale cut
                 saleCuts.length > 0: "Listing must have at least one payment cut recipient"
             }
@@ -196,7 +196,7 @@ pub contract NFTStorefrontV2 {
             self.saleCuts = saleCuts
 
             // Calculate the total price from the cuts
-            var salePrice = 0.0
+            var salePrice = commissionAmount
             // Perform initial check on capabilities, and calculate sale price from cut amounts.
             for cut in self.saleCuts {
                 // Make sure we can borrow the receiver.
@@ -291,7 +291,7 @@ pub contract NFTStorefrontV2 {
                 self.details.purchased == false: "listing has already been purchased"
                 payment.isInstance(self.details.salePaymentVaultType): "payment vault is not requested fungible token"
                 payment.balance == self.details.salePrice: "payment vault does not contain requested price"
-                self.details.expiry > (getCurrentBlock().timestamp as! UInt64): "Listing is expired"
+                self.details.expiry > UInt64(getCurrentBlock().timestamp): "Listing is expired"
                 self.owner != nil : "Resource doesn't have the assigned owner"
             }
             // Access the StoreFrontManager resource reference to remove the duplicate listings if purchase would happen successfully.
@@ -304,7 +304,7 @@ pub contract NFTStorefrontV2 {
                 if self.marketplacesCap != nil {
                     var doesCapabilityAllowed = false
                     for cap in self.marketplacesCap! {
-                        if cap.getType() == commissionRecipient.getType() && cap.address == commissionRecipient.address {
+                        if cap.getType() == commissionRecipient.getType() && cap.address == commissionRecipient.address && cap.check() {
                             doesCapabilityAllowed = true
                             break
                         }
@@ -542,7 +542,7 @@ pub contract NFTStorefrontV2 {
             destroy oldListing
 
             // Add the `listingResourceID` in the tracked listings.
-            self.listedNFTs[nftType.identifier]![nftID]!.append(listingResourceID)
+            self.addDuplicateListing(nftIdentifier: nftType.identifier, nftID: nftID, listingResourceID: listingResourceID)
 
             emit ListingAvailable(
                 storefrontAddress: self.owner?.address!,
@@ -558,6 +558,18 @@ pub contract NFTStorefrontV2 {
             )
 
             return listingResourceID
+        }
+
+        access(contract) fun addDuplicateListing(nftIdentifier: String, nftID: UInt64, listingResourceID: UInt64) {
+             if !self.listedNFTs.containsKey(nftIdentifier) {
+                self.listedNFTs.insert(key: nftIdentifier, {nftID: [listingResourceID]})
+            } else {
+                if !self.listedNFTs[nftIdentifier]!.containsKey(nftID) {
+                    self.listedNFTs[nftIdentifier]!.insert(key: nftID, [listingResourceID])
+                } else {
+                    self.listedNFTs[nftIdentifier]![nftID]!.append(listingResourceID)
+                } 
+            }
         }
         
         // removeListing
@@ -605,19 +617,21 @@ pub contract NFTStorefrontV2 {
         //
         pub fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64) {
             pre {
-                toIndex as! Int < self.getListingIDs().length : "Provided range is out of bound"
                 fromIndex <= toIndex : "Incorrect start index"
+                Int(toIndex - fromIndex) < self.getListingIDs().length : "Provided range is out of bound"
             }
             var index = fromIndex
+            let listingsIDs = self.getListingIDs()
             while index <= toIndex {
                 // There is a possibility that some index may not have the listing.
                 // Becuase of the instead of failing the transaction index moved to next listing.
-                if let listing = self.borrowListing(listingResourceID: index) {
-                    if listing.getDetails().expiry <= getCurrentBlock().timestamp as! UInt64 {
-                        self.cleanup(listingResourceID: index)
+                
+                if let listing = self.borrowListing(listingResourceID: listingsIDs[index]) {
+                    if listing.getDetails().expiry <= UInt64(getCurrentBlock().timestamp) {
+                        self.cleanup(listingResourceID: listingsIDs[index])
                     }
                 }
-                index = index + 1 as! UInt64 
+                index = index + UInt64(1) 
             }
         } 
 
@@ -626,7 +640,7 @@ pub contract NFTStorefrontV2 {
         //
         pub fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}? {
              if self.listings[listingResourceID] != nil {
-                return &self.listings[listingResourceID] as! &Listing{ListingPublic}?
+                return &self.listings[listingResourceID] as &Listing{ListingPublic}?
             } else {
                 return nil
             }
