@@ -11,6 +11,6 @@ jobs:
       with:
         node-version: 15
         cache: 'npm'
-        cache-dependency-path: subdir/package-lock.json
+        cache-dependency-path: test/package-lock.json
     - run: cd test && npm ci
     - run: npm test
