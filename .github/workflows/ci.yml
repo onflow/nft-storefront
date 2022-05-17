@@ -19,6 +19,8 @@ jobs:
         cache-dependency-path: test/package-lock.json
     - name: Install Flow CLI
       run: sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+    - name: Flow cli Version
+      run: flow version
     - name: Update PATH
       run: echo "/root/.local/bin" >> $GITHUB_PATH
     - name: Install dependencies
