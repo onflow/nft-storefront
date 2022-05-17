@@ -180,7 +180,7 @@ pub contract NFTStorefrontV2 {
 
             pre {
                 // Validate the expiry
-                expiry > UInt64(getCurrentBlock().timestamp) : "Expiry should be in future"
+                expiry > UInt64(getCurrentBlock().timestamp) : "Expiry should be in the future"
                 // Validate the length of the sale cut
                 saleCuts.length > 0: "Listing must have at least one payment cut recipient"
             }
@@ -294,22 +294,19 @@ pub contract NFTStorefrontV2 {
                 self.details.expiry > UInt64(getCurrentBlock().timestamp): "Listing is expired"
                 self.owner != nil : "Resource doesn't have the assigned owner"
             }
-            // Access the StoreFrontManager resource reference to remove the duplicate listings if purchase would happen successfully.
-            let storeFrontPublicRef = self.owner!.getCapability<&NFTStorefrontV2.Storefront{NFTStorefrontV2.StorefrontPublic}>(NFTStorefrontV2.StorefrontPublicPath)
-                                        .borrow() ?? panic("Unable to borrow the storeFrontManager resource")
             // Make sure the listing cannot be purchased again.
             self.details.setToPurchased() 
             
             if (self.details.commissionAmount > 0.0) {
                 if self.marketplacesCap != nil {
-                    var doesCapabilityAllowed = false
+                    var isCommissionRecipientValid = false
                     for cap in self.marketplacesCap! {
                         if cap.getType() == commissionRecipient.getType() && cap.address == commissionRecipient.address && cap.check() {
-                            doesCapabilityAllowed = true
+                            isCommissionRecipientValid = true
                             break
                         }
                     }
-                    assert(doesCapabilityAllowed, message: "Given recipient is not allowed")
+                    assert(isCommissionRecipientValid, message: "Given recipient is not allowed")
                 }
                 let commissionPayment <- payment.withdraw(amount: self.details.commissionAmount)
                 let recipient = commissionRecipient.borrow() ?? panic("Unable to borrow the recipent capability")
@@ -326,6 +323,9 @@ pub contract NFTStorefrontV2 {
             assert(nft.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
 
             // Fetch the duplicate listing for the given NFT
+            // Access the StoreFrontManager resource reference to remove the duplicate listings if purchase would happen successfully.
+            let storeFrontPublicRef = self.owner!.getCapability<&NFTStorefrontV2.Storefront{NFTStorefrontV2.StorefrontPublic}>(NFTStorefrontV2.StorefrontPublicPath)
+                                        .borrow() ?? panic("Unable to borrow the storeFrontManager resource")
             let duplicateListings = storeFrontPublicRef.getDuplicateListingIDs(nftType: self.details.nftType, nftID: self.details.nftID, listingID: self.uuid)
 
             // Let's force removal of the listing in this storefront for the NFT that is being purchased. 
@@ -571,6 +571,12 @@ pub contract NFTStorefrontV2 {
                 } 
             }
         }
+
+        access(contract) fun removeDuplicateListing(nftIdentifier: String, nftID: UInt64, listingResourceID: UInt64) {
+            // Remove the listing from the listedNFTs dictionary.
+            let listingIndex = self.listedNFTs[nftIdentifier]![nftID]!.firstIndex(of: listingResourceID) ?? panic("Should contain the index")
+            self.listedNFTs[nftIdentifier]![nftID]!.remove(at: listingIndex)
+        }
         
         // removeListing
         // Remove a Listing that has not yet been purchased from the collection and destroy it.
@@ -578,7 +584,8 @@ pub contract NFTStorefrontV2 {
         pub fun removeListing(listingResourceID: UInt64) {
             let listing <- self.listings.remove(key: listingResourceID)
                 ?? panic("missing Listing")
-    
+            let listingDetails = listing.getDetails()    
+            self.removeDuplicateListing(nftIdentifier: listingDetails.nftType.identifier, nftID: listingDetails.nftID, listingResourceID: listingResourceID)
             // This will emit a ListingCompleted event.
             destroy listing
         }
@@ -596,9 +603,9 @@ pub contract NFTStorefrontV2 {
         pub fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64] {            
             var listingIDs = self.listedNFTs[nftType.identifier]![nftID] ?? panic("No duplicate listing existed")
             // Verify that given listing Id also a part of the `listingIds`
-            let doesListingExisted = listingIDs.contains(listingID)
+            let doesListingExist = listingIDs.contains(listingID)
             // Find out the index of the existing listing.
-            if doesListingExisted {
+            if doesListingExist {
                 var index: Int = 0
                 for id in listingIDs {
                     if id == listingID {
@@ -624,7 +631,7 @@ pub contract NFTStorefrontV2 {
             let listingsIDs = self.getListingIDs()
             while index <= toIndex {
                 // There is a possibility that some index may not have the listing.
-                // Becuase of the instead of failing the transaction index moved to next listing.
+                // becuase of that instead of failing the transaction, Execution moved to next index or listing.
                 
                 if let listing = self.borrowListing(listingResourceID: listingsIDs[index]) {
                     if listing.getDetails().expiry <= UInt64(getCurrentBlock().timestamp) {
@@ -647,15 +654,17 @@ pub contract NFTStorefrontV2 {
         }
 
         // cleanup
-        // Remove an listing *if* it has been purchased.
-        // Anyone can call, but at present it only benefits the account owner to do so.
-        // Kind purchasers can however call it if they like.
+        // Remove an listing, When given listing is duplicate or expired
+        // Only contract is allowed to execute it.
         //
         access(contract) fun cleanup(listingResourceID: UInt64) {
             pre {
                 self.listings[listingResourceID] != nil: "could not find listing with given id"
             }
             let listing <- self.listings.remove(key: listingResourceID)!
+            let listingDetails = listing.getDetails()    
+            self.removeDuplicateListing(nftIdentifier: listingDetails.nftType.identifier, nftID: listingDetails.nftID, listingResourceID: listingResourceID)
+
             destroy listing
         }
 

@@ -334,7 +334,7 @@ describe("NFTStorefrontV2", ()=> {
     expect(listingDetails.salePrice).toEqual('50.50000000');
   });
 
-  test("should successfully list the same item multiple times and then purchase one of the listing that removes other duplicate ones programmatically", async() => {
+  test("should successfully list the same item multiple times and then purchase one of the listing that removes other duplicates programmatically", async() => {
     // step 1 : Setup a collection for seller_1
     await shallPass(
       sendTransaction({

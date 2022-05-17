@@ -40,7 +40,7 @@ pub contract MetadataViews {
         /// The name of the object. 
         ///
         /// This field will be displayed in lists and therefore should
-        /// be short an concise.
+        /// be short and concise.
         ///
         pub let name: String
 

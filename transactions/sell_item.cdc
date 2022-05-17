@@ -52,10 +52,10 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
         self.storefront = acct.borrow<&NFTStorefrontV2.Storefront>(from: NFTStorefrontV2.StorefrontStoragePath)
             ?? panic("Missing or mis-typed NFTStorefront Storefront")
 
-        for marketPlace in marketplacesAddress {
+        for marketplace in marketplacesAddress {
             // Here we are making a fair assumption that all given addresses would have
             // the capability to receive the `FlowToken`
-            self.marketplacesCap.append(getAccount(marketPlace).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver))
+            self.marketplacesCap.append(getAccount(marketplace).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver))
         }
     }
 
