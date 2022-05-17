@@ -2,5 +2,5 @@
   "testEnvironment": "node",
   "verbose": true,
   "coveragePathIgnorePatterns": ["/node_modules/"],
-  "testTimeout": 20000
+  "testTimeout": 40000
 }
