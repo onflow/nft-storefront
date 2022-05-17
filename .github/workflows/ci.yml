@@ -4,14 +4,24 @@ on: [push]
 
 jobs:
   build:
+    name: NFTStorefront V2 Integration Tests
+    timeout-minutes: 10
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ["1.16"]
     steps:
-    - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
         node-version: 15.0.0
         cache: 'npm'
         cache-dependency-path: test/package-lock.json
+    - name: Install Flow CLI
+      run: sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+    - name: Update PATH
+      run: echo "/root/.local/bin" >> $GITHUB_PATH
+    - name: Checkout
+      uses: actions/checkout@v3
     - name: Install dependencies
       run: cd test && npm ci
     - name: Run tests
