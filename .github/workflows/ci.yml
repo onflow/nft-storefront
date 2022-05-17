@@ -11,6 +11,7 @@ jobs:
       with:
         node-version: 15.0.0
         cache: 'npm'
+        cache-dependency-path: test/package-lock.json
     - name: Install dependencies
       run: cd test && npm ci
     - name: Run tests

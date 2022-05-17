@@ -8,9 +8,6 @@ const mint_nft_tx = fs.readFileSync(path.resolve(__dirname, "../mockTransactions
 const get_owned_nft_ids_script = fs.readFileSync(path.resolve(__dirname, "../mockScripts/get_owned_nft_ids.cdc"), {encoding:'utf8', flag:'r'});
 const setup_account_to_receive_royalty_tx = fs.readFileSync(path.resolve(__dirname, "../mockTransactions/setup_account_to_receive_royalty.cdc"), {encoding:'utf8', flag:'r'});
 
-// Increase timeout if your tests failing due to timeout
-jest.setTimeout(20000);
-
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
