@@ -138,7 +138,7 @@ pub contract NFTStorefrontV2 {
         pub let nftType: Type
         // The Resource ID of the NFT which can only be set in the contract
         pub let nftUUID: UInt64
-        // The Type of the FungibleToken that payments must be made in.
+        // The unique identifier of the NFT that will get sell.
         pub let nftID: UInt64
         // The Type of the FungibleToken that payments must be made in.
         pub let salePaymentVaultType: Type
