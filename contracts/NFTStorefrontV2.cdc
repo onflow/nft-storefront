@@ -3,19 +3,20 @@ import NonFungibleToken from "./NonFungibleToken.cdc"
 
 // NFTStorefrontV2
 //
-// A general purpose sale support contract for Flow NonFungibleTokens.
+// A general purpose sale support contract for NFTs that implement the Flow NonFungibleTokens.
 // 
 // Each account that wants to list NFTs for sale installs a Storefront,
 // and lists individual sales within that Storefront as Listings.
 // There is one Storefront per account, it handles sales of all NFT types
 // for that account.
 //
-// Each Listing can have one or more "cut"s of the sale price that
+// Each Listing can have one or more "cuts" of the sale price that
 // goes to one or more addresses. Cuts can be used to pay listing fees
 // or other considerations. 
-// Each Listing can have the commission amount that is there to facilitate the
-// purchase. Seller can choose to provide an optional list of market places 
-// reciever capability whom commission amount would get transfer during the purchase.
+// Each Listing can include a commission amount that is paid to whoever facilitates
+// the purchase. The seller can also choose to provide an optional list of marketplace 
+// receiver capabilities. In this case, the commission amount must be transferred to
+// one of the capabilities in the list.
 //
 // Each NFT may be listed in one or more Listings, the validity of each
 // Listing can easily be checked.
@@ -56,7 +57,7 @@ pub contract NFTStorefrontV2 {
     // ListingAvailable
     // A listing has been created and added to a Storefront resource.
     // The Address values here are valid when the event is emitted, but
-    // the state of the accounts they refer to may be changed outside of the
+    // the state of the accounts they refer to may change outside of the
     // NFTStorefrontV2 workflow, so be careful to check when using them.
     //
     pub event ListingAvailable(
@@ -65,15 +66,15 @@ pub contract NFTStorefrontV2 {
         nftType: Type,
         nftUUID: UInt64, 
         nftID: UInt64,
-        ftVaultType: Type,
-        price: UFix64,
+        salePaymentVaultType: Type,
+        salePrice: UFix64,
         customID: String?,
         commissionAmount: UFix64,
         expiry: UInt64
     )
 
     // ListingCompleted
-    // The listing has been resolved. It has either been purchased, or removed and destroyed.
+    // The listing has been resolved. It has either been purchased, removed or destroyed.
     //
     pub event ListingCompleted(
         listingResourceID: UInt64, 
@@ -82,8 +83,8 @@ pub contract NFTStorefrontV2 {
         nftType: Type,
         nftUUID: UInt64,
         nftID: UInt64,
-        ftVaultType: Type,
-        price: UFix64,
+        salePaymentVaultType: Type,
+        salePrice: UFix64,
         customID: String?,
         commissionAmount: UFix64,
         expiry: UInt64
@@ -231,7 +232,7 @@ pub contract NFTStorefrontV2 {
         pub fun purchase(
             payment: @FungibleToken.Vault, 
             commissionRecipient: Capability<&{FungibleToken.Receiver}>,
-            ): @NonFungibleToken.NFT
+        ): @NonFungibleToken.NFT
 
         // getDetails
         // Fetches the details of the listing.
@@ -254,8 +255,8 @@ pub contract NFTStorefrontV2 {
         // way that it claims.
         access(contract) let nftProviderCapability: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
 
-        // Optional list of marketplaces capabilities, Used for incentivising 
-        // them if purchase gets facilitated by them.
+        // An optional list of marketplaces capabilities that are approved 
+        // to receive the marketplace commission.
         access(contract) let marketplacesCap: [Capability<&{FungibleToken.Receiver}>]?
 
         // borrowNFT
@@ -263,9 +264,9 @@ pub contract NFTStorefrontV2 {
         // if the NFT is absent, for example if it has been sold via another listing.
         //
         pub fun borrowNFT(): &NonFungibleToken.NFT {
-            let ref = self.nftProviderCapability.borrow()!.borrowNFT(id: self.getDetails().nftID)
-            assert(ref.isInstance(self.getDetails().nftType), message: "NFT has wrong type")
-            assert(ref.id == self.getDetails().nftID, message: "NFT has wrong ID")
+            let ref = self.nftProviderCapability.borrow()!.borrowNFT(id: self.details.nftID)
+            assert(ref.isInstance(self.details.nftType), message: "NFT has wrong type")
+            assert(ref.id == self.details.nftID, message: "NFT has wrong ID")
             return ref as &NonFungibleToken.NFT
         }
 
@@ -367,8 +368,8 @@ pub contract NFTStorefrontV2 {
                 nftType: self.details.nftType,
                 nftUUID: self.details.nftUUID,
                 nftID: self.details.nftID,
-                ftVaultType: self.details.salePaymentVaultType,
-                price: self.details.salePrice,
+                salePaymentVaultType: self.details.salePaymentVaultType,
+                salePrice: self.details.salePrice,
                 customID: self.details.customID,
                 commissionAmount: self.details.commissionAmount,
                 expiry: self.details.expiry
@@ -393,8 +394,8 @@ pub contract NFTStorefrontV2 {
                     nftType: self.details.nftType,
                     nftUUID: self.details.nftUUID,
                     nftID: self.details.nftID,
-                    ftVaultType: self.details.salePaymentVaultType,
-                    price: self.details.salePrice,
+                    salePaymentVaultType: self.details.salePaymentVaultType,
+                    salePrice: self.details.salePrice,
                     customID: self.details.customID,
                     commissionAmount: self.details.commissionAmount,
                     expiry: self.details.expiry
@@ -449,7 +450,7 @@ pub contract NFTStorefrontV2 {
 
     // StorefrontManager
     // An interface for adding and removing Listings within a Storefront,
-    // intended for use by the Storefront's own
+    // intended for use by the Storefront's owner
     //
     pub resource interface StorefrontManager {
         // createListing
@@ -550,8 +551,8 @@ pub contract NFTStorefrontV2 {
                 nftType: nftType,
                 nftUUID: uuid,
                 nftID: nftID,
-                ftVaultType: salePaymentVaultType,
-                price: listingPrice,
+                salePaymentVaultType: salePaymentVaultType,
+                salePrice: listingPrice,
                 customID: customID,
                 commissionAmount: commissionAmount,
                 expiry: expiry
