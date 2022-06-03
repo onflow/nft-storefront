@@ -24,6 +24,6 @@ jobs:
     - name: Update PATH
       run: echo "/root/.local/bin" >> $GITHUB_PATH
     - name: Install dependencies
-      run: cd test && npm ci
+      run: cd lib/js/test && npm ci
     - name: Run tests
-      run: cd test && npm run test
+      run: cd lib/js/test && npm run test

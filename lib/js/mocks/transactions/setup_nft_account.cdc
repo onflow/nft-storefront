@@ -1,5 +1,5 @@
-import NonFungibleToken from "../../contracts/utility/NonFungibleToken.cdc"
-import ExampleNFT from "../../contracts/utility/ExampleNFT.cdc"
+import NonFungibleToken from "../../../../contracts/utility/NonFungibleToken.cdc"
+import ExampleNFT from "../../../../contracts/utility/ExampleNFT.cdc"
 
 // This transaction is what an account would run
 // to set itself up to receive NFTs
