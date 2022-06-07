@@ -222,7 +222,7 @@ pub contract NFTStorefront {
             //  result.isInstance(self.getDetails().nftType): "token has wrong type"
             assert(ref.isInstance(self.getDetails().nftType), message: "token has wrong type")
             assert(ref.id == self.getDetails().nftID, message: "token has wrong ID")
-            return ref as &NonFungibleToken.NFT
+            return (ref as &NonFungibleToken.NFT?)!
         }
 
         // getDetails

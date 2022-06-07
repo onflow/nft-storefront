@@ -267,7 +267,7 @@ pub contract NFTStorefrontV2 {
             let ref = self.nftProviderCapability.borrow()!.borrowNFT(id: self.details.nftID)
             assert(ref.isInstance(self.details.nftType), message: "NFT has wrong type")
             assert(ref.id == self.details.nftID, message: "NFT has wrong ID")
-            return ref as &NonFungibleToken.NFT
+            return (ref as &NonFungibleToken.NFT?)!
         }
 
         // getDetails
