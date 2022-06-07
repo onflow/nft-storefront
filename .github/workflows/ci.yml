@@ -16,7 +16,7 @@ jobs:
       with:
         node-version: 15.0.0
         cache: 'npm'
-        cache-dependency-path: test/package-lock.json
+        cache-dependency-path: lib/js/test/package-lock.json
     - name: Install Flow CLI
       run: sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)" -- v0.33.1-sc-m5
     - name: Flow cli Version
