@@ -12,6 +12,7 @@ or a JPEG image file.
 */
 
 import FungibleToken from "./FungibleToken.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
 
 pub contract MetadataViews {
 
@@ -40,7 +41,7 @@ pub contract MetadataViews {
         /// The name of the object. 
         ///
         /// This field will be displayed in lists and therefore should
-        /// be short and concise.
+        /// be short an concise.
         ///
         pub let name: String
 
@@ -132,6 +133,69 @@ pub contract MetadataViews {
         }
     }
 
+    /// Editions is an optional view for collections that issues multiple objects
+    /// with the same or similar metadata, for example an X of 100 set. This information is 
+    /// useful for wallets and marketplaes.
+    ///
+    /// An NFT might be part of multiple editions, which is why the edition information
+    /// is returned as an arbitrary sized array
+    /// 
+    pub struct Editions {
+
+        /// An arbitrary-sized list for any number of editions
+        /// that the NFT might be a part of
+        pub let infoList: [Edition]
+
+        init(_ infoList: [Edition]) {
+            self.infoList = infoList
+        }
+    }
+
+    /// Edition information for a single edition
+    pub struct Edition {
+
+        /// The name of the edition
+        /// For example, this could be Set, Play, Series,
+        /// or any other way a project could classify its editions
+        pub let name: String?
+
+        /// The edition number of the object.
+        ///
+        /// For an "24 of 100 (#24/100)" item, the number is 24. 
+        ///
+        pub let number: UInt64
+
+        /// The max edition number of this type of objects.
+        /// 
+        /// This field should only be provided for limited-editioned objects.
+        /// For an "24 of 100 (#24/100)" item, max is 100.
+        /// For an item with unlimited edition, max should be set to nil.
+        /// 
+        pub let max: UInt64?
+
+        init(name: String?, number: UInt64, max: UInt64?) {
+            if max != nil {
+                assert(number <= max!, message: "The number cannot be greater than the max number!")
+            }
+            self.name = name
+            self.number = number
+            self.max = max
+        }
+    }
+
+    /// A view representing a project-defined serial number for a specific NFT
+    /// Projects have different definitions for what a serial number should be
+    /// Some may use the NFTs regular ID and some may use a different classification system
+    /// The serial number is expected to be unique among other NFTs within that project
+    ///
+    pub struct Serial {
+        pub let number: UInt64
+
+        init(_ number: UInt64) {
+            self.number = number
+        }
+    }
+
     /*
     *  Royalty Views
     *  Defines the composable royalty standard that gives marketplaces a unified interface
@@ -204,11 +268,25 @@ pub contract MetadataViews {
         return /public/GenericFTReceiver
     }
 
-    // A view to represent Media, a file with an correspoiding mediaType.
+    /// Medias is an optional view for collections that issue objects with multiple Media sources in it
+    ///
+    pub struct Medias {
+
+        /// An arbitrary-sized list for any number of Media items
+        pub let items: [Media]
+
+        init(_ items: [Media]) {
+            self.items = items
+        }
+    }
+
+    /// A view to represent Media, a file with an correspoiding mediaType.
     pub struct Media {
+        
+        /// File for the media
         pub let file: AnyStruct{File}
 
-        // media-type comes on the form of type/subtype as described here https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+        /// media-type comes on the form of type/subtype as described here https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
         pub let mediaType: String
 
         init(file: AnyStruct{File}, mediaType: String) {
@@ -217,9 +295,9 @@ pub contract MetadataViews {
         }
     }
 
-    // A license according to https://spdx.org/licenses/
-    //
-    // This view can be used if the content of an NFT is licensed. 
+    /// A license according to https://spdx.org/licenses/
+    ///
+    /// This view can be used if the content of an NFT is licensed. 
     pub struct License {
         pub let spdxIdentifier: String
 
@@ -228,14 +306,113 @@ pub contract MetadataViews {
         }
     }
 
-    // A view to expose a URL to this item on an external site.
-    //
-    // This can be used by applications like .find and Blocto to direct users to the original link for an NFT.
+    /// A view to expose a URL to this item on an external site.
+    ///
+    /// This can be used by applications like .find and Blocto to direct users to the original link for an NFT.
     pub struct ExternalURL {
         pub let url: String
 
         init(_ url: String) {
             self.url=url
+        }
+    }
+
+    // A view to expose the information needed store and retrieve an NFT
+    //
+    // This can be used by applications to setup a NFT collection with proper storage and public capabilities.
+    pub struct NFTCollectionData {
+        /// Path in storage where this NFT is recommended to be stored.
+        pub let storagePath: StoragePath
+
+        /// Public path which must be linked to expose public capabilities of this NFT
+        /// including standard NFT interfaces and metadataviews interfaces
+        pub let publicPath: PublicPath
+
+        /// Private path which should be linked to expose the provider
+        /// capability to withdraw NFTs from the collection holding NFTs
+        pub let providerPath: PrivatePath
+
+        /// Public collection type that is expected to provide sufficient read-only access to standard
+        /// functions (deposit + getIDs + borrowNFT)
+        /// This field is for backwards compatibility with collections that have not used the standard
+        /// NonFungibleToken.CollectionPublic interface when setting up collections. For new
+        /// collections, this may be set to be equal to the type specified in `publicLinkedType`.
+        pub let publicCollection: Type
+
+        /// Type that should be linked at the aforementioned public path. This is normally a
+        /// restricted type with many interfaces. Notably the `NFT.CollectionPublic`,
+        /// `NFT.Receiver`, and `MetadataViews.ResolverCollection` interfaces are required.
+        pub let publicLinkedType: Type
+
+        /// Type that should be linked at the aforementioned private path. This is normally
+        /// a restricted type with at a minimum the `NFT.Provider` interface
+        pub let providerLinkedType: Type
+
+        /// Function that allows creation of an empty NFT collection that is intended to store
+        /// this NFT.
+        pub let createEmptyCollection: ((): @NonFungibleToken.Collection)
+
+        init(
+            storagePath: StoragePath,
+            publicPath: PublicPath,
+            providerPath: PrivatePath,
+            publicCollection: Type,
+            publicLinkedType: Type,
+            providerLinkedType: Type,
+            createEmptyCollectionFunction: ((): @NonFungibleToken.Collection)
+        ) {
+            pre {
+                publicLinkedType.isSubtype(of: Type<&{NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, MetadataViews.ResolverCollection}>()): "Public type must include NonFungibleToken.CollectionPublic, NonFungibleToken.Receiver, and MetadataViews.ResolverCollection interfaces."
+                providerLinkedType.isSubtype(of: Type<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection}>()): "Provider type must include NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, and MetadataViews.ResolverCollection interface."
+            }
+            self.storagePath=storagePath
+            self.publicPath=publicPath
+            self.providerPath = providerPath
+            self.publicCollection=publicCollection
+            self.publicLinkedType=publicLinkedType
+            self.providerLinkedType = providerLinkedType
+            self.createEmptyCollection=createEmptyCollectionFunction
+        }
+    }
+
+    // A view to expose the information needed to showcase this NFT's collection
+    //
+    // This can be used by applications to give an overview and graphics of the NFT collection
+    // this NFT belongs to.
+    pub struct NFTCollectionDisplay {
+        // Name that should be used when displaying this NFT collection.
+        pub let name: String
+
+        // Description that should be used to give an overview of this collection.
+        pub let description: String
+
+        // External link to a URL to view more information about this collection.
+        pub let externalURL: ExternalURL
+
+        // Square-sized image to represent this collection.
+        pub let squareImage: Media
+
+        // Banner-sized image for this collection, recommended to have a size near 1200x630.
+        pub let bannerImage: Media
+
+        // Social links to reach this collection's social homepages.
+        // Possible keys may be "instagram", "twitter", "discord", etc.
+        pub let socials: {String: ExternalURL}
+
+        init(
+            name: String,
+            description: String,
+            externalURL: ExternalURL,
+            squareImage: Media,
+            bannerImage: Media,
+            socials: {String: ExternalURL}
+        ) {
+            self.name = name
+            self.description = description
+            self.externalURL = externalURL
+            self.squareImage = squareImage
+            self.bannerImage = bannerImage
+            self.socials = socials
         }
     }
 }

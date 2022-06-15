@@ -15,7 +15,12 @@
         "testnet": "0x9a0766d93b6608b7"
       }
     },
-    "NonFungibleToken": "./contracts/utility/NonFungibleToken.cdc",
+    "NonFungibleToken": {
+      "source": "./contracts/utility/NonFungibleToken.cdc",
+      "aliases":{
+        "testnet" : "0x631e88ae7f1d7c20"
+      }
+    },
     "MetadataViews": "./contracts/utility/MetadataViews.cdc",
     "FlowToken": {
       "aliases": {
@@ -32,12 +37,21 @@
     "emulator-account": {
       "address": "0xf8d6e0586b0a20c7",
       "key": ""
+    },
+    "testnet-account": {
+      "address": "0x4edea54c5602be0c",
+      "key": ""
     }
   },
   "deployments": {
     "emulator": {
       "emulator-account": [
         "NonFungibleToken","NFTStorefront", "NFTStorefrontV2", "MetadataViews"
+      ]
+    },
+    "testnet": {
+      "testnet-account":[
+        "NFTStorefrontV2"
       ]
     }
   }
