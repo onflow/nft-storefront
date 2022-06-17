@@ -37,10 +37,6 @@
     "emulator-account": {
       "address": "0xf8d6e0586b0a20c7",
       "key": ""
-    },
-    "testnet-account": {
-      "address": "0x4edea54c5602be0c",
-      "key": ""
     }
   },
   "deployments": {
@@ -48,11 +44,7 @@
       "emulator-account": [
         "NonFungibleToken","NFTStorefront", "NFTStorefrontV2", "MetadataViews"
       ]
-    },
-    "testnet": {
-      "testnet-account":[
-        "NFTStorefrontV2"
-      ]
     }
   }
 }
+ 

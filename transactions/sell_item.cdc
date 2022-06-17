@@ -5,6 +5,18 @@ import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
 import MetadataViews from "../contracts/utility/MetadataViews.cdc"
 import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 
+/// Transaction used to facilitate the creation of the listing under the signer's owned storefront resource.
+/// It accepts the certain details from the signer,i.e. - 
+///
+/// `saleItemID` - ID of the NFT that is put on sale by the seller.
+/// `saleItemPrice` - Amount of tokens (FT) buyer needs to pay for the purchase of listed NFT.
+/// `customID` - Optional string to represent identifier of the dApp.
+/// `commissionAmount` - Commission amount that will be taken away by the purchase facilitator.
+/// `expiry` - Unix timestamp at which created listing become expired.
+/// `marketplacesAddress` - List of addresses that are allowed to get the commission.
+
+/// If the given nft has a support of the RoyaltyView then royalties will added as the sale cut.
+
 transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commissionAmount: UFix64, expiry: UInt64, marketplacesAddress: [Address]) {
     let flowReceiver: Capability<&AnyResource{FungibleToken.Receiver}>
     let exampleNFTProvider: Capability<&AnyResource{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
@@ -15,12 +27,15 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
     prepare(acct: AuthAccount) {
         self.saleCuts = []
         self.marketplacesCap = []
+
         // We need a provider capability, but one is not provided by default so we create one if needed.
         let exampleNFTCollectionProviderPrivatePath = /private/exampleNFTCollectionProviderForNFTStorefront
 
+        // Receiver for the sale cut.
         self.flowReceiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
         assert(self.flowReceiver.borrow() != nil, message: "Missing or mis-typed FlowToken receiver")
 
+        // Check if the Provider capability exists or not if `no` then create a new link for the same.
         if !acct.getCapability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath)!.check() {
             acct.link<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath, target: ExampleNFT.CollectionStoragePath)
         }
@@ -43,6 +58,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
                 totalRoyaltyCut = totalRoyaltyCut + royalty.cut * effectiveSaleItemPrice
             }
         }
+        // Append the cut for the seller.
         self.saleCuts.append(NFTStorefrontV2.SaleCut(
             receiver: self.flowReceiver,
             amount: effectiveSaleItemPrice - totalRoyaltyCut
@@ -60,6 +76,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
     }
 
     execute {
+        // Create listing
         self.storefront.createListing(
             nftProviderCapability: self.exampleNFTProvider,
             nftType: Type<@ExampleNFT.NFT>(),
