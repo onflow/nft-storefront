@@ -27,7 +27,7 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address) {
         self.paymentVault <- mainFlowVault.withdraw(amount: price)
 
         self.exampleNFTCollection = acct.borrow<&ExampleNFT.Collection{NonFungibleToken.Receiver}>(
-            from: /storage/NFTCollection
+            from: ExampleNFT.CollectionStoragePath
         ) ?? panic("Cannot borrow NFT collection receiver from account")
     }
 
