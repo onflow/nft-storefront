@@ -39,6 +39,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			sellerAddress,
 			contracts.NFTAddress,
 			contracts.ExampleNFTAddress,
+			contracts.MetadataViewsAddress,
 			contracts.ExampleNFTSigner,
 		)
 
@@ -69,6 +70,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			sellerAddress,
 			contracts.NFTAddress,
 			contracts.ExampleNFTAddress,
+			contracts.MetadataViewsAddress,
 			contracts.ExampleNFTSigner,
 		)
 
@@ -114,6 +116,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			sellerAddress,
 			contracts.NFTAddress,
 			contracts.ExampleNFTAddress,
+			contracts.MetadataViewsAddress,
 			contracts.ExampleNFTSigner,
 		)
 
