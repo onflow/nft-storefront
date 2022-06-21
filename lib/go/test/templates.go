@@ -6,13 +6,13 @@ import (
 
 const (
 	nftStorefrontNftStorefrontPath     = "../../../contracts/NFTStorefront.cdc"
-	nftStorefrontRootPath              = "../../../transactions"
+	nftStorefrontRootPath              = "../../../transactions-v1"
 	nftStorefrontSetupAccountPath      = nftStorefrontRootPath + "/setup_account.cdc"
 	nftStorefrontSellItemPath          = nftStorefrontRootPath + "/sell_item.cdc"
 	nftStorefrontBuyItemPath           = nftStorefrontRootPath + "/buy_item.cdc"
 	nftStorefrontRemoveItemPath        = nftStorefrontRootPath + "/remove_item.cdc"
-	nftStorefrontGetIDsPath            = nftStorefrontRootPath + "/scripts/read_storefront_ids.cdc"
-	nftStorefrontGetListingDetailsPath = nftStorefrontRootPath + "/scripts/read_listing_details.cdc"
+	nftStorefrontGetIDsPath            = nftStorefrontRootPath + "/scripts-v1/read_storefront_ids.cdc"
+	nftStorefrontGetListingDetailsPath = nftStorefrontRootPath + "/scripts-v1/read_listing_details.cdc"
 )
 
 func replaceAddresses(codeBytes []byte, contracts Contracts) []byte {

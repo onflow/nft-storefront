@@ -1,13 +1,47 @@
 name: CI
 
-on: [push]
+on:
+  - push
+  - pull_request
 
 jobs:
-  build:
+  V2-Integration-Tests:
+    name: NFTStorefront V2 Integration Tests
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ["1.16"]
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 15.0.0
+        cache: 'npm'
+        cache-dependency-path: lib/js/test/package-lock.json
+    - name: Install Flow CLI
+      run: sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)" -- v0.33.1-sc-m5
+    - name: Flow cli Version
+      run: flow version
+    - name: Update PATH
+      run: echo "/root/.local/bin" >> $GITHUB_PATH
+    - name: Install dependencies
+      run: cd lib/js/test && npm ci
+    - name: Run tests
+      run: cd lib/js/test && npm run test
+  V1-Integration-Tests:
+    name: NFTStorefront V1 Integration Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v1
+      - uses: actions/setup-go@v2
         with:
-          go-version: '1.16.2'
+          go-version: '1.16'
+      - uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - run: make ci
+

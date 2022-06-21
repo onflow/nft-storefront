@@ -18,13 +18,12 @@ func setupExampleNFTCollection(
 	b *emulator.Blockchain,
 	userAddress flow.Address,
 	userSigner crypto.Signer,
-	nftAddress, exampleNFTAddress flow.Address,
+	nftAddress, exampleNFTAddress, metadataAddress flow.Address,
 ) {
-	script := nfttemplates.GenerateCreateCollectionScript(
-		nftAddress.String(),
-		exampleNFTAddress.String(),
-		"ExampleNFT",
-		"exampleNFTCollection",
+	script := nfttemplates.GenerateSetupAccountScript(
+		nftAddress,
+		exampleNFTAddress,
+		metadataAddress,
 	)
 
 	tx := flow.NewTransaction().
@@ -34,10 +33,12 @@ func setupExampleNFTCollection(
 		SetPayer(b.ServiceKey().Address).
 		AddAuthorizer(userAddress)
 
+	serviceSigner, _ := b.ServiceKey().Signer()
+
 	signAndSubmit(
 		t, b, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
-		[]crypto.Signer{b.ServiceKey().Signer(), userSigner},
+		[]crypto.Signer{serviceSigner, userSigner},
 		false,
 	)
 }
@@ -46,10 +47,10 @@ func mintExampleNFT(
 	t *testing.T,
 	b *emulator.Blockchain,
 	receiverAddress flow.Address,
-	nftAddress, exampleNFTAddress flow.Address,
+	nftAddress, exampleNFTAddress, metadataAddress flow.Address,
 	exampleNFTSigner crypto.Signer,
 ) {
-	script := nfttemplates.GenerateMintNFTScript(nftAddress, exampleNFTAddress, receiverAddress)
+	script := nfttemplates.GenerateMintNFTScript(nftAddress, exampleNFTAddress, metadataAddress, flow.HexToAddress(emulatorFTAddress))
 
 	tx := flow.NewTransaction().
 		SetScript(script).
@@ -58,10 +59,24 @@ func mintExampleNFT(
 		SetPayer(b.ServiceKey().Address).
 		AddAuthorizer(exampleNFTAddress)
 
+	cuts := []cadence.Value{}
+	royaltyDescriptions := []cadence.Value{}
+	royaltyBeneficiaries := []cadence.Value{}
+
+	tx.AddArgument(cadence.NewAddress(receiverAddress))
+	tx.AddArgument(cadenceString("StorefrontNFT"))
+	tx.AddArgument(cadenceString("here for money!"))
+	tx.AddArgument(cadenceString("xx.png"))
+	tx.AddArgument(cadence.NewArray(cuts))
+	tx.AddArgument(cadence.NewArray(royaltyDescriptions))
+	tx.AddArgument(cadence.NewArray(royaltyBeneficiaries))
+
+	serviceSigner, _ := b.ServiceKey().Signer()
+
 	signAndSubmit(
 		t, b, tx,
 		[]flow.Address{b.ServiceKey().Address, exampleNFTAddress},
-		[]crypto.Signer{b.ServiceKey().Signer(), exampleNFTSigner},
+		[]crypto.Signer{serviceSigner, exampleNFTSigner},
 		false,
 	)
 }
@@ -88,10 +103,12 @@ func fundAccount(
 	tx.AddArgument(cadence.NewAddress(receiverAddress))
 	tx.AddArgument(cadenceUFix64(amount))
 
+	serviceSigner, _ := b.ServiceKey().Signer()
+
 	signAndSubmit(
 		t, b, tx,
 		[]flow.Address{b.ServiceKey().Address},
-		[]crypto.Signer{b.ServiceKey().Signer()},
+		[]crypto.Signer{serviceSigner},
 		false,
 	)
 }
@@ -116,10 +133,12 @@ func sellItem(
 	tx.AddArgument(cadence.NewUInt64(tokenID))
 	tx.AddArgument(cadenceUFix64(price))
 
+	serviceSigner, _ := b.ServiceKey().Signer()
+
 	signAndSubmit(
 		t, b, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
-		[]crypto.Signer{b.ServiceKey().Signer(), userSigner},
+		[]crypto.Signer{serviceSigner, userSigner},
 		shouldFail,
 	)
 
@@ -162,10 +181,12 @@ func buyItem(
 	tx.AddArgument(cadence.NewUInt64(offerResourceID))
 	tx.AddArgument(cadence.NewAddress(marketCollectionAddress))
 
+	serviceSigner, _ := b.ServiceKey().Signer()
+
 	signAndSubmit(
 		t, b, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
-		[]crypto.Signer{b.ServiceKey().Signer(), userSigner},
+		[]crypto.Signer{serviceSigner, userSigner},
 		shouldFail,
 	)
 }
@@ -188,10 +209,12 @@ func removeItem(
 
 	tx.AddArgument(cadence.NewUInt64(offerResourceID))
 
+	serviceSigner, _ := b.ServiceKey().Signer()
+
 	signAndSubmit(
 		t, b, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
-		[]crypto.Signer{b.ServiceKey().Signer(), userSigner},
+		[]crypto.Signer{serviceSigner, userSigner},
 		shouldFail,
 	)
 }
