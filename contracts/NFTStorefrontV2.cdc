@@ -89,7 +89,7 @@ pub contract NFTStorefrontV2 {
     /// UnpaidReceiver
     /// A entitled receiver has not been paid during the sale of the NFT.
     ///
-    pub event UnpaidReceiver(receiver: Address, entitiledSaleCut: UFix64)
+    pub event UnpaidReceiver(receiver: Address, entitledSaleCut: UFix64)
 
     /// StorefrontStoragePath
     /// The location in storage that a Storefront resource should be located.
@@ -148,10 +148,10 @@ pub contract NFTStorefrontV2 {
         pub let salePrice: UFix64
         /// This specifies the division of payment between recipients.
         pub let saleCuts: [SaleCut]
-        /// Allow different dApp teams to provide custom strings as the distinguisher string
+        /// Allow different dapp teams to provide custom strings as the distinguisher string
         /// that would help them to filter events related to their customID.
         pub var customID: String?
-        /// Commission/reward available to grab whoever facilitate the sale.
+        /// Commission available to be claimed by whoever facilitates the sale.
         pub let commissionAmount: UFix64
         /// Expiry of listing
         pub let expiry: UInt64
@@ -258,7 +258,7 @@ pub contract NFTStorefrontV2 {
 
         /// An optional list of marketplaces capabilities that are approved 
         /// to receive the marketplace commission.
-        access(contract) let marketplacesCap: [Capability<&{FungibleToken.Receiver}>]?
+        access(contract) let marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]?
 
         /// borrowNFT
         /// Return the reference of the NFT that is listed for sale.
@@ -300,10 +300,10 @@ pub contract NFTStorefrontV2 {
             self.details.setToPurchased() 
             
             if (self.details.commissionAmount > 0.0) {
-                if self.marketplacesCap != nil {
+                if self.marketplacesCapability != nil {
                     var isCommissionRecipientHasValidType = false
                     var isCommissionRecipientAuthorised = false
-                    for cap in self.marketplacesCap! {
+                    for cap in self.marketplacesCapability! {
                         // Check 1: Should have the same type
                         if cap.getType() == commissionRecipient.getType() {
                             isCommissionRecipientHasValidType = true
@@ -358,7 +358,7 @@ pub contract NFTStorefrontV2 {
                         residualReceiver = receiver
                     }
                 } else {
-                    emit UnpaidReceiver(receiver: cut.receiver.address, entitiledSaleCut: cut.amount)
+                    emit UnpaidReceiver(receiver: cut.receiver.address, entitledSaleCut: cut.amount)
                 }
             }
 
@@ -422,7 +422,7 @@ pub contract NFTStorefrontV2 {
             nftID: UInt64,
             salePaymentVaultType: Type,
             saleCuts: [SaleCut],
-            marketplacesCap: [Capability<&{FungibleToken.Receiver}>]?,
+            marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]?,
             storefrontID: UInt64,
             customID: String?,
             commissionAmount: UFix64,
@@ -443,7 +443,7 @@ pub contract NFTStorefrontV2 {
 
             // Store the NFT provider
             self.nftProviderCapability = nftProviderCapability
-            self.marketplacesCap = marketplacesCap
+            self.marketplacesCapability = marketplacesCapability
 
             // Check that the provider contains the NFT.
             // We will check it again when the token is sold.
@@ -472,7 +472,7 @@ pub contract NFTStorefrontV2 {
             nftID: UInt64,
             salePaymentVaultType: Type,
             saleCuts: [SaleCut],
-            marketplacesCap: [Capability<&{FungibleToken.Receiver}>]?,
+            marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]?,
             customID: String?,
             commissionAmount: UFix64,
             expiry: UInt64
@@ -516,7 +516,7 @@ pub contract NFTStorefrontV2 {
             nftID: UInt64,
             salePaymentVaultType: Type,
             saleCuts: [SaleCut],
-            marketplacesCap: [Capability<&{FungibleToken.Receiver}>]?,
+            marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]?,
             customID: String?,
             commissionAmount: UFix64,
             expiry: UInt64
@@ -537,7 +537,7 @@ pub contract NFTStorefrontV2 {
                 nftID: nftID,
                 salePaymentVaultType: salePaymentVaultType,
                 saleCuts: saleCuts,
-                marketplacesCap: marketplacesCap,
+                marketplacesCapability: marketplacesCapability,
                 storefrontID: self.uuid,
                 customID: customID,
                 commissionAmount: commissionAmount,
@@ -615,7 +615,7 @@ pub contract NFTStorefrontV2 {
         }
 
         /// getDuplicateListingIDs
-        /// Returns an array of listing Ids that are duplicate for the given `nftType` and `nftID`.
+        /// Returns an array of listing IDs that are duplicates of the given `nftType` and `nftID`.
         ///
         pub fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64] {            
             if self.listedNFTs[nftType.identifier] == nil || self.listedNFTs[nftType.identifier]![nftID] == nil {

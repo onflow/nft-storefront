@@ -10,7 +10,7 @@ import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 ///
 /// `saleItemID` - ID of the NFT that is put on sale by the seller.
 /// `saleItemPrice` - Amount of tokens (FT) buyer needs to pay for the purchase of listed NFT.
-/// `customID` - Optional string to represent identifier of the dApp.
+/// `customID` - Optional string to represent identifier of the dapp.
 /// `commissionAmount` - Commission amount that will be taken away by the purchase facilitator.
 /// `expiry` - Unix timestamp at which created listing become expired.
 /// `marketplacesAddress` - List of addresses that are allowed to get the commission.
@@ -22,11 +22,11 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
     let exampleNFTProvider: Capability<&AnyResource{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
     let storefront: &NFTStorefrontV2.Storefront
     var saleCuts: [NFTStorefrontV2.SaleCut]
-    var marketplacesCap: [Capability<&AnyResource{FungibleToken.Receiver}>]
+    var marketplacesCapability: [Capability<&AnyResource{FungibleToken.Receiver}>]
 
     prepare(acct: AuthAccount) {
         self.saleCuts = []
-        self.marketplacesCap = []
+        self.marketplacesCapability = []
 
         // We need a provider capability, but one is not provided by default so we create one if needed.
         let exampleNFTCollectionProviderPrivatePath = /private/exampleNFTCollectionProviderForNFTStorefront
@@ -71,7 +71,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
         for marketplace in marketplacesAddress {
             // Here we are making a fair assumption that all given addresses would have
             // the capability to receive the `FlowToken`
-            self.marketplacesCap.append(getAccount(marketplace).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver))
+            self.marketplacesCapability.append(getAccount(marketplace).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver))
         }
     }
 
@@ -83,7 +83,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64, customID: String?, commis
             nftID: saleItemID,
             salePaymentVaultType: Type<@FlowToken.Vault>(),
             saleCuts: self.saleCuts,
-            marketplacesCap: self.marketplacesCap.length == 0 ? nil : self.marketplacesCap,
+            marketplacesCapability: self.marketplacesCapability.length == 0 ? nil : self.marketplacesCapability,
             customID: customID,
             commissionAmount: commissionAmount,
             expiry: expiry
