@@ -1,14 +1,20 @@
 {
   "accounts": {
-    "nft-storefront-testnet": {
-      "address": "0x94b06cfca1d8a476",
-      "key": "${NFT_STOREFRONT_TESTNET_PRIVATE_KEY}"
+    "nft-storefront-v2-testnet": {
+      "address": "0x2d55b98eb200daef",
+      "key": "${PRIVATE_KEY}"
     }
+  },
+  "contracts": {
+      "NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc"
+  },
+  "networks": {
+      "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "deployments": {
     "testnet": {
-      "nft-storefront-testnet": [
-        "NFTStorefront"
+      "nft-storefront-v2-testnet": [
+        "NFTStorefrontV2"
       ]
     }
   }
