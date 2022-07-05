@@ -8,11 +8,14 @@ facilities to implement a marketplace that can take any currency in order to ven
 This means that only one instance of the contract is needed (see below for its address on Testnet and Mainnet), 
 and its resources, transactions, and scripts can be used by any account to create any marketplace.
 
+> **_NOTE:_** New version of NFTStorefront,i.e. `NFTStorefrontV2` contract has been developed and deployed on testnet. Whoever wants to build upon NFTStorefront, it is recommended to use latest version of it,i.e `NFTStorefrontV2` and enjoy its latest offerings.
+
 ## Contract Addresses 
 
 |Name|Testnet|Mainnet|
 |----|-------|-------|
 |[NFTStorefront](contracts/NFTStorefront.cdc)|[0x94b06cfca1d8a476](https://flow-view-source.com/testnet/account/0x94b06cfca1d8a476/contract/NFTStorefront)|[0x4eb8a10cb9f87357](https://flowscan.org/contract/A.4eb8a10cb9f87357.NFTStorefront)|
+|[NFTStorefrontV2](contracts/NFTStorefrontV2.cdc)|[0x2d55b98eb200daef](https://flow-view-source.com/testnet/account/0x2d55b98eb200daef/contract/NFTStorefrontV2)||
 
 ## Usage
 
