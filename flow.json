@@ -7,6 +7,7 @@
   },
   "contracts": {
     "NFTStorefront": "./contracts/NFTStorefront.cdc",
+    "NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc",
     "FungibleToken": {
       "source": "./contracts/utility/FungibleToken.cdc",
       "aliases": {
@@ -36,7 +37,7 @@
   "deployments": {
     "emulator": {
       "emulator-account": [
-        "FungibleToken", "NonFungibleToken", "NFTStorefront"
+        "NFTStorefrontV2"
       ]
     }
   }
