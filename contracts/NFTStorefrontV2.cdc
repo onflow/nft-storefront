@@ -65,6 +65,7 @@ pub contract NFTStorefrontV2 {
         salePrice: UFix64,
         customID: String?,
         commissionAmount: UFix64,
+        commissionReceivers: [Address]?,
         expiry: UInt64
     )
 
@@ -82,6 +83,7 @@ pub contract NFTStorefrontV2 {
         salePrice: UFix64,
         customID: String?,
         commissionAmount: UFix64,
+        commissionReceiver: Address?,
         expiry: UInt64
     )
 
@@ -238,6 +240,11 @@ pub contract NFTStorefrontV2 {
         /// Fetches the details of the listing.
         pub fun getDetails(): ListingDetails
 
+        /// getAllowedCommissionReceivers
+        /// Fetches the allowed marketplaces capabilities or commission receivers.
+        /// If it returns `nil` then commission is up to grab by anyone.
+        pub fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
+
     }
 
 
@@ -277,6 +284,13 @@ pub contract NFTStorefrontV2 {
         ///
         pub fun getDetails(): ListingDetails {
             return self.details
+        }
+
+        /// getAllowedCommissionReceivers
+        /// Fetches the allowed marketplaces capabilities or commission receivers.
+        /// If it returns `nil` then commission is up to grab by anyone.
+        pub fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]? {
+            return self.marketplacesCapability
         }
 
         /// purchase
@@ -381,6 +395,7 @@ pub contract NFTStorefrontV2 {
                 salePrice: self.details.salePrice,
                 customID: self.details.customID,
                 commissionAmount: self.details.commissionAmount,
+                commissionReceiver: self.details.commissionAmount != 0.0 ? commissionRecipient.address : nil,
                 expiry: self.details.expiry
             )
 
@@ -407,6 +422,7 @@ pub contract NFTStorefrontV2 {
                     salePrice: self.details.salePrice,
                     customID: self.details.customID,
                     commissionAmount: self.details.commissionAmount,
+                    commissionReceiver: nil,
                     expiry: self.details.expiry
                 )
             }
@@ -554,6 +570,17 @@ pub contract NFTStorefrontV2 {
             // Add the `listingResourceID` in the tracked listings.
             self.addDuplicateListing(nftIdentifier: nftType.identifier, nftID: nftID, listingResourceID: listingResourceID)
 
+            // Scraping addresses from the capabilities to emit in the event.
+            var allowedCommissionReceivers : [Address]? = nil
+            if let allowedReceivers = marketplacesCapability {
+                // Small hack here to make `allowedCommissionReceivers` variable compatible to
+                // array properties.
+                allowedCommissionReceivers = []
+                for receiver in allowedReceivers {
+                    allowedCommissionReceivers!.append(receiver.address)
+                }
+            }
+
             emit ListingAvailable(
                 storefrontAddress: self.owner?.address!,
                 listingResourceID: listingResourceID,
@@ -564,6 +591,7 @@ pub contract NFTStorefrontV2 {
                 salePrice: listingPrice,
                 customID: customID,
                 commissionAmount: commissionAmount,
+                commissionReceivers: allowedCommissionReceivers,
                 expiry: expiry
             )
 
