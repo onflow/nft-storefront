@@ -11,13 +11,18 @@ import (
 //go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../../contracts -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../contracts
 
 const (
-	storefrontFilename                 = "NFTStorefrontV2.cdc"
+	storefrontFilename                 = "NFTStorefront%d.cdc"
 	placeholderFungibleTokenAddress    = "./utility/FungibleToken.cdc"
 	placeholderNonfungibleTokenAddress = "./utility/NonFungibleToken.cdc"
 )
 
-func NFTStorefront(fungibleTokenAddress string, nonfungibleTokenAddress string) []byte {
-	code := assets.MustAssetString(storefrontFilename)
+func NFTStorefront(version int, fungibleTokenAddress string, nonfungibleTokenAddress string) []byte {
+	if version != 1 && version != 2 {
+		panic("storefront contract version doesn't exist")
+	}
+	contractFile := fmt.Sprintf(storefrontFilename, version)
+
+	code := assets.MustAssetString(contractFile)
 
 	// Replace the fungible token address
 	code = strings.ReplaceAll(
