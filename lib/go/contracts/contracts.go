@@ -3,8 +3,9 @@ package contracts
 import (
 	_ "embed"
 	"fmt"
-	"github.com/onflow/nft-storefront/internal/assets"
 	"strings"
+
+	"github.com/onflow/nft-storefront/lib/go/contracts/internal/assets"
 )
 
 //go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../../contracts -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../contracts
