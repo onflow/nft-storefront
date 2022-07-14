@@ -11,8 +11,8 @@ import (
 //go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../../contracts -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../contracts
 
 const (
-	placeholderFungibleTokenAddress    = "./utility/FungibleToken.cdc"
-	placeholderNonfungibleTokenAddress = "./utility/NonFungibleToken.cdc"
+	placeholderFungibleTokenAddress    = `"./utility/FungibleToken.cdc"`
+	placeholderNonfungibleTokenAddress = `"./utility/NonFungibleToken.cdc"`
 )
 
 func NFTStorefront(version int, fungibleTokenAddress string, nonfungibleTokenAddress string) []byte {
