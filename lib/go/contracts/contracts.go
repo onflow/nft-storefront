@@ -46,7 +46,3 @@ func withHexPrefix(address string) string {
 
 	return fmt.Sprintf("0x%s", address)
 }
-
-func NFTStoreFrontVersion(version int) {
-
-}
