@@ -1,6 +1,6 @@
 import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 
-/// Transaction facilitate the removal of listing by the
+/// Transaction to facilitate the removal of listing by the
 /// listing owner.
 /// Listing owner should provide the `listingResourceID` that
 /// needs to be removed.
