@@ -12,14 +12,15 @@ import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 /// transaction and if purchase happens then transacted NFT would store in
 /// buyer's collection.
 
-transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRecipient: Address) {
+transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRecipient: Address?) {
     let paymentVault: @FungibleToken.Vault
     let exampleNFTCollection: &ExampleNFT.Collection{NonFungibleToken.Receiver}
     let storefront: &NFTStorefrontV2.Storefront{NFTStorefrontV2.StorefrontPublic}
     let listing: &NFTStorefrontV2.Listing{NFTStorefrontV2.ListingPublic}
-    let commissionRecipientCap: Capability<&{FungibleToken.Receiver}>
+    var commissionRecipientCap: Capability<&{FungibleToken.Receiver}>?
 
     prepare(acct: AuthAccount) {
+        self.commissionRecipientCap = nil
         // Access the storefront public resource of the seller to purchase the listing.
         self.storefront = getAccount(storefrontAddress)
             .getCapability<&NFTStorefrontV2.Storefront{NFTStorefrontV2.StorefrontPublic}>(
@@ -43,9 +44,19 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRec
             from: ExampleNFT.CollectionStoragePath
         ) ?? panic("Cannot borrow NFT collection receiver from account")
 
-        // Access the capability to receive the commission.
-        self.commissionRecipientCap = getAccount(commissionRecipient).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-        assert(self.commissionRecipientCap.check(), message: "Commission Recipient doesn't have flowtoken receiving capability")
+        // Fetch the commission amt.
+        let commissionAmount = self.listing.getDetails().commissionAmount
+
+        if commissionRecipient != nil && commissionAmount != 0.0 {
+            // Access the capability to receive the commission.
+            let _commissionRecipientCap = getAccount(commissionRecipient!).getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+            assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have flowtoken receiving capability")
+            self.commissionRecipientCap = _commissionRecipientCap
+        } else if commissionAmount == 0.0 {
+            self.commissionRecipientCap = nil
+        } else {
+            panic("Commission recipient can not be empty when commission amount is non zero")
+        }
     }
 
     execute {

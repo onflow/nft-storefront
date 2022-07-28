@@ -233,7 +233,7 @@ pub contract NFTStorefrontV2 {
         ///
         pub fun purchase(
             payment: @FungibleToken.Vault, 
-            commissionRecipient: Capability<&{FungibleToken.Receiver}>,
+            commissionRecipient: Capability<&{FungibleToken.Receiver}>?,
         ): @NonFungibleToken.NFT
 
         /// getDetails
@@ -299,7 +299,7 @@ pub contract NFTStorefrontV2 {
         /// This also cleans up duplicate listings for the item being purchased.
         pub fun purchase(
             payment: @FungibleToken.Vault, 
-            commissionRecipient: Capability<&{FungibleToken.Receiver}>,
+            commissionRecipient: Capability<&{FungibleToken.Receiver}>?,
         ): @NonFungibleToken.NFT {
 
             pre {
@@ -312,16 +312,18 @@ pub contract NFTStorefrontV2 {
             // Make sure the listing cannot be purchased again.
             self.details.setToPurchased() 
             
-            if (self.details.commissionAmount > 0.0) {
+            if self.details.commissionAmount > 0.0 {
+                // If commission recipient is nil, Throw panic.
+                let commissionReceiver = commissionRecipient ?? panic("Commission recipient can't be nil")
                 if self.marketplacesCapability != nil {
                     var isCommissionRecipientHasValidType = false
                     var isCommissionRecipientAuthorised = false
                     for cap in self.marketplacesCapability! {
                         // Check 1: Should have the same type
-                        if cap.getType() == commissionRecipient.getType() {
+                        if cap.getType() == commissionReceiver.getType() {
                             isCommissionRecipientHasValidType = true
                             // Check 2: Should have the valid market address that holds approved capability.
-                            if cap.address == commissionRecipient.address && cap.check() {
+                            if cap.address == commissionReceiver.address && cap.check() {
                                 isCommissionRecipientAuthorised = true
                                 break
                             }
@@ -331,7 +333,7 @@ pub contract NFTStorefrontV2 {
                     assert(isCommissionRecipientAuthorised,   message: "Given recipient has not authorised to receive the commission")
                 }
                 let commissionPayment <- payment.withdraw(amount: self.details.commissionAmount)
-                let recipient = commissionRecipient.borrow() ?? panic("Unable to borrow the recipent capability")
+                let recipient = commissionReceiver.borrow() ?? panic("Unable to borrow the recipent capability")
                 recipient.deposit(from: <- commissionPayment)
             }
             // Fetch the token to return to the purchaser.
@@ -395,7 +397,7 @@ pub contract NFTStorefrontV2 {
                 salePrice: self.details.salePrice,
                 customID: self.details.customID,
                 commissionAmount: self.details.commissionAmount,
-                commissionReceiver: self.details.commissionAmount != 0.0 ? commissionRecipient.address : nil,
+                commissionReceiver: self.details.commissionAmount != 0.0 ? commissionRecipient!.address : nil,
                 expiry: self.details.expiry
             )
 
