@@ -1,4 +1,5 @@
 import NonFungibleToken from "../../../../contracts/utility/NonFungibleToken.cdc"
+import MetadataViews from "../../../../contracts/utility/MetadataViews.cdc"
 import ExampleNFT from "../../../../contracts/utility/ExampleNFT.cdc"
 
 // This transaction is what an account would run
@@ -19,7 +20,7 @@ transaction {
         signer.save(<-collection, to: ExampleNFT.CollectionStoragePath)
 
         // create a public capability for the collection
-        signer.link<&{NonFungibleToken.CollectionPublic, ExampleNFT.ExampleNFTCollectionPublic}>(
+        signer.link<&{NonFungibleToken.CollectionPublic, ExampleNFT.ExampleNFTCollectionPublic, MetadataViews.ResolverCollection}>(
             ExampleNFT.CollectionPublicPath,
             target: ExampleNFT.CollectionStoragePath
         )
