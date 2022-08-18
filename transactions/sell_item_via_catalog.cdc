@@ -36,7 +36,7 @@ transaction(collectionIdentifier: String, saleItemID: UInt64, saleItemPrice: UFi
         self.marketplacesCapability = []
 
         // We need a provider capability, but one is not provided by default so we create one if needed.
-        let exampleNFTCollectionProviderPrivatePath = /private/exampleNFTCollectionProviderForNFTStorefront
+        let nftCollectionProviderPrivatePath = /private/nftCollectionProviderForNFTStorefront
 
         // Receiver for the sale cut.
         self.flowReceiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
@@ -44,14 +44,14 @@ transaction(collectionIdentifier: String, saleItemID: UInt64, saleItemPrice: UFi
 
         // Check if the Provider capability exists or not if `no` then create a new link for the same.
         // TODO: When MetadataViews default implementation is available, use the following lines.
-        // if !acct.getCapability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath).check() {
-        //     acct.link<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath, target: value.collectionData.storagePath)
+        // if !acct.getCapability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(nftCollectionProviderPrivatePath).check() {
+        //     acct.link<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(nftCollectionProviderPrivatePath, target: value.collectionData.storagePath)
         // }
-        if !acct.getCapability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection}>(exampleNFTCollectionProviderPrivatePath).check() {
-            acct.link<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection}>(exampleNFTCollectionProviderPrivatePath, target: value.collectionData.storagePath)
+        if !acct.getCapability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection}>(nftCollectionProviderPrivatePath).check() {
+            acct.link<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection}>(nftCollectionProviderPrivatePath, target: value.collectionData.storagePath)
         }
 
-        self.collectionCap = acct.getCapability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection}>(exampleNFTCollectionProviderPrivatePath)
+        self.collectionCap = acct.getCapability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection}>(nftCollectionProviderPrivatePath)
         let collection = self.collectionCap.borrow<>()
             ?? panic("Could not borrow a reference to the collection")
         var totalRoyaltyCut = 0.0
