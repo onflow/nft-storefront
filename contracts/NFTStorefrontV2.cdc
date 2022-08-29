@@ -508,7 +508,6 @@ pub contract NFTStorefrontV2 {
     pub resource interface StorefrontPublic {
         pub fun getListingIDs(): [UInt64]
         pub fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64]
-        pub fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64]
         pub fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}?
         pub fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64)
         access(contract) fun cleanup(listingResourceID: UInt64)
