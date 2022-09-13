@@ -628,7 +628,7 @@ pub contract NFTStorefrontV2 {
         
         /// removeListing
         /// Remove a Listing that has not yet been purchased from the collection and destroy it.
-        /// It is only be executed by the StorefrontManager resource owner.
+        /// It can only be executed by the StorefrontManager resource owner.
         ///
         pub fun removeListing(listingResourceID: UInt64) {
             let listing <- self.listings.remove(key: listingResourceID)
