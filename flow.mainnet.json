@@ -1,0 +1,33 @@
+{
+    "contracts": {
+      "NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc",
+      "FungibleToken": {
+        "source": "./contracts/utility/FungibleToken.cdc",
+        "aliases": {
+          "mainnet": "0xf233dcee88fe0abe"
+        }
+      },
+      "NonFungibleToken": {
+        "source": "./contracts/utility/NonFungibleToken.cdc",
+        "aliases": {
+          "mainnet": "0x1d7e57aa55817448"
+        }
+      }
+    },
+    "networks": {
+      "mainnet": "access.mainnet.nodes.onflow.org:9000"
+    },
+    "accounts": {
+      "mainnet-account": {
+        "address": "0x4eb8a10cb9f87357",
+        "key": "$MAINNET_KEY"
+      }
+    },
+    "deployments": {
+      "mainnet": {
+        "mainnet-account": [
+          "NFTStorefrontV2"
+        ]
+      }
+    }
+  }
