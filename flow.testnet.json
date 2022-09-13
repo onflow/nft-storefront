@@ -1,19 +1,31 @@
 {
-  "accounts": {
-    "nft-storefront-v2-testnet": {
-      "address": "0x2d55b98eb200daef",
-      "key": "${PRIVATE_KEY}"
+  "contracts": {
+    "NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc",
+    "FungibleToken": {
+      "source": "./contracts/utility/FungibleToken.cdc",
+      "aliases": {
+        "testnet": "0x9a0766d93b6608b7"
+      }
+    },
+    "NonFungibleToken": {
+      "source": "./contracts/utility/NonFungibleToken.cdc",
+      "aliases": {
+        "testnet": "0x631e88ae7f1d7c20"
+      }
     }
   },
-  "contracts": {
-      "NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc"
-  },
   "networks": {
-      "testnet": "access.devnet.nodes.onflow.org:9000"
+    "testnet": "access.devnet.nodes.onflow.org:9000"
+  },
+  "accounts": {
+    "testnet-account": {
+      "address": "0x2d55b98eb200daef",
+      "key": "$TESTNET_KEY"
+    }
   },
   "deployments": {
     "testnet": {
-      "nft-storefront-v2-testnet": [
+      "testnet-account": [
         "NFTStorefrontV2"
       ]
     }
