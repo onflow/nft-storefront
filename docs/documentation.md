@@ -79,9 +79,9 @@ The seller can use [sell_item](https://github.com/onflow/nft-storefront/blob/mai
 
 # Purchase NFTs
 
-Purchasing NFTs through the NFTStorefrontV2 is simple. The buyer just has to provide the payment vault and the `commissionRecipient` , if applicable, during the purchase. p2p dApps don’t need any intermediaries to facilitate the purchase of listings. 
+Purchasing NFTs through the NFTStorefrontV2 is simple. The buyer just has to provide the payment vault and the `commissionRecipient` , if applicable, during the purchase. p2p dApps don’t need any intermediaries to facilitate the purchase of listings. [`purchase`](#fun-purchase) api offered by the `Listing` resource get used to facilitate the purchase of NFT.
 
-During the purchase of a listing, all saleCuts are paid automatically. This includes the [royalties](#enabling_creator_royalties_for_your_nfts) of the NFT as well. If the vault provided by the buyer doesn’t have sufficient funds, then the transaction will fail.
+During the purchase of a listing, all saleCuts are paid automatically. This includes the [royalties](#enabling-creator-royalties-for-nfts) of the NFT as well. If the vault provided by the buyer doesn’t have sufficient funds, then the transaction will fail.
 
 ### Considerations
 
@@ -92,11 +92,11 @@ During the purchase of a listing, all saleCuts are paid automatically. This incl
 2. **Unsupported receiver capability** - There is a common pitfall during the purchase of an NFT that some saleCut receivers don’t have a supported receiver capability because of that entitled sale cut would transfer to first valid sale cut receiver. However it can be partially solved by providing the generic receiver using the `FungibleTokenSwitchboard` contract and add all the currencies capabilities that beneficiary wants to receive. More on the ``FungibleTokenSwitchboard` can be read [here](https://github.com/onflow/flow-ft#fungible-token-switchboard)
 
 
-# Enabling creator royalties for your NFTs [TODO]
+# Enabling creator royalties for NFTs
 
-A user wants to sell an NFT that has a [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335) defined. A marketplace will want to support royalties during the fulfillment of a listing with royalties. 
+NFTStorefrontV2 contract support royalties but it doesn't mandate, It is a choice of marketplaces whether they want to support the creator royalties during listing or not. However, we encourage the marketplaces to support the royalties to stimulate the artists participation in FLOW ecosystem.
 
-NFTStorefrontV2 leverages the `NFTMetadataViews` standard to dynamically fetch the royalty details during the creation of the listing and convert it to one of the `saleCut` receivers.
+If seller's NFT supports [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335) standard then marketplaces can support royalties during the fulfillment of a listing. NFTStorefrontV2 can dynamically fetch the royalty details during the creation of the listing and turn it into the `saleCut` of the listing.
 
 ```solidity
 // Check whether the NFT implements the MetadataResolver or not.
@@ -115,7 +115,7 @@ if nft.getViews().contains(Type<MetadataViews.Royalties>()) {
 
 full transaction can be viewed [here](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc).
 
-You may think that sale cut receiver capability should differ for different currencies. Otherwise, the seller would not be able to receive the sale cut. This is true with normal account setups, but it is recommended to use the [FungibleTokenSwitchboard](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract. It defines a generic receiver for fungible tokens, so that a user can always provide their generic receiver, regardless of what fungible token they want to receive. The switchboard will manage the routing of funds to the respective Vault. You can read more about this [here](https://github.com/onflow/flow-ft#fungible-token-switchboard).
+`saleCut` only supports single receiver type, because of that beneficiary of saleCut doesn't able to receive different currency as the royalty or a general sale percentage cut. To resolve this we recommend to use the [FungibleTokenSwitchboard](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract. It defines a generic receiver for fungible tokens, so that a user can always provide their generic receiver, regardless of what fungible token they want to receive. The switchboard will manage the routing of funds to the respective Vault. You can read more about this [here](https://github.com/onflow/flow-ft#fungible-token-switchboard).
 
 # Enabling marketplace commissions for NFT sales [TODO]
 
