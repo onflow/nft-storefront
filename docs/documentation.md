@@ -26,13 +26,13 @@ Since the Storefront can support any NFT and Fungible Token type, purchasers can
 
 NFTStorefront offers a generic process for creating the listing for an NFT. Users should possess the `Storefront` resource under their account to create the listing using the storefront contract. It provides all the essential APIs to manage their listings independently. However, many marketplaces create a single storefront resource to manage different individual listings. We recommend creating the listing under the user-owned storefront resource to make it trustless and platform-independent.
 
-**Journey for creating a successful listing using the NFTStorefront contract.**
+**Journey for creating a successful listing using the NFTStorefrontV2 contract.**
 
 As recommended above, the first step is to create and store the [Storefront resource](#resource-storefront) in the user account using the [setup_account](https://github.com/onflow/nft-storefront/blob/main/transactions/setup_account.cdc) transaction. 
 
-The next step is to create a listing under the newly created storefront resource or if user (repeatitive) already holds the storefront resource then use the existing resource. Each user would have different scenarios for their listings, We cover most of them below.
+The next step is to create a listing under the newly created storefront resource or if user (repeatitive) already holds the storefront resource then use the existing resource. Seller can comes with multiple requirement for listing their NFTs, We try our best to cover most of them below.
 
-**Scenario 1:** The seller wants to list their NFT and be able to receive different fungible tokens, i.e. FLOW, FUSD etc.
+**Scenario 1:** Selling NFTs corresponds to more than one crypto currencies , i.e. FLOW, FUSD etc.
 
 The NFTStorefront contract doesn’t support selling an NFT for multiple different currencies with a single listing. However, this can be achieved by creating multiple listings for the same NFT for each different currency.
 
@@ -40,32 +40,61 @@ The NFTStorefront contract doesn’t support selling an NFT for multiple differe
 
 ![scenario_1](https://user-images.githubusercontent.com/14581509/190966672-e1793fa3-112c-4273-b2a3-e81b8c94fd70.png)
 
-As depicted in the above diagram, only the `salePaymentVaultType` parameter would need to be different when creating the same NFT listings with different sale currency types. There would likely be a different price as well. You may think that sale cut receiver capability should differ for different currencies. Otherwise, the seller would not be able to receive the sale cut. This is true with normal account setups, but it is recommended to use the [FungibleTokenSwitchboard](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract. It defines a generic receiver for fungible tokens, so that a user can always provide their generic receiver, regardless of what fungible token they want to receive. The switchboard will manage the routing of funds to the respective Vault. You can read more about this [here](https://github.com/onflow/flow-ft#fungible-token-switchboard).
+Putting a NFT on sell called listing, Seller can create listing using [sell_item](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc) transaction by providing some required details to list a NFT,i.e Receving currency type, [Capability](https://developers.flow.com/cadence/language/capability-based-access-control) from where NFT will be deducted etc. If interested look [here](#fun-createListing()) for more details. 
+
+To receive different currency seller has to provide different __Receiver currency type__ ,i.e `salePaymentVaultType` As depicted in the above diagram, There are two listing formation with almost same inputs the only differentiator is the `salePaymentVaultType` parameter that needs to be different when creating the same NFT listings with different sale currency types. 
 
 **Scenario 2:**  Peer-to-Peer (p2p) listing of NFT: A listing anyone can fulfill.
 
-Using the NFTStorefront is it possible to create a listing that is not tied to any marketplace. It can be listed by any marketplace or fulfilled by anyone directly in a peer-to-peer manner.  
+Dapps can leverage the NFTStorefrontV2 to facilitate the creation of listing for the seller independent of any marketplace, Dapps or marketplaces can list those listings on their platforms or seller can settle it p2p.
 
-The seller can use [sell_item](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc) transaction to create a p2p listing, providing the `marketplacesAddress` with an empty array. The seller also has a choice of providing a commission to the facilitator of the sale which can also act as a discount if the facilitator and the purchaser are the same.
+The seller can use [sell_item](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc) transaction to create a p2p listing, providing the `marketplacesAddress` with an empty array. The seller also has a choice of providing a [commission](#commission) to the facilitator of the sale which can also act as a discount if the facilitator and the purchaser are the same.
 
-![scenario_2](https://user-images.githubusercontent.com/14581509/190966499-c176203f-b6a6-4422-860f-1bf6f2bcdbb6.png)
+**Scenario 3:** Seller wants to list its NFT to different marketplaces.
 
-**Scenario 3:** The user wants to list their NFT in different marketplaces.
+`NFTStorefrontV2` offers 2 different ways of doing it.
 
-`NFTStorefront` offers 2 different ways of doing it.
-
-- The seller can create a listing and provide the `marketplacesAddress` that it wants to have a listing on to the [sell_item](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc) transaction.
+- The seller can create a listing and provide the `marketplacesAddress` that it wants to have a listing on using [sell_item](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc) transaction.
     
-    To incentivize the marketplaces to show the sale on their app, the seller can specify a commission for the sale that is taken during the fulfillment of the listing. Here, the commission can only be claimed by one of the marketplace addresses provided during the creation of the listing. Marketplaces can listen for `ListingAvailable` events and check whether their address is included in the `commissionReceivers` list; If yes then marketplace would get rewarded during the successful fulfillment of the listing.
+    Marketplaces can listen for `ListingAvailable` events and check whether their address is included in the `commissionReceivers` list; If yes then marketplace would get rewarded during the successful fulfillment of the listing.
     
     Example - Bob wants to list on marketplace 0xA, 0xB & 0xC and is willing to offer 10% commission on the sale price of the listing to the marketplaces.
     
     ![scenario_3](https://user-images.githubusercontent.com/14581509/190966834-8eda4ec4-e9bf-49ef-9dec-3c47a236d281.png)
     
 
-- Another way to accomplish this is to create separate listings for each marketplace that a user wants their listing on using [sell_item_with_marketplace_cut](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item_with_marketplace_cut.cdc) transaction. In this case,  An explicitly commissionAmount is set to zero and provided `nil` value to marketplacesAddresses during the creation of listing while marketplace would be incentivized by earning one of the part of the `saleCut` by appending marketplace saleCut in `saleCuts` array during the creation of the listing.
+- Another way to accomplish this is to create separate listings for each marketplace that a user wants their listing on using [sell_item_with_marketplace_cut](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item_with_marketplace_cut.cdc) transaction. In this case, marketplace would be incentivized by earning one of the part of the [`saleCut`](https://github.com/onflow/nft-storefront/blob/160e97aa802405ad26a3164bcaff0fde7ee52ad2/contracts/NFTStorefrontV2.cdc#L104) by appending marketplace saleCut in `saleCuts` array during the creation of the listing.
 
-**Scenario 4:** A user wants to sell an NFT that has a [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335) defined. A marketplace will want to support royalties during the fulfillment of a listing with royalties. 
+
+### Considerations
+
+1. **Ghost listings -** *Ghost listings are listings which don’t have an underlying NFT in the seller’s account but the listing is still available for buyers to attempt to purchase*. StorefrontV2 is not immune to ghost listings. Normally, ghost listings will cause a purchaser’s transaction to fail, which is annoying, but isn’t a significant problem. Ghost listings become a problem for the seller when the listed NFT comes back to the seller’s account after its original sale. The moment it comes back, the ghost listing will no longer be invalid anymore and anyone can purchase it even if the seller doesn’t want to sell it at that price anymore.
+    
+    **Note -** *We recommend to marketplaces and p2p dApps to create some kind of off-chain notification service that tells its users (i.e. seller’s) to remove the listings if the don’t hold the NFT anymore in the same account.*
+    
+2. **Expired listings -** NFTStorefrontV2 introduces a safety measure to specify that a listing will expire after a certain period of time that can be set during the creation of a listing so no one can purchase the listing anymore. It is not a fool-proof safety measure but it does give some safe ground to the sellers for the ghost listings & stale listings.
+    
+    
+    **Note -** *It is recommended for marketplaces and p2p dApps to not show the expired listings on their dashboards.*
+
+# Purchase NFTs
+
+Purchasing NFTs through the NFTStorefrontV2 is simple. The buyer just has to provide the payment vault and the `commissionRecipient` , if applicable, during the purchase. p2p dApps don’t need any intermediaries to facilitate the purchase of listings. 
+
+During the purchase of a listing, all saleCuts are paid automatically. This includes the [royalties](#enabling_creator_royalties_for_your_nfts) of the NFT as well. If the vault provided by the buyer doesn’t have sufficient funds, then the transaction will fail.
+
+### Considerations
+
+1. **Auto cleanup -** NFTStorefrontV2 offers a unique ability to do auto cleanup of duplicate listings during a purchase. It comes with a drawback if one NFT has thousands of duplicate listings, then it will become the bottleneck during the purchase of one of the listings as it will likely trigger an out of gas error. 
+
+    **Note -** *It is NOT recommended to have more than 50 (TBD) duplicate listings of any given NFT.*
+
+2. **Unsupported receiver capability** - There is a common pitfall during the purchase of an NFT that some saleCut receivers don’t have a supported receiver capability because of that entitled sale cut would transfer to first valid sale cut receiver. However it can be partially solved by providing the generic receiver using the `FungibleTokenSwitchboard` contract and add all the currencies capabilities that beneficiary wants to receive. More on the ``FungibleTokenSwitchboard` can be read [here](https://github.com/onflow/flow-ft#fungible-token-switchboard)
+
+
+# Enabling creator royalties for your NFTs [TODO]
+
+A user wants to sell an NFT that has a [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335) defined. A marketplace will want to support royalties during the fulfillment of a listing with royalties. 
 
 NFTStorefrontV2 leverages the `NFTMetadataViews` standard to dynamically fetch the royalty details during the creation of the listing and convert it to one of the `saleCut` receivers.
 
@@ -86,34 +115,16 @@ if nft.getViews().contains(Type<MetadataViews.Royalties>()) {
 
 full transaction can be viewed [here](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc).
 
-### Known limitations
+You may think that sale cut receiver capability should differ for different currencies. Otherwise, the seller would not be able to receive the sale cut. This is true with normal account setups, but it is recommended to use the [FungibleTokenSwitchboard](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract. It defines a generic receiver for fungible tokens, so that a user can always provide their generic receiver, regardless of what fungible token they want to receive. The switchboard will manage the routing of funds to the respective Vault. You can read more about this [here](https://github.com/onflow/flow-ft#fungible-token-switchboard).
 
-1. **Ghost listings -** *Ghost listings are listings which don’t have an underlying NFT in the seller’s account but the listing is still available for buyers to attempt to purchase*. StorefrontV2 is not immune to ghost listings. Normally, ghost listings will cause a purchaser’s transaction to fail, which is annoying, but isn’t a significant problem. Ghost listings become a problem for the seller when the listed NFT comes back to the seller’s account after its original sale. The moment it comes back, the ghost listing will no longer be invalid anymore and anyone can purchase it even if the seller doesn’t want to sell it at that price anymore.
-    
-    **Note -** *We recommend to marketplaces and p2p dApps to create some kind of off-chain notification service that tells its users (i.e. seller’s) to remove the listings if the don’t hold the NFT anymore in the same account.*
-    
-2. **Expired listings -** NFTStorefrontV2 introduces a safety measure to specify that a listing will expire after a certain period of time that can be set during the creation of a listing so no one can purchase the listing anymore. It is not a fool-proof safety measure but it does give some safe ground to the sellers for the ghost listings & stale listings.
-    
-    
-    **Note -** *It is recommended for marketplaces and p2p dApps to not show the expired listings on their dashboards.*
-    
+# Enabling marketplace commissions for NFT sales [TODO]
 
-# Purchase NFTs
+![scenario_2](https://user-images.githubusercontent.com/14581509/190966499-c176203f-b6a6-4422-860f-1bf6f2bcdbb6.png)
 
-Purchasing NFTs through the NFTStorefrontV2 is simple. The buyer just has to provide the payment vault and the `commissionRecipient` , if applicable, during the purchase. p2p dApps don’t need any intermediaries to facilitate the purchase of listings. 
 
-During the purchase of a listing, all saleCuts are paid automatically. This includes the royalties of the NFT. If the vault provided by the buyer doesn’t have sufficient funds, then the transaction will fail.
+To incentivize the marketplaces to show the sale on their app, the seller can specify a commission for the sale that is taken during the fulfillment of the listing. Here, the commission can only be claimed by one of the marketplace addresses provided during the creation of the listing.
 
- 
-
-### Gotchas of purchase of listing using NFTStorefrontV2
-
-1. **Auto cleanup -** NFTStorefrontV2 offers a unique ability to do auto cleanup of duplicate listings during a purchase. It comes with a drawback if one NFT has thousands of duplicate listings, then it will become the bottleneck during the purchase of one of the listings as it will likely trigger an out of gas error. 
-
-**Note -** *It is NOT recommended to have more than 50 (TBD) duplicate listings of any given NFT.*
-
-1. **Unsupported receiver capability** - There is a common pitfall during the purchase of an NFT that some saleCut receivers don’t have a supported receiver capability because of that entitled sale cut would transfer to first valid sale cut receiver. However it can be partially solved by providing the generic receiver using the `FungibleTokenSwitchboard` contract and add all the currencies capabilities that beneficiary wants to receive.
-
+An explicitly commissionAmount is set to zero and provided `nil` value to marketplacesAddresses during the creation of listing while
 
 # APIs & Events offered by NFTStorefrontV2
 
