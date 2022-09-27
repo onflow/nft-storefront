@@ -1,5 +1,5 @@
 ## Primer
-NFTStorefrontV2 contract lets you create a *non-custodial marketplace* on the FLOW blockchain. 
+NFTStorefrontV2 contract lets you create a *non-custodial Resource (NFT) marketplace* on the FLOW blockchain. 
 
 p2p dapps can create an NFT marketplace using the API's offered by the NFTStorefrontV2 contract and allow the sellers to list the NFTs to their dApp and can allow creating NFT listings for different marketplaces like OpenSea, Rariable, BloctoBay etc.
 
