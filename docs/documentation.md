@@ -1,15 +1,15 @@
 ## Primer
 NFTStorefrontV2 contract lets you create a *non-custodial Resource (NFT) marketplace* on the FLOW blockchain. 
 
-p2p dapps can create an NFT marketplace using the API's offered by the NFTStorefrontV2 contract and allow the sellers to list the NFTs to their dApp and can allow creating NFT listings for different marketplaces like OpenSea, Rariable, BloctoBay etc.
+p2p dapps can create an NFT marketplace using the API's offered by the `NFTStorefrontV2` contract and allow the sellers to list the NFTs to their dApp and can allow creating NFT listings for different marketplaces like OpenSea, Rariable, BloctoBay etc.
 
 ![dapps_1](https://user-images.githubusercontent.com/14581509/191749748-714f9d8f-cb41-4be4-a3d2-ec84cb8b5ffb.png)
 
-Developers should use the NFTStorefrontV2 to create their marketplace to enable p2p purchases. The diagram below shows how dApps can facilitate the creation of NFT listings for different marketplaces and how marketplaces can filter their listings.
+Developers should use the `NFTStorefrontV2` to create their marketplace to enable p2p purchases. The diagram below shows how dApps can facilitate the creation of NFT listings for different marketplaces and how marketplaces can filter their listings.
 
 ![dapps_2](https://user-images.githubusercontent.com/14581509/191753605-e1c48a57-0c3c-4509-808b-8fee4e7d32e8.png)
 
-Using the NFTStorefrontV2, marketplaces can instantly and easily tap into the vibrant FLOW NFT ecosystem and allow NFT holders to list their NFTs and enables creator royalties.
+Using the `NFTStorefrontV2`, marketplaces can instantly and easily tap into the vibrant FLOW NFT ecosystem and allow NFT holders to list their NFTs and enables creator royalties.
 
 ![marketplace_1](https://user-images.githubusercontent.com/14581509/191755699-fe0570cb-80a3-408c-8eef-4051e3209481.png)
 
@@ -26,7 +26,7 @@ Since the Storefront can support any NFT and Fungible Token type, purchasers can
 
 ## Selling NFTs
 
-NFTStorefrontV2 offers a generic process for creating the listing for an NFT. It provides all the essential APIs to manage those listings independently. 
+`NFTStorefrontV2` offers a generic process for creating the listing for an NFT. It provides all the essential APIs to manage those listings independently. 
 
 Many marketplaces create a single storefront resource to manage different individual listings. We recommend creating the listing under the user-owned storefront resource to make it trustless and platform-independent. Users should possess the `Storefront` resource under their account to create the listing using the storefront contract.
 
@@ -38,7 +38,7 @@ The next step is to create a listing under the newly created storefront resource
 
 ### **Scenario 1:** Selling NFTs corresponds to more than one cryptocurrency, i.e. FLOW, FUSD etc.
 
-The NFTStorefrontV2 contract doesn’t support selling an NFT for multiple different currencies with a single listing. However, this can be achieved by creating multiple listings for the same NFT for each different currency.
+The `NFTStorefrontV2` contract doesn’t support selling an NFT for multiple different currencies with a single listing. However, this can be achieved by creating multiple listings for the same NFT for each different currency.
 
 **Example -** Alice wants to sell a kitty and is open to receiving FLOW and FUSD
 
@@ -50,7 +50,7 @@ To receive a different currency seller has to provide a different __Receiver cur
 
 ### **Scenario 2:**  Peer-to-Peer (p2p) listing of NFT: A listing anyone can fulfil.
 
-Dapps can leverage the NFTStorefrontV2 to facilitate the creation of a listing for the seller independent of any marketplace. Dapps or marketplaces can list those listings on their platforms, or seller can settle it p2p.
+Dapps can leverage the **NFTStorefrontV2** to facilitate the creation of a listing for the seller independent of any marketplace. Dapps or marketplaces can list those listings on their platforms, or seller can settle it p2p.
 
 The seller can use [sell_item](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc) transaction to create a p2p listing, providing the `marketplacesAddress` with an empty array. The seller has a choice of providing [commission](#commission) to the facilitator of sale, which can also act as a discount if the facilitator and the purchaser are the same.
 
@@ -82,7 +82,7 @@ The seller can use [sell_item](https://github.com/onflow/nft-storefront/blob/mai
 
 ## Purchase NFTs
 
-Purchasing NFTs through the NFTStorefrontV2 is simple. The buyer has to provide the payment vault and the `commissionRecipient` , if applicable, during the purchase. p2p dApps don’t need any intermediaries to facilitate the purchase of listings. [`purchase`](#fun-purchase) API offered by the `Listing` resource gets used to facilitate the purchase of NFT.
+Purchasing NFTs through the `NFTStorefrontV2` is simple. The buyer has to provide the payment vault and the `commissionRecipient` , if applicable, during the purchase. p2p dApps don’t need any intermediaries to facilitate the purchase of listings. [`purchase`](#fun-purchase) API offered by the `Listing` resource gets used to facilitate the purchase of NFT.
 
 During the purchase of a listing, all saleCuts are paid automatically. It also includes the [royalties](#enabling-creator-royalties-for-nfts) of the NFT. If the vault provided by the buyer doesn’t have sufficient funds, then the transaction will fail.
 
@@ -97,7 +97,7 @@ During the purchase of a listing, all saleCuts are paid automatically. It also i
 
 ## Enabling creator royalties for NFTs
 
-NFTStorefrontV2 contract supports royalties, but it doesn't mandate them. It is a choice of marketplaces whether they want to support the creator royalties during the listing or not. However, we encourage the marketplaces to support the royalties to stimulate the artist's participation in the FLOW ecosystem.
+The `NFTStorefrontV2` contract supports royalties, but it doesn't mandate them. It is a choice of marketplaces whether they want to support the creator royalties during the listing or not. However, we encourage the marketplaces to support the royalties to stimulate the artist's participation in the **FLOW** ecosystem.
 
 If seller's NFT supports [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335) standard, then marketplaces can support royalties during the fulfilment of a listing. NFTStorefrontV2 can dynamically fetch the royalty details during the listing creation and turn them into the `saleCut` of the listing.
 
@@ -122,7 +122,7 @@ Complete transaction can be viewed [here](https://github.com/onflow/nft-storefro
 
 ## Enabling marketplace commissions for NFT sales
 
-NFTStorefrontV2 introduces the commissions on trade to incentivize the listing's facilitator (i.e Marketplaces , dapps). Commission & commission receivers are set during the listing creation, and only one of the commission receivers, i.e. `marketplaceAddress` can take away to commission after the fulfilment of the listing. However, if a user wants to create a p2p listing, then the user can set commission receivers as `nil`. At the same time, the commission will be available to anyone for grabs. If the buyer of the NFT and `commissionRecipient` is the same, then the commission can act as the discount.
+`NFTStorefrontV2` introduces the commissions on trade to incentivize the listing's facilitator (i.e Marketplaces , dapps). Commission & commission receivers are set during the listing creation, and only one of the commission receivers, i.e. `marketplaceAddress` can take away to commission after the fulfilment of the listing. However, if a user wants to create a p2p listing, then the user can set commission receivers as `nil`. At the same time, the commission will be available to anyone for grabs. If the buyer of the NFT and `commissionRecipient` is the same, then the commission can act as the discount.
 
 ![scenario_2](https://user-images.githubusercontent.com/14581509/190966499-c176203f-b6a6-4422-860f-1bf6f2bcdbb6.png).
 
