@@ -413,7 +413,7 @@ A entitled receiver has not been paid during the sale of the NFT.
 
 **Holistic process flow diagram of NFTStorefrontV2 -** 
 
-![NFT Storefront Process flow](https://user-images.githubusercontent.com/14581509/191960793-ff153e5d-2934-410c-b724-5c5dffd2c20f.png))
+![NFT Storefront Process flow](https://user-images.githubusercontent.com/14581509/191960793-ff153e5d-2934-410c-b724-5c5dffd2c20f.png)
 
 
 ## Glossary
