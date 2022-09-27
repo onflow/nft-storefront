@@ -1,5 +1,5 @@
 ## Primer
-NFTStorefrontV2 contract lets you create a *non-custodial Resource (NFT) marketplace* on the FLOW blockchain. 
+The `NFTStorefrontV2` contract lets you create a *non-custodial Resource (NFT) marketplace* on the FLOW blockchain. 
 
 p2p dapps can create an NFT marketplace using the API's offered by the `NFTStorefrontV2` contract and allow the sellers to list the NFTs to their dApp and can allow creating NFT listings for different marketplaces like OpenSea, Rariable, BloctoBay etc.
 
@@ -76,11 +76,11 @@ The seller can use [sell_item](https://github.com/onflow/nft-storefront/blob/mai
     
     **Note -** *We recommend that marketplaces and p2p dApps create an off-chain notification service that tells their users (i.e., sellers) to remove the listings if they don’t hold the NFT anymore in the same account.*
     
-2. **Expired listings -** NFTStorefrontV2 introduces a safety measure to specify that a listing will expire after a certain period that can be set during the creation so no one can purchase the listing anymore. It is not a fool-proof safety measure, but it does give some safe ground to the sellers for the ghost listings & stale listings.
+2. **Expired listings -** `NFTStorefrontV2` introduces a safety measure to specify that a listing will expire after a certain period that can be set during the creation so no one can purchase the listing anymore. It is not a fool-proof safety measure, but it does give some safe ground to the sellers for the ghost listings & stale listings.
     
     **Note -** *We recommended for marketplaces and p2p dApps not to show the expired listings on their dashboards.*
 
-## Purchase NFTs
+## Purchasing NFTs
 
 Purchasing NFTs through the `NFTStorefrontV2` is simple. The buyer has to provide the payment vault and the `commissionRecipient` , if applicable, during the purchase. p2p dApps don’t need any intermediaries to facilitate the purchase of listings. [`purchase`](#fun-purchase) API offered by the `Listing` resource gets used to facilitate the purchase of NFT.
 
@@ -88,18 +88,18 @@ During the purchase of a listing, all saleCuts are paid automatically. It also i
 
 ### Considerations
 
-1. **Auto cleanup -** NFTStorefrontV2 offers a unique ability to do auto cleanup of duplicate listings during a purchase. It comes with a drawback if one NFT has thousands of duplicate listings. It will become the bottleneck during purchasing one of the listings as it will likely trigger an out-of-gas error. 
+1. **Auto cleanup -** `NFTStorefrontV2` offers a unique ability to do auto cleanup of duplicate listings during a purchase. It comes with a drawback if one NFT has thousands of duplicate listings. It will become the bottleneck during purchasing one of the listings as it will likely trigger an out-of-gas error. 
 
     **Note -** *We recommended NOT to have more than 50 (TBD) duplicate listings of any given NFT.*
 
-2. **Unsupported receiver capability** - A common pitfall during the purchase of an NFT that some saleCut receivers don’t have a supported receiver capability because that entitled sale cut would transfer to first valid sale cut receiver. However, it can be partially solved by providing the generic receiver using the `FungibleTokenSwitchboard` contract and adding all the currency capabilities the beneficiary wants to receive. More on the ``FungibleTokenSwitchboard` can be read [here](https://github.com/onflow/flow-ft#fungible-token-switchboard)
+2. **Unsupported receiver capability** - A common pitfall during the purchase of an NFT that some saleCut receivers don’t have a supported receiver capability because that entitled sale cut would transfer to first valid sale cut receiver. However, it can be partially solved by providing the generic receiver using the [`FungibleTokenSwitchboard`](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract and adding all the currency capabilities the beneficiary wants to receive. More on the `FungibleTokenSwitchboard` can be read [here](https://github.com/onflow/flow-ft#fungible-token-switchboard)
 
 
 ## Enabling creator royalties for NFTs
 
 The `NFTStorefrontV2` contract supports royalties, but it doesn't mandate them. It is a choice of marketplaces whether they want to support the creator royalties during the listing or not. However, we encourage the marketplaces to support the royalties to stimulate the artist's participation in the **FLOW** ecosystem.
 
-If seller's NFT supports [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335) standard, then marketplaces can support royalties during the fulfilment of a listing. NFTStorefrontV2 can dynamically fetch the royalty details during the listing creation and turn them into the `saleCut` of the listing.
+If seller's NFT supports [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335) standard, then marketplaces can support royalties during the fulfilment of a listing. `NFTStorefrontV2` can dynamically fetch the royalty details during the listing creation and turn them into the `saleCut` of the listing.
 
 ```cadence
 // Check whether the NFT implements the MetadataResolver or not.
@@ -388,7 +388,7 @@ event ListingAvailable(storefrontAddress: Address, listingResourceID: UInt64, nf
 ```
 
 Above event gets emitted when a listing has been created and added to a Storefront resource. The Address values here are valid when the event is emitted, but the state of the accounts they refer to may change outside of the
-NFTStorefrontV2 workflow, so be careful to check when using them.
+`NFTStorefrontV2` workflow, so be careful to check when using them.
 
 ---
 
