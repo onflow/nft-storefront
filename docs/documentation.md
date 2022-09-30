@@ -69,7 +69,7 @@ To accept a different token type for the same NFT sellers must specify an altern
 
 ### Considerations
 
-1. **Ghost listings -** *Ghost listings are listings which don’t have an underlying NFT in the seller’s account. However, the listing is still available for buyers to attempt to purchase and which fails*. 
+***Ghost listings*** - *Ghost listings are listings which don’t have an underlying NFT in the seller’s account. However, the listing is still available for buyers to attempt to purchase and which fails*. 
 
 Ghost listings occur for two reasons: 
 
@@ -80,13 +80,13 @@ Usually, ghost listings will cause a purchaser’s transaction to fail, which is
 
 Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time.
 
-Note -** *It may also be desirable for marketplaces or dApps to implement an off-chain notification service to inform users (eg: sellers) of listings that should be removed where the NFT for that listing no longer exists in the seller's account.*
+Note: ***It may also be desirable for marketplaces or dApps to implement an off-chain notification service to inform users (eg: sellers) of listings that should be removed where the NFT for that listing no longer exists in the seller's account.***
 
-2. **Expired listings -** `NFTStorefrontV2` introduces a safety measure to flag an NFT listing as expired after a certain period. This can be set during listing creation to prevent the purchase through the listing after expiry has been reached. Once expiry has been reached the listing can no longer facilitate the purchase of the NFT. 
+***Expired listings*** `NFTStorefrontV2` introduces a safety measure to flag an NFT listing as expired after a certain period. This can be set during listing creation to prevent the purchase through the listing after expiry has been reached. Once expiry has been reached the listing can no longer facilitate the purchase of the NFT. 
 
 We recommend that sellers use the [`cleanupExpiredListings`](#fun-cleanupExpiredListings) function to manage expired listings. 
     
-Note: ***We recommend that marketplaces and dApps not to display expired listings in their UIs as they cannot be purchased.***
+Note: ***We recommend that marketplaces and dApps filter out expired listings as they cannot be purchased.***
 
 ## Purchasing NFTs
 
@@ -130,7 +130,7 @@ Note: ***We recommend that marketplace honor creator royalties across the Flow e
 
 ## Enabling marketplace commissions for NFT sales
 
-`NFTStorefrontV2` enables optional commissions on trades for marketplaces which require it as a condition to list a NFT for sale. Commission & commission receivers are set by the seller during initial listing creation. At time of purchase the commission amount is paid once only to the commission receiver matching the marketplace receiver address which facilitated the sale.
+`NFTStorefrontV2` enables optional commissions on trades for marketplaces which require it as a condition to list a NFT for sale. Commission & commission receivers are set by the seller during initial listing creation. At time of purchase the commission amount is paid once only to the commission receiver matching the marketplace receiver address which facilitated the sale. When commission is set but no commission receivers are specified, the commission is paid to [TBD].
 
 For NFT listings in marketplaces which don't require commission, commission receivers can be set as `nil`. Setting the buyer of the NFT and `commissionRecipient` to the same has the effect of applying a discount for the buyer.
 
