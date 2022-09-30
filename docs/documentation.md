@@ -65,7 +65,7 @@ The `NFTStorefrontV2` contract has no default support for multiple token types i
 
 Sellers can create a basic `Listing` using the [sell_item](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc) transaction which requires certain details including the receiving token type [Capability](https://developers.flow.com/cadence/language/capability-based-access-control). This capability will transact the specified tokens when the NFT is sold. More detailed specifics are available [here](#fun-createListing()). 
 
-To accept a different token type for the same NFT sellers must specify an alternate __Receiver token type__, eg: `salePaymentVaultType`, in another listing. The only difference between the two listings is that the `salePaymentVaultType` specifies different token types while the NFT being sold remains the same for both. Another more advanced option for handling multiple token types is using the [`FungibleTokenSwitchboard`](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) standard.
+To accept a different token type for the same NFT sellers must specify an alternate __Receiver token type__, eg: `salePaymentVaultType`, in another listing. The only difference between the two listings is that `salePaymentVaultType` specifies different token types while the NFT being sold remains the same for both. Another more advanced option for handling multiple token types is using the [`FungibleTokenSwitchboard`](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) standard.
 
 ### Considerations
 
@@ -84,7 +84,7 @@ To accept a different token type for the same NFT sellers must specify an altern
 
 2. ***Expired listings*** `NFTStorefrontV2` introduces a safety measure to flag an NFT listing as expired after a certain period. This can be set during listing creation to prevent the purchase through the listing after expiry has been reached. Once expiry has been reached the listing can no longer facilitate the purchase of the NFT. 
 
-    We recommend that sellers use the [`cleanupExpiredListings`](#fun-cleanupExpiredListings) function to manage expired listings. 
+    We recommend that using the [`cleanupExpiredListings`](#fun-cleanupExpiredListings) function to manage expired listings. 
     
     ***Note:*** We recommend that marketplaces and dApps filter out expired listings as they cannot be purchased.
 
