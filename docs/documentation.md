@@ -53,7 +53,7 @@ Example - Bob wants to list on marketplace 0xA, 0xB & 0xC and is willing to offe
 
    ![scenario_3](https://user-images.githubusercontent.com/14581509/190966834-8eda4ec4-e9bf-49ef-9dec-3c47a236d281.png)
 
-An alternate approach is to create separate listing for each marketplace using the [sell_item_with_marketplace_cut](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item_with_marketplace_cut.cdc) transaction. This is targeted towards marketplaces which select listings based on [`saleCut`](https://github.com/onflow/nft-storefront/blob/160e97aa802405ad26a3164bcaff0fde7ee52ad2/contracts/NFTStorefrontV2.cdc#L104) amounts.
+An alternate approach is to create separate listing for each marketplace using the [sell_item_with_marketplace_cut](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item_with_marketplace_cut.cdc) transaction. This is targeted towards marketplaces which select listings purely based on [`saleCut`](https://github.com/onflow/nft-storefront/blob/160e97aa802405ad26a3164bcaff0fde7ee52ad2/contracts/NFTStorefrontV2.cdc#L104) amounts.
 
 ### **Scenario 3:** Supporting multiple token types (eg: FLOW, FUSD, etc) for your NFT listings
 
@@ -69,39 +69,38 @@ To accept a different token type for the same NFT sellers must specify an altern
 
 ### Considerations
 
-***Ghost listings*** - *Ghost listings are listings which don’t have an underlying NFT in the seller’s account. However, the listing is still available for buyers to attempt to purchase and which fails*. 
+1. ***Ghost listings*** - *Ghost listings are listings which don’t have an underlying NFT in the seller’s account. However, the listing is still available for buyers to attempt to purchase and which fails*. 
 
-Ghost listings occur for two reasons: 
+    Ghost listings occur for two reasons: 
 
-1. When a seller's NFT is sold in one marketplace but listings for that NFT in other marketplaces are not removed.
-2. When the seller transfers out the listed NFT from the account that made the listings.
+    1. When a seller's NFT is sold in one marketplace but listings for that NFT in other marketplaces are not removed.
+    2. When the seller transfers out the listed NFT from the account that made the listings.
 
-Usually, ghost listings will cause a purchaser’s transaction to fail, which is annoying but isn’t a significant problem. We recommend that sellers use the [`cleanupPurchasedListings`](#fun-cleanupPurchasedListings) function to mitigate the issues above. 
+    Usually, ghost listings will cause a purchaser’s transaction to fail, which is annoying but isn’t a significant problem. We recommend using the [`cleanupPurchasedListings`](#fun-cleanupPurchasedListings) function to mitigate the issues above. 
 
-Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time.
+    Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time.
 
-Note: ***It may also be desirable for marketplaces or dApps to implement an off-chain notification service to inform users (eg: sellers) of listings that should be removed where the NFT for that listing no longer exists in the seller's account.***
+    ***Note:*** It may also be desirable for marketplaces or dApps to implement an off-chain notification service to inform users (eg: sellers) of listings that should be removed where the NFT for that listing no longer exists in the seller's account.
 
-***Expired listings*** `NFTStorefrontV2` introduces a safety measure to flag an NFT listing as expired after a certain period. This can be set during listing creation to prevent the purchase through the listing after expiry has been reached. Once expiry has been reached the listing can no longer facilitate the purchase of the NFT. 
+2. ***Expired listings*** `NFTStorefrontV2` introduces a safety measure to flag an NFT listing as expired after a certain period. This can be set during listing creation to prevent the purchase through the listing after expiry has been reached. Once expiry has been reached the listing can no longer facilitate the purchase of the NFT. 
 
-We recommend that sellers use the [`cleanupExpiredListings`](#fun-cleanupExpiredListings) function to manage expired listings. 
+    We recommend that sellers use the [`cleanupExpiredListings`](#fun-cleanupExpiredListings) function to manage expired listings. 
     
-Note: ***We recommend that marketplaces and dApps filter out expired listings as they cannot be purchased.***
+    ***Note:*** We recommend that marketplaces and dApps filter out expired listings as they cannot be purchased.
 
 ## Purchasing NFTs
 
-Purchasing NFTs through the `NFTStorefrontV2` is simple. The buyer has to provide the payment vault and the `commissionRecipient`, if applicable, during the purchase. The [`purchase`](#fun-purchase) API offered by the `Listing` facilitates the trade with the buyer in the sellers `Storefront`.
+Purchasing NFTs through the `NFTStorefrontV2` is simple. The buyer has to provide the payment vault and the `commissionRecipient`, if applicable, during the purchase. The [`purchase`](#fun-purchase) API offered by the `Listing` facilitates the trade with the buyer in the seller's `Storefront`.
 
 During the listing purchase all `saleCuts` are paid automatically. This also includes distributing [royalties](#enabling-creator-royalties-for-nfts) for that NFT, if applicable. If the vault provided by the buyer lacks sufficient funds then the transaction will fail.
 
 ### Considerations
 
-1. **Auto cleanup -** `NFTStorefrontV2` offers a unique ability to do auto cleanup of duplicate listings during a purchase. The main drawback of this applies to NFTs with large numbers of duplicate listings. When a NFT is listed in a large number of marketplaces it will slow the purchase and in the worst case may trigger an out-of-gas error. 
+1. ***Auto cleanup*** `NFTStorefrontV2` provides the [`getDuplicateListingIDs`](#fun-getDuplicateListingIDs) function to support cleanup of duplicate listings. The only drawback of this applies to NFTs with large numbers of duplicate listings. When a NFT is listed in a large number of marketplaces and performs cleanup on sale, it will slow the purchase and in the worst case may trigger an out-of-gas error. 
 
-Note: ***We recommend maintaining <= 50(TBD) duplicate listings of any given NFT.***
+    ***Note:*** We recommend maintaining <= 50(TBD) duplicate listings of any given NFT.
 
-2. **Unsupported receiver capability** - A common pitfall during the purchase of an NFT that some `saleCut` receivers don’t have a supported receiver capability because that entitled sale cut would transfer to first valid sale cut receiver. However, it can be partially solved by providing the generic receiver using the [`FungibleTokenSwitchboard`](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract and adding all the currency capabilities the beneficiary wants to receive. More on the `FungibleTokenSwitchboard` can be read [here](https://github.com/onflow/flow-ft#fungible-token-switchboard)
-
+2. ***Unsupported receiver capability*** A common pitfall during the purchase of an NFT is if `saleCut` receivers don’t have a supported receiver capability because that entitled sale cut would transfer to first valid sale cut receiver. To mitigate this we recommend using the generic receiver from the [`FungibleTokenSwitchboard`](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract, adding capabilities to support whichever token types the beneficiary wishes to receive. 
 
 ## Enabling creator royalties for NFTs
 
@@ -124,9 +123,9 @@ if nft.getViews().contains(Type<MetadataViews.Royalties>()) {
 
 Complete transaction available [here](https://github.com/onflow/nft-storefront/blob/main/transactions/sell_item.cdc).
 
-`saleCut` only supports a single token receiver type and therefore beneficiaries of a `saleCut` can only receive the token type used for the purchase. To support different token types for saleCuts we recommend using the [FungibleTokenSwitchboard](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract. The contract defines a generic receiver for fungible tokens which can be configured to receive multiple token types. Learn more about this [here](https://github.com/onflow/flow-ft#fungible-token-switchboard).
+`saleCut` only supports a single token receiver type and therefore beneficiaries of a `saleCut` can only receive the token type used for the purchase. To support different token types for saleCuts we recommend using the [FungibleTokenSwitchboard](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract.
 
-Note: ***We recommend that marketplace honor creator royalties across the Flow ecosystem***
+***Note:*** We recommend that marketplaces honor creator royalties across the Flow ecosystem
 
 ## Enabling marketplace commissions for NFT sales
 
