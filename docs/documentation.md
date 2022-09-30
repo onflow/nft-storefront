@@ -86,7 +86,7 @@ Note -** *It may also be desirable for marketplaces or dApps to implement an off
 
 We recommend that sellers use the [`cleanupExpiredListings`](#fun-cleanupExpiredListings) function to manage expired listings. 
     
-Note -** *We recommend that marketplaces and dApps not to display expired listings in their UIs as they cannot be purchased.*
+Note: ***We recommend that marketplaces and dApps not to display expired listings in their UIs as they cannot be purchased.***
 
 ## Purchasing NFTs
 
@@ -98,7 +98,7 @@ During the listing purchase all `saleCuts` are paid automatically. This also inc
 
 1. **Auto cleanup -** `NFTStorefrontV2` offers a unique ability to do auto cleanup of duplicate listings during a purchase. The main drawback of this applies to NFTs with large numbers of duplicate listings. When a NFT is listed in a large number of marketplaces it will slow the purchase and in the worst case may trigger an out-of-gas error. 
 
-Note -** *We recommend maintaining <= 50(TBD) duplicate listings of any given NFT.*
+Note: ***We recommend maintaining <= 50(TBD) duplicate listings of any given NFT.***
 
 2. **Unsupported receiver capability** - A common pitfall during the purchase of an NFT that some `saleCut` receivers don’t have a supported receiver capability because that entitled sale cut would transfer to first valid sale cut receiver. However, it can be partially solved by providing the generic receiver using the [`FungibleTokenSwitchboard`](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract and adding all the currency capabilities the beneficiary wants to receive. More on the `FungibleTokenSwitchboard` can be read [here](https://github.com/onflow/flow-ft#fungible-token-switchboard)
 
@@ -126,7 +126,7 @@ Complete transaction available [here](https://github.com/onflow/nft-storefront/b
 
 `saleCut` only supports a single token receiver type and therefore beneficiaries of a `saleCut` can only receive the token type used for the purchase. To support different token types for saleCuts we recommend using the [FungibleTokenSwitchboard](https://github.com/onflow/flow-ft/blob/master/contracts/FungibleTokenSwitchboard.cdc) contract. The contract defines a generic receiver for fungible tokens which can be configured to receive multiple token types. Learn more about this [here](https://github.com/onflow/flow-ft#fungible-token-switchboard).
 
-Note -** *We recommend that marketplace honor creator royalties across the Flow ecosystem*
+Note: ***We recommend that marketplace honor creator royalties across the Flow ecosystem***
 
 ## Enabling marketplace commissions for NFT sales
 
