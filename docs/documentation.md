@@ -104,7 +104,7 @@ During the listing purchase all `saleCuts` are paid automatically. This also inc
 
 ## Enabling creator royalties for NFTs
 
-The `NFTStorefrontV2` contract optionally supports paying royalties to the minter account for secondary resales of a NFT. When seller NFTs support the [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335), `NFTStorefrontV2` stores the royalty amount due based on the specified royalty percentage of the sale price, calculated at the time of listing. The `saleCut` amount is only paid to the minter at the time of sale. 
+The `NFTStorefrontV2` contract optionally supports paying royalties to the minter account for secondary resales of a NFT. When seller NFTs support the [Royalty Metadata View](https://github.com/onflow/flow-nft/blob/21c254438910c8a4b5843beda3df20e4e2559625/contracts/MetadataViews.cdc#L335), `NFTStorefrontV2` stores the royalty amount as a `saleCut` based on the specified royalty percentage of the sale price, calculated at the time of listing. The `saleCut` amount is only paid to the minter at the time of sale. 
 
 ```cadence
 // Check whether the NFT implements the MetadataResolver or not.
