@@ -17,7 +17,7 @@ Listings made through a specific dApp can be simultaneously listed on third-part
 
 ![dapps_2](https://user-images.githubusercontent.com/14581509/191753605-e1c48a57-0c3c-4509-808b-8fee4e7d32e8.png)
 
-Marketplaces facilitate a NFT trade through direct interaction with seller storefronts. Flow's account based model ensures that NFTs listed for sale remain in the Seller account until traded, regardless of how many listings are posted across any number of marketplaces, for the same NFT.
+Marketplaces facilitate a NFT trade through direct interaction with seller storefront resources. Flow's account based model ensures that NFTs listed for sale remain in the Seller account until traded, regardless of how many listings are posted across any number of marketplaces, for the same NFT.
 
 ![marketplace_1](https://user-images.githubusercontent.com/14581509/191755699-fe0570cb-80a3-408c-8eef-4051e3209481.png)
 
