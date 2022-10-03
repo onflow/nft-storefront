@@ -96,7 +96,7 @@ During the listing purchase all `saleCuts` are paid automatically. This also inc
 
 ### Considerations
 
-1. ***Auto cleanup*** `NFTStorefrontV2` provides the [`getDuplicateListingIDs`](#fun-getDuplicateListingIDs) function to support cleanup of duplicate listings. The only drawback of this applies to NFTs with large numbers of duplicate listings. When a NFT is listed in a large number of marketplaces and performs cleanup on sale, it will slow the purchase and in the worst case may trigger an out-of-gas error. 
+1. ***Auto cleanup*** the `NFTStorefrontV2` standard autoamtes the cleanup of duplicate listings at time of sale. However, if an NFT has a large number of duplicate listings, it may slow the purchase and, in the worst case, may trigger an out-of-gas error.
 
     ***Note:*** We recommend maintaining <= 50(TBD) duplicate listings of any given NFT.
 
@@ -129,9 +129,7 @@ Complete transaction available [here](https://github.com/onflow/nft-storefront/b
 
 ## Enabling marketplace commissions for NFT sales
 
-`NFTStorefrontV2` enables optional commissions on trades for marketplaces which require it as a condition to list a NFT for sale. Commission & commission receivers are set by the seller during initial listing creation. At time of purchase the commission amount is paid once only to the commission receiver matching the marketplace receiver address which facilitated the sale. When commission is set but no commission receivers are specified, the commission is paid to [TBD].
-
-For NFT listings in marketplaces which don't require commission, commission receivers can be set as `nil`. Setting the buyer of the NFT and `commissionRecipient` to the same has the effect of applying a discount for the buyer.
+`NFTStorefrontV2` enables optional commissions on trades for marketplaces which require it as a condition to list a NFT for sale. Commission & commission receivers are set by the seller during initial listing creation. At time of purchase the commission amount is paid once only to the commission receiver matching the marketplace receiver address which facilitated the sale. For NFT listings in marketplaces which don't require commission, commission receivers can be set as `nil`. The default behavior when `commissionRecipient`s are set to `nil` with a commission amount >0 results in a discount for the buyer who is paid the commission.
 
 ![scenario_2](https://user-images.githubusercontent.com/14581509/190966499-c176203f-b6a6-4422-860f-1bf6f2bcdbb6.png).
 
@@ -190,7 +188,7 @@ Fetches the details of the listings
 fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
 ```
 Fetches the allowed marketplaces capabilities or commission receivers for the underlying listing.
-If it returns `nil` then commission is up to grab by anyone.
+If it returns `nil` then commission paid to the receiver by default.
 
 ---
 
