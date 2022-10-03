@@ -96,7 +96,7 @@ During the listing purchase all `saleCuts` are paid automatically. This also inc
 
 ### Considerations
 
-1. ***Auto cleanup*** the `NFTStorefrontV2` standard autoamtes the cleanup of duplicate listings at time of sale. However, if an NFT has a large number of duplicate listings, it may slow the purchase and, in the worst case, may trigger an out-of-gas error.
+1. ***Auto cleanup*** the `NFTStorefrontV2` standard automates the cleanup of duplicate listings at time of sale. However, if an NFT has a large number of duplicate listings, it may slow the purchase and, in the worst case, may trigger an out-of-gas error.
 
     ***Note:*** We recommend maintaining <= 50(TBD) duplicate listings of any given NFT.
 
