@@ -13,7 +13,7 @@ The `NFTStorefrontV2` contract makes it simple for Sellers to list NFTs in dApp 
 
 ![dapps_1](https://user-images.githubusercontent.com/14581509/191749748-714f9d8f-cb41-4be4-a3d2-ec84cb8b5ffb.png)
 
-Listings made through a specific dApp storefront can be simultaneously listed on 3rd party marketplaces beyond that dApp. Well known 3rd party marketplaces listen for compatible NFT listing events enabling the automation of listings into their marketplace UIs.
+Listings made through a specific dApp can be simultaneously listed on third-party marketplaces beyond that dApp. Well-known third-party marketplaces listen for compatible NFT listing events enabling the automation of listings into their marketplace UIs.
 
 ![dapps_2](https://user-images.githubusercontent.com/14581509/191753605-e1c48a57-0c3c-4509-808b-8fee4e7d32e8.png)
 
