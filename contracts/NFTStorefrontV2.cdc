@@ -182,15 +182,11 @@ pub contract NFTStorefrontV2 {
         ) {
 
             pre {
+                // Validate the expiry
+                expiry > UInt64(getCurrentBlock().timestamp): "Expiry should be in the future"
                 // Validate the length of the sale cut
                 saleCuts.length > 0: "Listing must have at least one payment cut recipient"
             }
-            assert (
-                // Validate the expiry
-                expiry > UInt64(getCurrentBlock().timestamp),
-                message: "Expiry should be in the future"
-            )
-
 
             self.storefrontID = storefrontID
             self.purchased = false
@@ -311,13 +307,9 @@ pub contract NFTStorefrontV2 {
                 self.details.purchased == false: "listing has already been purchased"
                 payment.isInstance(self.details.salePaymentVaultType): "payment vault is not requested fungible token"
                 payment.balance == self.details.salePrice: "payment vault does not contain requested price"
+                self.details.expiry > UInt64(getCurrentBlock().timestamp): "Listing is expired"
                 self.owner != nil : "Resource doesn't have the assigned owner"
             }
-
-            assert (
-                self.details.expiry > UInt64(getCurrentBlock().timestamp),
-                message: "Listing is expired"
-            )
             
             // Make sure the listing cannot be purchased again.
             self.details.setToPurchased() 
