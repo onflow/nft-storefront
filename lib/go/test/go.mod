@@ -3,10 +3,10 @@ module github.com/onflow/kitty-items/lib/go/test
 go 1.18
 
 require (
-	github.com/onflow/cadence v0.29.0-stable-cadence-2
-	github.com/onflow/flow-emulator v0.38.2-0.20221105005839-70d4b579a3c9
+	github.com/onflow/cadence v0.29.0-stable-cadence-3
+	github.com/onflow/flow-emulator v0.38.2-0.20221108004942-a86ecc71b130
 	github.com/onflow/flow-ft/lib/go/templates v0.2.0
-	github.com/onflow/flow-go-sdk v0.29.1-0.20221105000544-8bd53e2edb8a
+	github.com/onflow/flow-go-sdk v0.29.1-0.20221108002506-202a45f4bc82
 	github.com/onflow/flow-nft/lib/go/contracts v1.0.1-0.20221105005624-1405f0e468ba
 	github.com/onflow/flow-nft/lib/go/templates v0.0.0-20221105005624-1405f0e468ba
 	github.com/stretchr/testify v1.8.0
@@ -76,7 +76,7 @@ require (
 	github.com/onflow/flow-core-contracts/lib/go/contracts v0.11.2-0.20221105003204-7b5540cf5fc2 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v0.11.2-0.20221102180244-3ac018c412f2 // indirect
 	github.com/onflow/flow-ft/lib/go/contracts v0.5.0 // indirect
-	github.com/onflow/flow-go v0.28.1-0.20221105003818-cc62a6241036 // indirect
+	github.com/onflow/flow-go v0.28.1-0.20221108003644-e3042307b5e9 // indirect
 	github.com/onflow/flow-go/crypto v0.24.4 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.1 // indirect
 	github.com/onflow/sdks v0.4.4 // indirect
