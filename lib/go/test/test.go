@@ -87,13 +87,13 @@ func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flo
 	return nftAddress, exampleNFTAddress, metadataAddress, exampleNFTSigner
 }
 
-func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contracts {
+func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain, version int) Contracts {
 	accountKeys := test.AccountKeyGenerator()
 
 	nftAddress, exampleNFTAddress, metadataAddress, exampleNFTSigner := deployNFTContracts(t, b)
 
 	nftStorefrontAccountKey, nftStorefrontSigner := accountKeys.NewWithSigner()
-	nftStorefrontCode := loadNFTStorefront(ftAddress, nftAddress)
+	nftStorefrontCode, nftStorefrontName := loadNFTStorefront(ftAddress, nftAddress, version)
 
 	nftStorefrontAddress, err := b.CreateAccount(
 		[]*flow.AccountKey{nftStorefrontAccountKey},
@@ -106,7 +106,7 @@ func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contract
 	tx := sdktemplates.AddAccountContract(
 		nftStorefrontAddress,
 		sdktemplates.Contract{
-			Name:   "NFTStorefront",
+			Name:   nftStorefrontName,
 			Source: string(nftStorefrontCode),
 		},
 	)

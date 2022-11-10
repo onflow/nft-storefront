@@ -6,15 +6,20 @@ import (
 	"testing"
 )
 
-func TestNFTStorefrontDeployContracts(t *testing.T) {
+func TestNFTStorefrontV1DeployContracts(t *testing.T) {
 	b := newEmulator()
-	nftStorefrontDeployContracts(t, b)
+	nftStorefrontDeployContracts(t, b, 1)
+}
+
+func TestNFTStorefrontV2DeployContracts(t *testing.T) {
+	b := newEmulator()
+	nftStorefrontDeployContracts(t, b, 2)
 }
 
 func TestNFTStorefrontSetupAccount(t *testing.T) {
 	b := newEmulator()
 
-	contracts := nftStorefrontDeployContracts(t, b)
+	contracts := nftStorefrontDeployContracts(t, b, 1)
 
 	userAddress, userSigner := createAccount(t, b)
 	setupNFTStorefront(t, b, userAddress, userSigner, contracts)
@@ -23,7 +28,7 @@ func TestNFTStorefrontSetupAccount(t *testing.T) {
 func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 	b := newEmulator()
 
-	contracts := nftStorefrontDeployContracts(t, b)
+	contracts := nftStorefrontDeployContracts(t, b, 1)
 
 	t.Run("Should be able to list a sale offer", func(t *testing.T) {
 		tokenToList := uint64(0)
