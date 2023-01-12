@@ -245,6 +245,11 @@ pub contract NFTStorefrontV2 {
         /// If it returns `nil` then commission is up to grab by anyone.
         pub fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
 
+        /// hasNFTPresentInListingProvider
+        /// Tells whether listed NFT is present in provided capability.
+        /// If it returns `false` then it means listing becomes ghost or sold out.
+        pub fun hasNFTPresentInListingProvider(): Bool
+
     }
 
 
@@ -291,6 +296,21 @@ pub contract NFTStorefrontV2 {
         /// If it returns `nil` then commission is up to grab by anyone.
         pub fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]? {
             return self.marketplacesCapability
+        }
+
+        /// hasNFTPresentInListingProvider
+        /// Tells whether listed NFT is present in provided capability.
+        /// If it returns `false` then it means listing becomes ghost or sold out.
+        pub fun hasNFTPresentInListingProvider(): Bool {
+            if let providerRef = self.nftProviderCapability.borrow() {
+                let availableIDs = providerRef.getIDs()
+                for id in availableIDs {
+                    if id == self.details.nftID {
+                        return true
+                    }
+                }
+            }
+            return false
         }
 
         /// purchase
@@ -513,6 +533,7 @@ pub contract NFTStorefrontV2 {
         access(contract) fun cleanup(listingResourceID: UInt64)
         pub fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64]
         pub fun cleanupPurchasedListings(listingResourceID: UInt64)
+        pub fun cleanupGhostListings(listingResourceID: UInt64)
    }
 
     /// Storefront
@@ -735,12 +756,36 @@ pub contract NFTStorefrontV2 {
         ///
         access(contract) fun cleanup(listingResourceID: UInt64) {
             pre {
-                self.listings[listingResourceID] != nil: "could not find listing with given id"
+                self.listings[listingResourceID] != nil: "Could not find listing with given id"
             }
             let listing <- self.listings.remove(key: listingResourceID)!
             let listingDetails = listing.getDetails()
             self.removeDuplicateListing(nftIdentifier: listingDetails.nftType.identifier, nftID: listingDetails.nftID, listingResourceID: listingResourceID)
 
+            destroy listing
+        }
+
+        /// cleanupGhostListings
+        /// Allow anyone to cleanup ghost listings
+        /// Listings will become ghost listings if stored provider capability doesn't hold
+        /// the NFT anymore.
+        ///
+        /// @param listingResourceID ID of the listing resource which would get removed if it become ghost liting.
+        pub fun cleanupGhostListings(listingResourceID: UInt64) {
+            pre {
+                self.listings[listingResourceID] != nil: "Could not find listing with given id"
+            }
+            let listingRef = self.borrowListing(listingResourceID: listingResourceID)!
+            let details = listingRef.getDetails()
+            assert(!details.purchased, message: "Given listing is already purchased")
+            assert(!listingRef.hasNFTPresentInListingProvider(), message: "Listing is not ghost listing")
+            let listing <- self.listings.remove(key: listingResourceID)!
+            let duplicateListings = self.getDuplicateListingIDs(nftType: details.nftType, nftID: details.nftID, listingID: listingResourceID)
+
+            // Let's force removal of the listing in this storefront for the NFT that is being ghosted. 
+            for listingID in duplicateListings {
+                self.cleanup(listingResourceID: listingID)
+            }
             destroy listing
         }
 

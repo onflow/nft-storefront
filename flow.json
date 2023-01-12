@@ -39,12 +39,12 @@
     "accounts": {
         "emulator-account": {
             "address": "0xf8d6e0586b0a20c7",
-            "key": "$FLOW_EMULATOR_PRIVATE_KEY"
+            "key": "1f109e253744b3e99ddfa1e7b5a18be4a386394e12f5576df7b7247ad296ac8b"
         }
     },
     "deployments": {
         "emulator": {
-            "emulator-account": ["NFTStorefrontV2"]
+            "emulator-account": ["FungibleToken", "NonFungibleToken", "NFTStorefrontV2"]
         }
     }
 }
