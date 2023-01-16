@@ -304,11 +304,7 @@ pub contract NFTStorefrontV2 {
         pub fun hasNFTPresentInListingProvider(): Bool {
             if let providerRef = self.nftProviderCapability.borrow() {
                 let availableIDs = providerRef.getIDs()
-                for id in availableIDs {
-                    if id == self.details.nftID {
-                        return true
-                    }
-                }
+                return availableIDs.contains(self.details.nftID)
             }
             return false
         }
