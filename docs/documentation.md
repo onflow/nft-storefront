@@ -1,12 +1,3 @@
-## Primer
-The `NFTStorefrontV2` contract lets you create a *non-custodial NFT marketplace* which standardizes buying and selling of NFTs in a decentralized way across Flow. Marketplaces and dApp developers can trustlessly consume listings offered across the entire chain, making those available to buy in their marketplace UIs. Adopters of the standard benefit from simplified listing aggregation, increased marketplace audience reach, and in-built support for commissions. 
-
-Furthermore, the contract supports sellers who want to list and manage NFTs for sale simultaneously across any number of marketplaces. Sellers benefit from improved management of listings across multiple marketplaces, support for royalties, and additional ways to split revenues. 
-
-Both marketplaces and sellers benefit from the robust security guarantees of Flow's account model when trading NFTs. Through this standard a NFT trade takes place from peer-to-peer, directly from the Storefront resource in the sellers Account to the purchasers account. At the same time, the standard ensures that marketplaces or other recipients may receive royalties, fees or commissions with no risk to the seller.
-
-We highly recommend sellers, marketplace developers and integrators onboard the `NFTStorefrontV2` contract for seamless integration into Flow's ecosystem-wide NFT marketplace functionality in your applications!
-
 ### Overview
 
 The `NFTStorefrontV2` contract makes it simple for Sellers to list NFTs in dApp specific marketplaces. DApp developers leverage the APIs provided by the contract to manage listings being offered for sale and to transact NFT trades. 
