@@ -1,7 +1,9 @@
 import FungibleToken from "./utility/FungibleToken.cdc"
 import NonFungibleToken from "./utility/NonFungibleToken.cdc"
 
-/// NFTStorefront
+/// NB: This contract is no longer supported. NFT Storefront V2 is recommended
+///
+/// NFTStorefront. 
 ///
 /// A general purpose sale support contract for Flow NonFungibleTokens.
 /// 
