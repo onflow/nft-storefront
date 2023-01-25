@@ -1,12 +1,16 @@
-# NFT Storefront
+# NFT Storefront Contract Standard
 
-The NFTStorefront contract lets you create a non-custodial NFT marketplace which standardizes buying and selling of NFTs in a decentralized way across Flow. Marketplaces and dApp developers can trustlessly consume listings offered across the entire chain, making those available to buy in their marketplace UIs. Adopters of the standard benefit from simplified listing aggregation, increased marketplace audience reach, and in-built support for commissions.
+The NFT Storefront contract standard is a cornerstone of the Open Marketplace ecosystem on Flow. An open market ecosystem promotes the 
+free flow of NFT listings across the network, emitted as events and consumed by other marketplaces (or any other consumer). Marketplaces may filter 
+listings consumed based on commission rates they may receive. Listings may be created with variable commission, royalties or other fractional revenue, paying to multiple accounts. NFT listings are not NFTs, they are Resources which can be transacted with using the `purchase` [function](https://github.com/onflow/nft-storefront/blob/jp-update-structure/contracts/NFTStorefrontV2.cdc#L300) to obtain the token indicated by the listing. 
 
-Furthermore, the contract supports sellers who want to list and manage NFTs for sale simultaneously across any number of marketplaces. Sellers benefit from improved management of listings across multiple marketplaces, support for royalties, and additional ways to split revenues.
+The NFTStorefront contract lets you create a non-custodial NFT marketplace to simplify integration with off-chain applications/UIs. The contract supports sellers who want to list and manage NFTs for sale simultaneously across any number of marketplaces. Listing expiry, orphaned and ghost listing cleanup are also of value for integrators to minimize overheads and ensure the best UX. 
 
-Both marketplaces and sellers benefit from the robust security guarantees of Flow's account model when trading NFTs. Through this standard a NFT trade takes place from peer-to-peer, directly from the Storefront resource in the sellers Account to the purchasers account. At the same time, the standard ensures that marketplaces or other recipients may receive royalties, fees or commissions with no risk to the seller.
+Marketplaces and sellers also benefit from the robust security guarantees of Flow's account model when trading NFTs. Through this standard a NFT trade takes place from peer-to-peer, directly from the Storefront Resource in the sellers account to the purchasers account. At the same time, the standard ensures that marketplaces or other recipients may receive royalties, fees or commissions with no risk to the seller.
 
-We highly recommend sellers, marketplace developers and integrators onboard the NFTStorefrontV2 contract for seamless integration into Flow's ecosystem-wide NFT marketplace functionality in your applications!
+Sellers or marketplaces can optionally configure their NFTStorefront to be limited or closed. However, those wishing to participate in the Open Marketplace ecosystem on Flow are required to use the NFTStorefront standard. 
+
+Detailed docs: [docs/documentation.md](docs/documentation.md)
 
 ## Contract Addresses 
 
