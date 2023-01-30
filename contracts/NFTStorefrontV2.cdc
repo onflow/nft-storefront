@@ -245,10 +245,10 @@ pub contract NFTStorefrontV2 {
         /// If it returns `nil` then commission is up to grab by anyone.
         pub fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
 
-        /// hasNFTPresentInListingProvider
+        /// hasListingBecomeGhosted
         /// Tells whether listed NFT is present in provided capability.
         /// If it returns `false` then it means listing becomes ghost or sold out.
-        pub fun hasNFTPresentInListingProvider(): Bool
+        pub fun hasListingBecomeGhosted(): Bool
 
     }
 
@@ -298,10 +298,10 @@ pub contract NFTStorefrontV2 {
             return self.marketplacesCapability
         }
 
-        /// hasNFTPresentInListingProvider
+        /// hasListingBecomeGhosted
         /// Tells whether listed NFT is present in provided capability.
         /// If it returns `false` then it means listing becomes ghost or sold out.
-        pub fun hasNFTPresentInListingProvider(): Bool {
+        pub fun hasListingBecomeGhosted(): Bool {
             if let providerRef = self.nftProviderCapability.borrow() {
                 let availableIDs = providerRef.getIDs()
                 return availableIDs.contains(self.details.nftID)
@@ -774,7 +774,7 @@ pub contract NFTStorefrontV2 {
             let listingRef = self.borrowListing(listingResourceID: listingResourceID)!
             let details = listingRef.getDetails()
             assert(!details.purchased, message: "Given listing is already purchased")
-            assert(!listingRef.hasNFTPresentInListingProvider(), message: "Listing is not ghost listing")
+            assert(!listingRef.hasListingBecomeGhosted(), message: "Listing is not ghost listing")
             let listing <- self.listings.remove(key: listingResourceID)!
             let duplicateListings = self.getDuplicateListingIDs(nftType: details.nftType, nftID: details.nftID, listingID: listingResourceID)
 

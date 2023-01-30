@@ -20,7 +20,7 @@ pub fun main(storefront: Address): [UInt64] {
     for id in availableListingIds {
         if !duplicateListings.contains(id) {
             let listingRef = storefrontPublicRef.borrowListing(listingResourceID: id)!
-            if !listingRef.hasNFTPresentInListingProvider() {
+            if !listingRef.hasListingBecomeGhosted() {
                 ghostListings.append(id)
                 let listingDetails = listingRef.getDetails()
                 let dupListings = storefrontPublicRef.getDuplicateListingIDs(nftType: listingDetails.nftType, nftID: listingDetails.nftID, listingID: id)
