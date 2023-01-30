@@ -149,7 +149,7 @@ pub contract NFTStorefrontV2 {
         pub let salePrice: UFix64
         /// This specifies the division of payment between recipients.
         pub let saleCuts: [SaleCut]
-        /// Allow different dapp teams to provide custom strings as the distinguisher string
+        /// Allow different dapp teams to provide custom strings as the distinguished string
         /// that would help them to filter events related to their customID.
         pub var customID: String?
         /// Commission available to be claimed by whoever facilitates the sale.
@@ -346,16 +346,16 @@ pub contract NFTStorefrontV2 {
                         }
                     }
                     assert(isCommissionRecipientHasValidType, message: "Given recipient does not has valid type")
-                    assert(isCommissionRecipientAuthorised,   message: "Given recipient has not authorised to receive the commission")
+                    assert(isCommissionRecipientAuthorised,   message: "Given recipient is not authorised to receive the commission")
                 }
                 let commissionPayment <- payment.withdraw(amount: self.details.commissionAmount)
-                let recipient = commissionReceiver.borrow() ?? panic("Unable to borrow the recipent capability")
+                let recipient = commissionReceiver.borrow() ?? panic("Unable to borrow the recipient capability")
                 recipient.deposit(from: <- commissionPayment)
             }
             // Fetch the token to return to the purchaser.
             let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
             // Neither receivers nor providers are trustworthy, they must implement the correct
-            // interface but beyond complying with its pre/post conditions they are not gauranteed
+            // interface but beyond complying with its pre/post conditions they are not guaranteed
             // to implement the functionality behind the interface in any given way.
             // Therefore we cannot trust the Collection resource behind the interface,
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
@@ -378,7 +378,7 @@ pub contract NFTStorefrontV2 {
             // The first receiver should therefore either be the seller, or an agreed recipient for
             // any unpaid cuts.
             var residualReceiver: &{FungibleToken.Receiver}? = nil
-            // Pay the comission 
+            // Pay the commission 
             // Pay each beneficiary their amount of the payment.
 
             for cut in self.details.saleCuts {
@@ -395,7 +395,7 @@ pub contract NFTStorefrontV2 {
 
             assert(residualReceiver != nil, message: "No valid payment receivers")
 
-            // At this point, if all recievers were active and availabile, then the payment Vault will have
+            // At this point, if all receivers were active and available, then the payment Vault will have
             // zero tokens left, and this will functionally be a no-op that consumes the empty vault
             residualReceiver!.deposit(from: <-payment)
 
@@ -512,7 +512,7 @@ pub contract NFTStorefrontV2 {
         ): UInt64
 
         /// removeListing
-        /// Allows the Storefront owner to remove any sale listing, acepted or not.
+        /// Allows the Storefront owner to remove any sale listing, accepted or not.
         ///
         pub fun removeListing(listingResourceID: UInt64)
     }
@@ -564,7 +564,7 @@ pub contract NFTStorefrontV2 {
             let nftRef = collectionRef.borrowNFT(id: nftID)
 
             // Instead of letting an arbitrary value be set for the UUID of a given NFT, the contract
-            // should fetch it itelf     
+            // should fetch it itself     
             let uuid = nftRef.uuid
             let listing <- create Listing(
                 nftProviderCapability: nftProviderCapability,
@@ -724,7 +724,7 @@ pub contract NFTStorefrontV2 {
             let listingsIDs = self.getListingIDs()
             while index <= toIndex {
                 // There is a possibility that some index may not have the listing.
-                // becuase of that instead of failing the transaction, Execution moved to next index or listing.
+                // because of that instead of failing the transaction, Execution moved to next index or listing.
                 
                 if let listing = self.borrowListing(listingResourceID: listingsIDs[index]) {
                     if listing.getDetails().expiry <= UInt64(getCurrentBlock().timestamp) {
@@ -766,7 +766,7 @@ pub contract NFTStorefrontV2 {
         /// Listings will become ghost listings if stored provider capability doesn't hold
         /// the NFT anymore.
         ///
-        /// @param listingResourceID ID of the listing resource which would get removed if it become ghost liting.
+        /// @param listingResourceID ID of the listing resource which would get removed if it become ghost listing.
         pub fun cleanupGhostListings(listingResourceID: UInt64) {
             pre {
                 self.listings[listingResourceID] != nil: "Could not find listing with given id"
