@@ -149,7 +149,7 @@ pub contract NFTStorefrontV2 {
         pub let salePrice: UFix64
         /// This specifies the division of payment between recipients.
         pub let saleCuts: [SaleCut]
-        /// Allow different dapp teams to provide custom strings as the distinguisher string
+        /// Allow different dapp teams to provide custom strings as the distinguished string
         /// that would help them to filter events related to their customID.
         pub var customID: String?
         /// Commission available to be claimed by whoever facilitates the sale.
@@ -245,6 +245,11 @@ pub contract NFTStorefrontV2 {
         /// If it returns `nil` then commission is up to grab by anyone.
         pub fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
 
+        /// hasListingBecomeGhosted
+        /// Tells whether listed NFT is present in provided capability.
+        /// If it returns `false` then it means listing becomes ghost or sold out.
+        pub fun hasListingBecomeGhosted(): Bool
+
     }
 
 
@@ -293,6 +298,17 @@ pub contract NFTStorefrontV2 {
             return self.marketplacesCapability
         }
 
+        /// hasListingBecomeGhosted
+        /// Tells whether listed NFT is present in provided capability.
+        /// If it returns `false` then it means listing becomes ghost or sold out.
+        pub fun hasListingBecomeGhosted(): Bool {
+            if let providerRef = self.nftProviderCapability.borrow() {
+                let availableIDs = providerRef.getIDs()
+                return availableIDs.contains(self.details.nftID)
+            }
+            return false
+        }
+
         /// purchase
         /// Purchase the listing, buying the token.
         /// This pays the beneficiaries and commission to the facilitator and returns extra token to the buyer.
@@ -330,16 +346,16 @@ pub contract NFTStorefrontV2 {
                         }
                     }
                     assert(isCommissionRecipientHasValidType, message: "Given recipient does not has valid type")
-                    assert(isCommissionRecipientAuthorised,   message: "Given recipient has not authorised to receive the commission")
+                    assert(isCommissionRecipientAuthorised,   message: "Given recipient is not authorised to receive the commission")
                 }
                 let commissionPayment <- payment.withdraw(amount: self.details.commissionAmount)
-                let recipient = commissionReceiver.borrow() ?? panic("Unable to borrow the recipent capability")
+                let recipient = commissionReceiver.borrow() ?? panic("Unable to borrow the recipient capability")
                 recipient.deposit(from: <- commissionPayment)
             }
             // Fetch the token to return to the purchaser.
             let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
             // Neither receivers nor providers are trustworthy, they must implement the correct
-            // interface but beyond complying with its pre/post conditions they are not gauranteed
+            // interface but beyond complying with its pre/post conditions they are not guaranteed
             // to implement the functionality behind the interface in any given way.
             // Therefore we cannot trust the Collection resource behind the interface,
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
@@ -362,7 +378,7 @@ pub contract NFTStorefrontV2 {
             // The first receiver should therefore either be the seller, or an agreed recipient for
             // any unpaid cuts.
             var residualReceiver: &{FungibleToken.Receiver}? = nil
-            // Pay the comission 
+            // Pay the commission 
             // Pay each beneficiary their amount of the payment.
 
             for cut in self.details.saleCuts {
@@ -379,7 +395,7 @@ pub contract NFTStorefrontV2 {
 
             assert(residualReceiver != nil, message: "No valid payment receivers")
 
-            // At this point, if all recievers were active and availabile, then the payment Vault will have
+            // At this point, if all receivers were active and available, then the payment Vault will have
             // zero tokens left, and this will functionally be a no-op that consumes the empty vault
             residualReceiver!.deposit(from: <-payment)
 
@@ -496,7 +512,7 @@ pub contract NFTStorefrontV2 {
         ): UInt64
 
         /// removeListing
-        /// Allows the Storefront owner to remove any sale listing, acepted or not.
+        /// Allows the Storefront owner to remove any sale listing, accepted or not.
         ///
         pub fun removeListing(listingResourceID: UInt64)
     }
@@ -513,6 +529,7 @@ pub contract NFTStorefrontV2 {
         access(contract) fun cleanup(listingResourceID: UInt64)
         pub fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64]
         pub fun cleanupPurchasedListings(listingResourceID: UInt64)
+        pub fun cleanupGhostListings(listingResourceID: UInt64)
    }
 
     /// Storefront
@@ -547,7 +564,7 @@ pub contract NFTStorefrontV2 {
             let nftRef = collectionRef.borrowNFT(id: nftID)
 
             // Instead of letting an arbitrary value be set for the UUID of a given NFT, the contract
-            // should fetch it itelf     
+            // should fetch it itself     
             let uuid = nftRef.uuid
             let listing <- create Listing(
                 nftProviderCapability: nftProviderCapability,
@@ -707,7 +724,7 @@ pub contract NFTStorefrontV2 {
             let listingsIDs = self.getListingIDs()
             while index <= toIndex {
                 // There is a possibility that some index may not have the listing.
-                // becuase of that instead of failing the transaction, Execution moved to next index or listing.
+                // because of that instead of failing the transaction, Execution moved to next index or listing.
                 
                 if let listing = self.borrowListing(listingResourceID: listingsIDs[index]) {
                     if listing.getDetails().expiry <= UInt64(getCurrentBlock().timestamp) {
@@ -735,12 +752,36 @@ pub contract NFTStorefrontV2 {
         ///
         access(contract) fun cleanup(listingResourceID: UInt64) {
             pre {
-                self.listings[listingResourceID] != nil: "could not find listing with given id"
+                self.listings[listingResourceID] != nil: "Could not find listing with given id"
             }
             let listing <- self.listings.remove(key: listingResourceID)!
             let listingDetails = listing.getDetails()
             self.removeDuplicateListing(nftIdentifier: listingDetails.nftType.identifier, nftID: listingDetails.nftID, listingResourceID: listingResourceID)
 
+            destroy listing
+        }
+
+        /// cleanupGhostListings
+        /// Allow anyone to cleanup ghost listings
+        /// Listings will become ghost listings if stored provider capability doesn't hold
+        /// the NFT anymore.
+        ///
+        /// @param listingResourceID ID of the listing resource which would get removed if it become ghost listing.
+        pub fun cleanupGhostListings(listingResourceID: UInt64) {
+            pre {
+                self.listings[listingResourceID] != nil: "Could not find listing with given id"
+            }
+            let listingRef = self.borrowListing(listingResourceID: listingResourceID)!
+            let details = listingRef.getDetails()
+            assert(!details.purchased, message: "Given listing is already purchased")
+            assert(!listingRef.hasListingBecomeGhosted(), message: "Listing is not ghost listing")
+            let listing <- self.listings.remove(key: listingResourceID)!
+            let duplicateListings = self.getDuplicateListingIDs(nftType: details.nftType, nftID: details.nftID, listingID: listingResourceID)
+
+            // Let's force removal of the listing in this storefront for the NFT that is being ghosted. 
+            for listingID in duplicateListings {
+                self.cleanup(listingResourceID: listingID)
+            }
             destroy listing
         }
 

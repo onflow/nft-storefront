@@ -44,7 +44,7 @@
     },
     "deployments": {
         "emulator": {
-            "emulator-account": ["NFTStorefrontV2"]
+            "emulator-account": ["FungibleToken", "NonFungibleToken", "NFTStorefrontV2"]
         }
     }
 }
