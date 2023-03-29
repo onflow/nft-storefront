@@ -1,6 +1,6 @@
 import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 
-/// It tells whether the provided `listingID` under the provided `storefront` address
+/// This script tells whether the provided `listingID` under the provided `storefront` address
 /// has becomed ghost listing.
 pub fun main(storefront: Address, listingID: UInt64): Bool {
     let storefrontPublicRef = getAccount(storefront)
