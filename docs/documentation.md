@@ -69,7 +69,7 @@ To accept a different token type for the same NFT sellers must specify an altern
 
     Usually, ghost listings will cause a purchaser’s transaction to fail, which is annoying but isn’t a significant problem. We recommend using the [`cleanupPurchasedListings`](#fun-cleanupPurchasedListings) function to mitigate the issues above. 
 
-    Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time. 
+    Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result, the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time. 
 
     In order to safeguard sellers from these adverse circumstances, marketplaces have the ability to meticulously sift through a seller's entire inventory of ghost listings by utilizing the [`read_all_unique_ghost_listings`](../scripts/read_all_unique_ghost_listings.cdc) script. By executing this script at routine intervals, marketplaces can effectively purge all ghost listings with the aid of the [`cleanup_ghost_listing`](../transactions/cleanup_ghost_listing.cdc) transaction. While it is possible for any individual to cleanse a seller's ghost listings, marketplaces have the discretion to determine the degree of ease with which this process is made available to their users.
 
