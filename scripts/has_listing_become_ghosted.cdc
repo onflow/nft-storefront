@@ -10,6 +10,6 @@ pub fun main(storefront: Address, listingID: UInt64): Bool {
 
     // Access the listing under the given storefront account
     let listingRef = storefrontPublicRef.borrowListing(listingResourceID: listingID)
-         ?? panic("Provided listingID doesn't exists under the given storefront address")
+         ?? panic("Provided listingID doesn't exist under the given storefront address")
     return listingRef.hasListingBecomeGhosted()
 }
