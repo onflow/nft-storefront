@@ -67,11 +67,14 @@ To accept a different token type for the same NFT sellers must specify an altern
     1. When a seller's NFT is sold in one marketplace but listings for that NFT in other marketplaces are not removed.
     2. When the seller transfers out the listed NFT from the account that made the listings.
 
-    Usually, ghost listings will cause a purchaser’s transaction to fail, which is annoying but isn’t a significant problem. We recommend using the [`cleanupPurchasedListings`](#fun-cleanupPurchasedListings) function to mitigate the issues above. 
+    If ghost listings are not removed, they will eventually result in a prospective purchaser’s transaction to fail which is annoying in isolated cases. However, ghost listings negatively impact everyone's user experience when they are widespread. To address this and ensure that listings are always accurate the [`cleanupPurchasedListings`](#fun-cleanupPurchasedListings) function has been provided. 
 
-    Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time.
+    The recommended standard practice is for marketplaces to execute the `cleanupPurchasedListing` function after the sale has completed within the same transaction. This requires minimal gas, ensures the best experience for all participants in the marketplace ecosystem and also significantly minimizes the likelihood of transaction failure.
 
-    ***Note:*** It may also be desirable for marketplaces or dApps to implement an off-chain notification service to inform users (eg: sellers) of listings that should be removed where the NFT for that listing no longer exists in the seller's account.
+    Ghost listings which are not cleaned up may be specifically problematic for sellers in the unique case when a **previously sold or gifted** NFT returns to the seller’s account some time later. In this case, previously ghost listings for which purchase attempts would have failed, once again become enabled to facilitate purchases. Since some time may have passed since the listing was created, ghost listings remaining against NFTs returned to an account may implicitly make the listing available for purchase below market rates. 
+    
+    To mitigate this, the storefront contract provides global access to all seller's inventory of ghost listings using the [`read_all_unique_ghost_listings`](../scripts/read_all_unique_ghost_listings.cdc) script. Sellers who have active listings for an NFT are strongly advised to purge ghost listings using the [`cleanup_ghost_listing`](../transactions/cleanup_ghost_listing.cdc) transaction when the listed NFT is transferred to another account, not sold through a marketplace.
+
 
 2. ***Expired listings*** `NFTStorefrontV2` introduces a safety measure to flag an NFT listing as expired after a certain period. This can be set during listing creation to prevent the purchase through the listing after expiry has been reached. Once expiry has been reached the listing can no longer facilitate the purchase of the NFT. 
 
@@ -183,6 +186,16 @@ If it returns `nil` then commission paid to the receiver by default.
 
 ---
 
+**fun `hasListingBecomeGhosted()`**
+
+```cadence
+pub fun hasListingBecomeGhosted(): Bool
+```
+Tells whether listed NFT is present in provided capability.
+If it returns `false` then it means listing becomes ghost or sold out.
+
+---
+
 ## Resource `Storefront`
 
 ```cadence
@@ -291,6 +304,7 @@ resource interface StorefrontPublic {
     pub fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}?
     pub fun cleanupPurchasedListings(listingResourceID: UInt64)
     pub fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64]
+    pub fun cleanupGhostListings(listingResourceID: UInt64)
 }
 ```
 
@@ -353,6 +367,16 @@ fun getExistingListingIDs(nftType Type, nftID UInt64): [UInt64]
 ```
 getExistingListingIDs
 Returns an array of listing IDs of the given `nftType` and `nftID`.
+
+---
+
+**fun `cleanupGhostListings()`**
+
+```cadence
+pub fun cleanupGhostListings(listingResourceID: UInt64)
+```
+cleanupGhostListings
+Allow callers to clean up ghost listings for this seller. Listings which remain orphaned on marketplaces because the stored provider capability cannot acquire the NFT any more.
 
 ---
 
