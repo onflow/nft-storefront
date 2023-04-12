@@ -8,8 +8,8 @@ import NFTCatalogAdmin from "../../../../contracts/utility/NFTCatalogAdmin.cdc"
 
 transaction {
     prepare(signer: AuthAccount) {
-        let adminProxyResource = signer.borrow<&NFTCatalogAdmin.AdminProxy>(from : NFTCatalogAdmin.AdminProxyStoragePath)!
-        adminProxyResource.getCapability()!.borrow()!.addCatalogEntry(
+        let adminResource = signer.borrow<&NFTCatalogAdmin.Admin>(from: NFTCatalogAdmin.AdminStoragePath)!
+        adminResource.addCatalogEntry(
             collectionIdentifier: "ExampleNFT", 
             metadata: NFTCatalog.NFTCatalogMetadata(
                 contractName: "ExampleNFT", 
