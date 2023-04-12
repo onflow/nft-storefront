@@ -67,7 +67,7 @@ To accept a different token type for the same NFT sellers must specify an altern
     1. When a seller's NFT is sold in one marketplace but listings for that NFT in other marketplaces are not removed.
     2. When the seller transfers out the listed NFT from the account that made the listings.
 
-    Usually, ghost listings will cause a purchaser’s transaction to fail, which is annoying but isn’t a significant problem. We recommend using the [`cleanupPurchasedListings`](#fun-cleanupPurchasedListings) function to mitigate the issues above. 
+    If ghost listings are not removed, they will eventually result in a prospective purchaser’s transaction to fail which is annoying in isolated cases. However, ghost listings negatively impact everyone's user experience when they are widespread. To address this and ensure that listings are always accurate the [`cleanupPurchasedListings`](#fun-cleanupPurchasedListings) function has been provided. 
 
     Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result, the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time. 
 
