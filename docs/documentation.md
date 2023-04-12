@@ -69,7 +69,7 @@ To accept a different token type for the same NFT sellers must specify an altern
 
     If ghost listings are not removed, they will eventually result in a prospective purchaser’s transaction to fail which is annoying in isolated cases. However, ghost listings negatively impact everyone's user experience when they are widespread. To address this and ensure that listings are always accurate the [`cleanupPurchasedListings`](#fun-cleanupPurchasedListings) function has been provided. 
 
-    Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result, the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time. 
+    The recommended standard practice is for marketplaces to execute the `cleanupPurchasedListing` function after the sale has completed within the same transaction. This requires minimal gas, ensures the best experience for all participants in the marketplace ecosystem and also significantly minimizes the likelihood of transaction failure.
 
     Ghost listings which are not cleaned up may be specifically problematic for sellers in the unique case when a **previously sold or gifted** NFT returns to the seller’s account some time later. In this case, previously ghost listings for which purchase attempts would have failed, once again become enabled to facilitate purchases. Since some time may have passed since the listing was created, ghost listings remaining against NFTs returned to an account may implicitly make the listing available for purchase below market rates. 
     
