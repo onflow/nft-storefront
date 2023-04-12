@@ -8,6 +8,7 @@
     "contracts": {
         "NFTStorefront": "./contracts/NFTStorefront.cdc",
         "NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc",
+        "ViewResolver": "./contracts/ViewResolver.cdc",
         "FungibleToken": {
             "source": "./contracts/utility/FungibleToken.cdc",
             "aliases": {

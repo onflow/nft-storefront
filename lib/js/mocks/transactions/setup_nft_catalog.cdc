@@ -2,12 +2,14 @@ import NonFungibleToken from "../../../../contracts/utility/NonFungibleToken.cdc
 import MetadataViews from "../../../../contracts/utility/MetadataViews.cdc"
 import NFTCatalog from "../../../../contracts/utility/NFTCatalog.cdc"
 import ExampleNFT from "../../../../contracts/utility/ExampleNFT.cdc"
+import NFTCatalogAdmin from "../../../../contracts/utility/NFTCatalogAdmin.cdc"
 
 // This transaction sets up a fake NFT catalog for testing.
 
 transaction {
     prepare(signer: AuthAccount) {
-        NFTCatalog.addCatalogEntry(
+        let adminProxyResource = signer.borrow<&NFTCatalogAdmin.AdminProxy>(from : NFTCatalogAdmin.AdminProxyStoragePath)!
+        adminProxyResource.getCapability()!.borrow()!.addCatalogEntry(
             collectionIdentifier: "ExampleNFT", 
             metadata: NFTCatalog.NFTCatalogMetadata(
                 contractName: "ExampleNFT", 
