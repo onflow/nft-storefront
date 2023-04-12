@@ -71,11 +71,9 @@ To accept a different token type for the same NFT sellers must specify an altern
 
     Ghost listings could be problematic for the seller if not cleaned up specifically when the listed NFT returns to the seller’s account after the original sale or transfer out. As a result, the ghost listings would once again become able to facilitate purchases. This may be undesirable as the ghost listing price may be less than fair market value at the subsequent time. 
 
-    To support sellers in avoiding ghost listings, marketplaces have the ability to access the seller's entire inventory of ghost listings using the [`read_all_unique_ghost_listings`](../scripts/read_all_unique_ghost_listings.cdc) script. Marketplaces can then purge all ghost listings by routinely running the [`cleanup_ghost_listing`](../transactions/cleanup_ghost_listing.cdc) transaction.
-
-    Marketplaces can undertake the task of eliminating all ghost listings on behalf of sellers, as this approach consumes minimal gas during routine operations while simultaneously ensuring user protection.
-
-    It is strongly advised that creators of marketplaces employ the [`has_listing_become_ghosted`](../scripts/has_listing_become_ghosted.cdc) script prior to exhibiting any listings on the dashboard for potential buyers. This added precaution not only bolsters security but also significantly minimizes the likelihood of transaction failure.
+    Ghost listings which are not cleaned up may be specifically problematic for sellers in the unique case when a **previously sold or gifted** NFT returns to the seller’s account some time later. In this case, previously ghost listings for which purchase attempts would have failed, once again become enabled to facilitate purchases. Since some time may have passed since the listing was created, ghost listings remaining against NFTs returned to an account may implicitly make the listing available for purchase below market rates. 
+    
+    To mitigate this, the storefront contract provides global access to all seller's inventory of ghost listings using the [`read_all_unique_ghost_listings`](../scripts/read_all_unique_ghost_listings.cdc) script. Sellers who have active listings for an NFT are strongly advised to purge ghost listings using the [`cleanup_ghost_listing`](../transactions/cleanup_ghost_listing.cdc) transaction when the listed NFT is transferred to another account, not sold through a marketplace.
 
 
 2. ***Expired listings*** `NFTStorefrontV2` introduces a safety measure to flag an NFT listing as expired after a certain period. This can be set during listing creation to prevent the purchase through the listing after expiry has been reached. Once expiry has been reached the listing can no longer facilitate the purchase of the NFT. 
