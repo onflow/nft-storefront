@@ -376,8 +376,7 @@ Returns an array of listing IDs of the given `nftType` and `nftID`.
 pub fun cleanupGhostListings(listingResourceID: UInt64)
 ```
 cleanupGhostListings
-Allow anyone to cleanup ghost listings. Listings will become ghost listings
-if stored provider capability doesn't hold the NFT anymore.
+Allow callers to clean up ghost listings for this seller. Listings which remain orphaned on marketplaces because the stored provider capability cannot acquire the NFT any more.
 
 ---
 
