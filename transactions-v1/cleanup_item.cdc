@@ -1,19 +1,22 @@
-import NFTStorefront from "../contracts/NFTStorefront.cdc"
+import "NFTStorefront"
 
 transaction(listingResourceID: UInt64, storefrontAddress: Address) {
-    let storefront: &NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}
 
-    prepare(acct: AuthAccount) {
-        self.storefront = getAccount(storefrontAddress)
-            .getCapability<&NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}>(
+    let storefront: &{NFTStorefront.StorefrontPublic}
+
+    prepare(acct: &Account) {
+        self.storefront = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefront.StorefrontPublic}>(
                 NFTStorefront.StorefrontPublicPath
-            )!
-            .borrow()
-            ?? panic("Could not borrow Storefront from provided address")
+            ) ?? panic("Could not borrow Storefront from provided address")
     }
 
     execute {
         // Be kind and recycle
         self.storefront.cleanup(listingResourceID: listingResourceID)
+    }
+
+    post {
+        self.storefront.getListingIDs().contains(listingResourceID) == false:
+            "Listing was not successfully removed"
     }
 }
