@@ -1,14 +1,14 @@
 {
 	"contracts": {
 		"ExampleNFT": "./contracts/utility/ExampleNFT.cdc",
-        "FlowToken": {
-            "source": "",
-            "aliases": {
-                "emulator": "0x0ae53cb6e3f42a79",
-                "testnet": "0x7e60df042a9c0868",
-                "mainnet": "0x1654653399040a61"
-            }
-        },
+		"FlowToken": {
+			"source": "",
+			"aliases": {
+				"emulator": "0ae53cb6e3f42a79",
+				"mainnet": "1654653399040a61",
+				"testnet": "7e60df042a9c0868"
+			}
+		},
 		"FungibleToken": {
 			"source": "./contracts/utility/FungibleToken.cdc",
 			"aliases": {
