@@ -1,22 +1,27 @@
-import FlowToken from 0x0ae53cb6e3f42a79
+import FlowToken from "FlowToken"
 import FungibleToken from "../contracts/utility/FungibleToken.cdc"
 import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
 import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
 import NFTStorefront from "../contracts/NFTStorefront.cdc"
 
 transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
-    let flowReceiver: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
+
+    let flowReceiver: Capability<&{FungibleToken.Receiver}>
     let exampleNFTProvider: Capability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
     let storefront: &NFTStorefront.Storefront
 
     prepare(acct: AuthAccount) {
+
+        let collectionData = ExampleNFT.getCollectionData(nftType: Type<@ExampleNFT.NFT>())
+            ?? panic("Missing collection data")
+
         // We need a provider capability, but one is not provided by default so we create one if needed.
         let exampleNFTCollectionProviderPrivatePath = /private/exampleNFTCollectionProviderForNFTStorefront
 
-        self.flowReceiver = acct.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
+        self.flowReceiver = acct.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
         assert(self.flowReceiver.borrow() != nil, message: "Missing or mis-typed FlowToken receiver")
 
-        if !acct.getCapability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath)!.check() {
+        if !acct.getCapability<auth(Withdrawable) &{NonFungibleToken.Collection}>(exampleNFTCollectionProviderPrivatePath)!.check() {
             acct.link<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath, target: ExampleNFT.CollectionStoragePath)
         }
 
