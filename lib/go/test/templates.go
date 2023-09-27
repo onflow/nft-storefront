@@ -5,7 +5,9 @@ import (
 )
 
 const (
-	nftStorefrontNftStorefrontPath     = "../../../contracts/NFTStorefront.cdc"
+	nftStorefrontPath   = "../../../contracts/NFTStorefront.cdc"
+	nftStorefrontV2path = "../../../contracts/NFTStorefrontV2.cdc"
+
 	nftStorefrontRootPath              = "../../../transactions-v1"
 	nftStorefrontSetupAccountPath      = nftStorefrontRootPath + "/setup_account.cdc"
 	nftStorefrontSellItemPath          = nftStorefrontRootPath + "/sell_item.cdc"
@@ -27,13 +29,22 @@ func replaceAddresses(codeBytes []byte, contracts Contracts) []byte {
 	return []byte(code)
 }
 
-func loadNFTStorefront(ftAddr, nftAddr flow.Address) []byte {
-	code := string(readFile(nftStorefrontNftStorefrontPath))
+func loadNFTStorefront(ftAddr, nftAddr flow.Address, version int) ([]byte, string) {
+	code := ""
+	name := ""
+
+	if version == 1 {
+		code = string(readFile(nftStorefrontPath))
+		name = "NFTStorefront"
+	} else if version == 2 {
+		code = string(readFile(nftStorefrontV2path))
+		name = "NFTStorefrontV2"
+	}
 
 	code = ftAddressPlaceholder.ReplaceAllString(code, "0x"+ftAddr.String())
 	code = nftAddressPlaceholder.ReplaceAllString(code, "0x"+nftAddr.String())
 
-	return []byte(code)
+	return []byte(code), name
 }
 
 func nftStorefrontGenerateSetupAccountScript(contracts Contracts) []byte {

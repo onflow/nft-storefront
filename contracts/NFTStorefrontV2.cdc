@@ -183,10 +183,11 @@ pub contract NFTStorefrontV2 {
 
             pre {
                 // Validate the expiry
-                expiry > UInt64(getCurrentBlock().timestamp) : "Expiry should be in the future"
+                expiry > UInt64(getCurrentBlock().timestamp): "Expiry should be in the future"
                 // Validate the length of the sale cut
                 saleCuts.length > 0: "Listing must have at least one payment cut recipient"
             }
+
             self.storefrontID = storefrontID
             self.purchased = false
             self.nftType = nftType
@@ -238,7 +239,7 @@ pub contract NFTStorefrontV2 {
 
         /// getDetails
         /// Fetches the details of the listing.
-        pub fun getDetails(): ListingDetails
+        pub view fun getDetails(): ListingDetails
 
         /// getAllowedCommissionReceivers
         /// Fetches the allowed marketplaces capabilities or commission receivers.
@@ -279,7 +280,7 @@ pub contract NFTStorefrontV2 {
         pub fun borrowNFT(): &NonFungibleToken.NFT? {
             let ref = self.nftProviderCapability.borrow()!.borrowNFT(id: self.details.nftID)
             if ref.isInstance(self.details.nftType) && ref.id == self.details.nftID {
-                return ref as! &NonFungibleToken.NFT  
+                return ref as &NonFungibleToken.NFT?  
             } 
             return nil
         }
@@ -287,7 +288,7 @@ pub contract NFTStorefrontV2 {
         /// getDetails
         /// Get the details of listing.
         ///
-        pub fun getDetails(): ListingDetails {
+        pub view fun getDetails(): ListingDetails {
             return self.details
         }
 
@@ -325,6 +326,7 @@ pub contract NFTStorefrontV2 {
                 self.details.expiry > UInt64(getCurrentBlock().timestamp): "Listing is expired"
                 self.owner != nil : "Resource doesn't have the assigned owner"
             }
+            
             // Make sure the listing cannot be purchased again.
             self.details.setToPurchased() 
             
@@ -522,9 +524,9 @@ pub contract NFTStorefrontV2 {
     /// in a Storefront.
     ///
     pub resource interface StorefrontPublic {
-        pub fun getListingIDs(): [UInt64]
+        pub view fun getListingIDs(): [UInt64]
         pub fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64]
-        pub fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}?
+        pub view fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}?
         pub fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64)
         access(contract) fun cleanup(listingResourceID: UInt64)
         pub fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64]
@@ -659,7 +661,7 @@ pub contract NFTStorefrontV2 {
         /// getListingIDs
         /// Returns an array of the Listing resource IDs that are in the collection
         ///
-        pub fun getListingIDs(): [UInt64] {
+        pub view fun getListingIDs(): [UInt64] {
             return self.listings.keys
         }
 
@@ -738,12 +740,8 @@ pub contract NFTStorefrontV2 {
         /// borrowSaleItem
         /// Returns a read-only view of the SaleItem for the given listingID if it is contained by this collection.
         ///
-        pub fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}? {
-             if self.listings[listingResourceID] != nil {
-                return &self.listings[listingResourceID] as &Listing{ListingPublic}?
-            } else {
-                return nil
-            }
+        pub view fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}? {
+            return &self.listings[listingResourceID]
         }
 
         /// cleanup
