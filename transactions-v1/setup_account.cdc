@@ -16,8 +16,8 @@ transaction {
 
             // create a public capability for the .Storefront & publish
             let storefrontPublicCap = acct.capabilities.storage.issue<&{NFTStorefront.StorefrontPublic}>(
-                NFTStorefront.StorefrontStoragePath
-            )
+                    NFTStorefront.StorefrontStoragePath
+                )
             acct.capabilities.publish(storefrontPublicCap, at: NFTStorefront.StorefrontPublicPath)
         }
     }
