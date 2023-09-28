@@ -85,10 +85,10 @@ require (
 	github.com/multiformats/go-multistream v0.4.1 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onflow/atree v0.6.1-0.20230711151834-86040b30171f // indirect
-	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230912234730-407f346dfe8c // indirect
+	github.com/onflow/flow-core-contracts/lib/go/contracts v1.2.4-0.20230921055800-5ed9c184d103 // indirect
 	github.com/onflow/flow-core-contracts/lib/go/templates v1.2.4-0.20230918230627-2daea3d4f44b // indirect
-	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230906165834-daca6600a634 // indirect
-	github.com/onflow/flow-go v0.31.1-0.20230912223233-26a5aeb2636a // indirect
+	github.com/onflow/flow-ft/lib/go/contracts v0.7.1-0.20230921055403-cf7a05c90c20 // indirect
+	github.com/onflow/flow-go v0.31.1-0.20230921060220-83b00fb98777 // indirect
 	github.com/onflow/flow-go/crypto v0.24.9 // indirect
 	github.com/onflow/flow/protobuf/go/flow v0.3.2-0.20230628215638-83439d22e0ce // indirect
 	github.com/onflow/sdks v0.5.1-0.20230912225508-b35402f12bba // indirect
@@ -137,10 +137,10 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
-	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.10.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gonum.org/v1/gonum v0.13.0 // indirect
