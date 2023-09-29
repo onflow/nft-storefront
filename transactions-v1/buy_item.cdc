@@ -7,7 +7,7 @@ import NFTStorefront from "NFTStorefront"
 transaction(listingResourceID: UInt64, storefrontAddress: Address) {
 
     let paymentVault: @{FungibleToken.Vault}
-    let exampleNFTCollection: &ExampleNFT.Collection
+    let exampleNFTReceiver: &{NonFungibleToken.Receiver}
     let storefront: &{NFTStorefront.StorefrontPublic}
     let listing: &{NFTStorefront.ListingPublic}
 
@@ -26,7 +26,7 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address) {
 
         let collectionData = ExampleNFT.getCollectionData(nftType: Type<@ExampleNFT.NFT>())
             ?? panic("Missing collection data")
-        self.exampleNFTCollection = acct.storage.borrow<&ExampleNFT.Collection>(from: collectionData.storagePath)
+        self.exampleNFTReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
             ?? panic("Cannot borrow NFT collection receiver from account")
     }
 
@@ -35,7 +35,7 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address) {
             payment: <-self.paymentVault
         )
 
-        self.exampleNFTCollection.deposit(token: <-item)
+        self.exampleNFTReceiver.deposit(token: <-item)
 
         /*
         error: Execution failed:
