@@ -7,40 +7,41 @@ import (
 )
 
 func TestNFTStorefrontV1DeployContracts(t *testing.T) {
-	b := newEmulator()
-	nftStorefrontDeployContracts(t, b, 1)
+	b, a := newEmulator()
+	nftStorefrontDeployContracts(t, b, a, 1)
 }
 
 func TestNFTStorefrontV2DeployContracts(t *testing.T) {
-	b := newEmulator()
-	nftStorefrontDeployContracts(t, b, 2)
+	b, a := newEmulator()
+	nftStorefrontDeployContracts(t, b, a, 2)
 }
 
 func TestNFTStorefrontSetupAccount(t *testing.T) {
-	b := newEmulator()
+	b, a := newEmulator()
 
-	contracts := nftStorefrontDeployContracts(t, b, 1)
+	contracts := nftStorefrontDeployContracts(t, b, a, 1)
 
-	userAddress, userSigner := createAccount(t, b)
-	setupNFTStorefront(t, b, userAddress, userSigner, contracts)
+	userAddress, userSigner := createAccount(t, b, a)
+	setupNFTStorefront(t, b, a, userAddress, userSigner, contracts)
 }
 
 func TestNFTStorefrontCreateSaleSell(t *testing.T) {
-	b := newEmulator()
+	b, a := newEmulator()
 
-	contracts := nftStorefrontDeployContracts(t, b, 1)
+	contracts := nftStorefrontDeployContracts(t, b, a, 1)
 
 	t.Run("Should be able to list a sale offer", func(t *testing.T) {
 		tokenToList := uint64(0)
 		tokenPrice := "1.11"
 
-		sellerAddress, sellerSigner := createAccount(t, b)
-		setupAccount(t, b, sellerAddress, sellerSigner, contracts)
+		sellerAddress, sellerSigner := createAccount(t, b, a)
+		setupAccount(t, b, a, sellerAddress, sellerSigner, contracts)
 
 		// Contract mints item to seller account
 		mintExampleNFT(
 			t,
 			b,
+			a,
 			sellerAddress,
 			contracts.NFTAddress,
 			contracts.ExampleNFTAddress,
@@ -52,6 +53,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		sellItem(
 			t,
 			b,
+			a,
 			contracts,
 			sellerAddress,
 			sellerSigner,
@@ -65,13 +67,14 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		tokenToList := uint64(1)
 		tokenPrice := "1.11"
 
-		sellerAddress, sellerSigner := createAccount(t, b)
-		setupAccount(t, b, sellerAddress, sellerSigner, contracts)
+		sellerAddress, sellerSigner := createAccount(t, b, a)
+		setupAccount(t, b, a, sellerAddress, sellerSigner, contracts)
 
 		// Contract mints item to seller account
 		mintExampleNFT(
 			t,
 			b,
+			a,
 			sellerAddress,
 			contracts.NFTAddress,
 			contracts.ExampleNFTAddress,
@@ -83,6 +86,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		listingResourceID := sellItem(
 			t,
 			b,
+			a,
 			contracts,
 			sellerAddress,
 			sellerSigner,
@@ -91,12 +95,13 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			false,
 		)
 
-		buyerAddress, buyerSigner := createAccount(t, b)
-		setupAccount(t, b, buyerAddress, buyerSigner, contracts)
+		buyerAddress, buyerSigner := createAccount(t, b, a)
+		setupAccount(t, b, a, buyerAddress, buyerSigner, contracts)
 
 		// Make the purchase
 		buyItem(
 			b,
+			a,
 			t,
 			contracts,
 			buyerAddress,
@@ -111,13 +116,14 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		tokenToList := uint64(2)
 		tokenPrice := "1.11"
 
-		sellerAddress, sellerSigner := createAccount(t, b)
-		setupAccount(t, b, sellerAddress, sellerSigner, contracts)
+		sellerAddress, sellerSigner := createAccount(t, b, a)
+		setupAccount(t, b, a, sellerAddress, sellerSigner, contracts)
 
 		// Contract mints item to seller account
 		mintExampleNFT(
 			t,
 			b,
+			a,
 			sellerAddress,
 			contracts.NFTAddress,
 			contracts.ExampleNFTAddress,
@@ -129,6 +135,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		listingResourceID := sellItem(
 			t,
 			b,
+			a,
 			contracts,
 			sellerAddress,
 			sellerSigner,
@@ -140,6 +147,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		// Cancel the sale
 		removeItem(
 			b,
+			a,
 			t,
 			contracts,
 			sellerAddress,

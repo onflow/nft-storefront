@@ -1,11 +1,13 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/onflow/cadence"
-	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-emulator/adapters"
+	emulator "github.com/onflow/flow-emulator/emulator"
 	fttemplates "github.com/onflow/flow-ft/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	sdk "github.com/onflow/flow-go-sdk"
@@ -15,7 +17,8 @@ import (
 
 func setupExampleNFTCollection(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	userAddress flow.Address,
 	userSigner crypto.Signer,
 	nftAddress, exampleNFTAddress, metadataAddress flow.Address,
@@ -36,7 +39,7 @@ func setupExampleNFTCollection(
 	serviceSigner, _ := b.ServiceKey().Signer()
 
 	signAndSubmit(
-		t, b, tx,
+		t, b, a, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
 		[]crypto.Signer{serviceSigner, userSigner},
 		false,
@@ -45,7 +48,8 @@ func setupExampleNFTCollection(
 
 func mintExampleNFT(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	receiverAddress flow.Address,
 	nftAddress, exampleNFTAddress, metadataAddress flow.Address,
 	exampleNFTSigner crypto.Signer,
@@ -74,7 +78,7 @@ func mintExampleNFT(
 	serviceSigner, _ := b.ServiceKey().Signer()
 
 	signAndSubmit(
-		t, b, tx,
+		t, b, a, tx,
 		[]flow.Address{b.ServiceKey().Address, exampleNFTAddress},
 		[]crypto.Signer{serviceSigner, exampleNFTSigner},
 		false,
@@ -83,7 +87,8 @@ func mintExampleNFT(
 
 func fundAccount(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	receiverAddress flow.Address,
 	amount string,
 ) {
@@ -106,7 +111,7 @@ func fundAccount(
 	serviceSigner, _ := b.ServiceKey().Signer()
 
 	signAndSubmit(
-		t, b, tx,
+		t, b, a, tx,
 		[]flow.Address{b.ServiceKey().Address},
 		[]crypto.Signer{serviceSigner},
 		false,
@@ -115,7 +120,8 @@ func fundAccount(
 
 func sellItem(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	contracts Contracts,
 	userAddress sdk.Address,
 	userSigner crypto.Signer,
@@ -136,7 +142,7 @@ func sellItem(
 	serviceSigner, _ := b.ServiceKey().Signer()
 
 	signAndSubmit(
-		t, b, tx,
+		t, b, a, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
 		[]crypto.Signer{serviceSigner, userSigner},
 		shouldFail,
@@ -149,10 +155,12 @@ func sellItem(
 	var i uint64
 	i = 0
 	for i < 1000 {
-		results, _ := b.GetEventsByHeight(i, eventType)
-		for _, event := range results {
-			if event.Type == eventType {
-				listingResourceID = event.Value.Fields[1].(cadence.UInt64).ToGoValue().(uint64)
+		results, _ := a.GetEventsForHeightRange(context.Background(), eventType, i, i)
+		for _, result := range results {
+			for _, event := range result.Events {
+				if event.Type == eventType {
+					listingResourceID = event.Value.Fields[1].(cadence.UInt64).ToGoValue().(uint64)
+				}
 			}
 		}
 		i = i + 1
@@ -162,7 +170,8 @@ func sellItem(
 }
 
 func buyItem(
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	t *testing.T,
 	contracts Contracts,
 	userAddress sdk.Address,
@@ -184,7 +193,7 @@ func buyItem(
 	serviceSigner, _ := b.ServiceKey().Signer()
 
 	signAndSubmit(
-		t, b, tx,
+		t, b, a, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
 		[]crypto.Signer{serviceSigner, userSigner},
 		shouldFail,
@@ -192,7 +201,8 @@ func buyItem(
 }
 
 func removeItem(
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	t *testing.T,
 	contracts Contracts,
 	userAddress sdk.Address,
@@ -212,7 +222,7 @@ func removeItem(
 	serviceSigner, _ := b.ServiceKey().Signer()
 
 	signAndSubmit(
-		t, b, tx,
+		t, b, a, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
 		[]crypto.Signer{serviceSigner, userSigner},
 		shouldFail,
