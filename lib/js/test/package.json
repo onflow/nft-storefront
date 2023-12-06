@@ -14,7 +14,7 @@
     "@babel/preset-env": "^7.17.10",
     "babel-jest": "^28.0.3",
     "child_process": "^1.0.2",
-    "flow-js-testing": "^0.2.3-alpha.6",
+    "flow-js-testing": "npm:@onflow/flow-js-testing@^0.4.0",
     "jest": "^28.0.3",
     "jest-environment-node": "^28.0.2",
     "util": "^0.12.4"
