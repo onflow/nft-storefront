@@ -146,42 +146,18 @@
     "accounts": {
         "emulator-account": {
             "address": "f8d6e0586b0a20c7",
-            "key": {
-                "location": "emulator-account.pkey",
-                "type": "file"
-            }
+            "key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
         },
         "emulator-ft": {
             "address": "ee82856bf20e2aa6",
-            "key": {
-                "location": "emulator-ft.pkey",
-                "type": "file"
-            }
+            "key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
         }
     },
     "deployments": {
         "emulator": {
             "emulator-account": [
-                "NonFungibleToken",
-                "MetadataViews",
-                "ViewResolver",
                 "ExampleNFT",
-                "NFTStorefrontV2",
-                "HybridCustody",
-                "CapabilityDelegator",
-                "CapabilityFilter",
-                "CapabilityFactory",
-                "FTProviderFactory",
-                "FTAllFactory",
-                "FTBalanceFactory",
-                "FTReceiverBalanceFactory",
-                "FTReceiverFactory",
-                "NFTProviderFactory",
-                "NFTProviderAndCollectionFactory",
-                "NFTCollectionPublicFactory"
-            ],
-            "emulator-ft": [
-                "FungibleToken"
+                "NFTStorefront"
             ]
         }
     },
