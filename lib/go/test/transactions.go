@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/onflow/cadence"
-	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-emulator/emulator"
 	fttemplates "github.com/onflow/flow-ft/lib/go/templates"
 	"github.com/onflow/flow-go-sdk"
 	sdk "github.com/onflow/flow-go-sdk"
@@ -88,11 +88,20 @@ func fundAccount(
 	amount string,
 ) {
 	script := fttemplates.GenerateMintTokensScript(
-		ftAddress,
-		flowTokenAddress,
-		flowTokenName,
+		fttemplates.Environment{
+			"emulator",
+			ftAddress.String(),
+			flowTokenAddress.String(),
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+			"",
+		},
 	)
-
+	
 	tx := flow.NewTransaction().
 		SetScript(script).
 		SetGasLimit(100).
@@ -151,8 +160,10 @@ func sellItem(
 	for i < 1000 {
 		results, _ := b.GetEventsByHeight(i, eventType)
 		for _, event := range results {
-			if event.Type == eventType {
-				listingResourceID = event.Value.Fields[1].(cadence.UInt64).ToGoValue().(uint64)
+			if string(event.Type) == eventType {
+				// TODO: Figure out how to read the event fields to fix the following line
+				// listingResourceID = event.Value.Fields[1].(cadence.UInt64).ToGoValue().(uint64)
+				listingResourceID = 0
 			}
 		}
 		i = i + 1

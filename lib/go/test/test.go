@@ -1,12 +1,15 @@
 package test
 
 import (
+	"context"
+	"github.com/onflow/flow-emulator/convert"
 	"io/ioutil"
 	"regexp"
 	"testing"
 
 	"github.com/onflow/cadence"
-	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-emulator/adapters"
+	"github.com/onflow/flow-emulator/emulator"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	sdktemplates "github.com/onflow/flow-go-sdk/templates"
@@ -17,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/onflow/flow-go-sdk"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -49,8 +53,15 @@ type Contracts struct {
 }
 
 func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flow.Address, flow.Address, crypto.Signer) {
-	nftCode := nftcontracts.NonFungibleToken()
-	nftAddress, err := b.CreateAccount(nil,
+	logger := zerolog.Nop()
+	adapter := adapters.NewSDKAdapter(&logger, b)
+
+	resolverAddress := deploy(t, b, "ViewResolver", contracts.ViewResolver())
+
+	nftCode := nftcontracts.NonFungibleToken(resolverAddress)
+
+	nftAddress, err := adapter.CreateAccount(context.Background(),
+		nil,
 		[]sdktemplates.Contract{
 			{
 				Name:   nonFungibleTokenName,
@@ -58,6 +69,7 @@ func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flo
 			},
 		},
 	)
+
 	require.NoError(t, err)
 
 	_, err = b.CommitBlock()
@@ -65,20 +77,13 @@ func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flo
 
 	accountKeys := test.AccountKeyGenerator()
 
-	metadataAddress := deploy(t, b, "MetadataViews", contracts.MetadataViews(flow.HexToAddress(emulatorFTAddress), nftAddress))
+	metadataAddress := deploy(t, b, "MetadataViews", contracts.MetadataViews(flow.HexToAddress(emulatorFTAddress), nftAddress, resolverAddress))
 
 	exampleNFTAccountKey, exampleNFTSigner := accountKeys.NewWithSigner()
 
-	exampleNFTCode := nftcontracts.ExampleNFT(nftAddress, metadataAddress)
-	exampleNFTAddress, err := b.CreateAccount(
-		[]*flow.AccountKey{exampleNFTAccountKey},
-		[]sdktemplates.Contract{
-			{
-				Name:   "ExampleNFT",
-				Source: string(exampleNFTCode),
-			},
-		},
-	)
+	exampleNFTCode := nftcontracts.ExampleNFT(nftAddress, metadataAddress, resolverAddress)
+	exampleNFTAddress := deploy(t, b, "ExampleNFT", exampleNFTCode, exampleNFTAccountKey)
+
 	require.NoError(t, err)
 
 	_, err = b.CommitBlock()
@@ -95,10 +100,14 @@ func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contract
 	nftStorefrontAccountKey, nftStorefrontSigner := accountKeys.NewWithSigner()
 	nftStorefrontCode := loadNFTStorefront(ftAddress, nftAddress)
 
-	nftStorefrontAddress, err := b.CreateAccount(
+	logger := zerolog.Nop()
+	adapter := adapters.NewSDKAdapter(&logger, b)
+	nftStorefrontAddress, err := adapter.CreateAccount(
+		context.Background(),
 		[]*flow.AccountKey{nftStorefrontAccountKey},
 		nil,
 	)
+
 	require.NoError(t, err)
 
 	fundAccount(t, b, nftStorefrontAddress, defaultAccountFunding)
@@ -112,7 +121,6 @@ func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contract
 	)
 
 	tx.
-		SetGasLimit(100).
 		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
 		SetPayer(b.ServiceKey().Address)
 
@@ -140,7 +148,8 @@ func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contract
 
 // newEmulator returns a emulator object for testing
 func newEmulator() *emulator.Blockchain {
-	b, err := emulator.NewBlockchain()
+
+	b, err := emulator.New(emulator.WithStorageLimitEnabled(false))
 	if err != nil {
 		panic(err)
 	}
@@ -186,7 +195,8 @@ func submit(
 	shouldRevert bool,
 ) {
 	// submit the signed transaction
-	err := b.AddTransaction(*tx)
+	flowTx := convert.SDKTransactionToFlow(*tx)
+	err := b.AddTransaction(*flowTx)
 	require.NoError(t, err)
 
 	result, err := b.ExecuteNextTransaction()
@@ -250,7 +260,14 @@ func createAccount(t *testing.T, b *emulator.Blockchain) (sdk.Address, crypto.Si
 	accountKeys := test.AccountKeyGenerator()
 	accountKey, signer := accountKeys.NewWithSigner()
 
-	address, err := b.CreateAccount([]*sdk.AccountKey{accountKey}, nil)
+	logger := zerolog.Nop()
+	adapter := adapters.NewSDKAdapter(&logger, b)
+	address, err := adapter.CreateAccount(
+		context.Background(),
+		[]*sdk.AccountKey{accountKey},
+		nil,
+	)
+
 	require.NoError(t, err)
 
 	return address, signer
@@ -302,7 +319,10 @@ func deploy(
 	code []byte,
 	keys ...*flow.AccountKey,
 ) flow.Address {
-	address, err := b.CreateAccount(
+	logger := zerolog.Nop()
+	adapter := adapters.NewSDKAdapter(&logger, b)
+	address, err := adapter.CreateAccount(
+		context.Background(),
 		keys,
 		[]sdktemplates.Contract{
 			{

@@ -157,7 +157,8 @@
         "emulator": {
             "emulator-account": [
                 "ExampleNFT",
-                "NFTStorefront"
+                "NFTStorefront",
+                "NFTStorefrontV2"
             ]
         }
     },
