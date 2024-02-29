@@ -19,6 +19,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	ftcontracts "github.com/onflow/flow-ft/lib/go/contracts"
+
 	sdk "github.com/onflow/flow-go-sdk"
 	"github.com/rs/zerolog"
 )
@@ -44,15 +46,19 @@ var (
 )
 
 type Contracts struct {
-	NFTAddress           flow.Address
-	ExampleNFTAddress    flow.Address
-	ExampleNFTSigner     crypto.Signer
-	NFTStorefrontAddress flow.Address
-	NFTStorefrontSigner  crypto.Signer
-	MetadataViewsAddress flow.Address
+	NFTAddress             flow.Address
+	ExampleNFTAddress      flow.Address
+	ExampleNFTSigner       crypto.Signer
+	NFTStorefrontAddress   flow.Address
+	NFTStorefrontSigner    crypto.Signer
+	ViewResolverAddress    flow.Address
+	MetadataViewsAddress   flow.Address
+	FTMetadataViewsAddress flow.Address
+	ExampleFTAddress       flow.Address
+	exampleFTSigner        crypto.Signer
 }
 
-func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flow.Address, flow.Address, crypto.Signer) {
+func deployNFTAndFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flow.Address, flow.Address, flow.Address, flow.Address, flow.Address, crypto.Signer, crypto.Signer) {
 	logger := zerolog.Nop()
 	adapter := adapters.NewSDKAdapter(&logger, b)
 
@@ -79,23 +85,30 @@ func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flo
 
 	metadataAddress := deploy(t, b, "MetadataViews", contracts.MetadataViews(flow.HexToAddress(emulatorFTAddress), nftAddress, resolverAddress))
 
+	ftMetadataAddress := deploy(t, b, "FungibleTokenMetadataViews", ftcontracts.FungibleTokenMetadataViews(ftAddress.String(), metadataAddress.String(), resolverAddress.String()))
+
 	exampleNFTAccountKey, exampleNFTSigner := accountKeys.NewWithSigner()
 
 	exampleNFTCode := nftcontracts.ExampleNFT(nftAddress, metadataAddress, resolverAddress)
 	exampleNFTAddress := deploy(t, b, "ExampleNFT", exampleNFTCode, exampleNFTAccountKey)
+
+	exampleTokenAccountKey, exampleFTSigner := accountKeys.NewWithSigner()
+
+	exampleFTCode := ftcontracts.ExampleToken(ftAddress.String(), metadataAddress.String(), ftMetadataAddress.String(), resolverAddress.String())
+	exampleFTAddress := deploy(t, b, "ExampleToken", exampleFTCode, exampleTokenAccountKey)
 
 	require.NoError(t, err)
 
 	_, err = b.CommitBlock()
 	require.NoError(t, err)
 
-	return nftAddress, exampleNFTAddress, metadataAddress, exampleNFTSigner
+	return nftAddress, exampleNFTAddress, metadataAddress, resolverAddress, ftMetadataAddress, exampleFTAddress, exampleNFTSigner, exampleFTSigner
 }
 
 func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contracts {
 	accountKeys := test.AccountKeyGenerator()
 
-	nftAddress, exampleNFTAddress, metadataAddress, exampleNFTSigner := deployNFTContracts(t, b)
+	nftAddress, exampleNFTAddress, metadataAddress, resolverAddress, ftMetadataAddress, exampleFTAddress, exampleNFTSigner, exampleFTSigner := deployNFTAndFTContracts(t, b)
 
 	nftStorefrontAccountKey, nftStorefrontSigner := accountKeys.NewWithSigner()
 	nftStorefrontCode := loadNFTStorefront(ftAddress, nftAddress)
@@ -110,7 +123,8 @@ func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contract
 
 	require.NoError(t, err)
 
-	fundAccount(t, b, nftStorefrontAddress, defaultAccountFunding)
+	setupExampleTokenVault(t, b, nftStorefrontAddress, nftStorefrontSigner, ftAddress, exampleFTAddress, resolverAddress, metadataAddress, ftMetadataAddress)
+	fundAccount(t, b, exampleFTAddress, exampleFTSigner, metadataAddress, ftMetadataAddress, resolverAddress, nftStorefrontAddress, defaultAccountFunding)
 
 	tx := sdktemplates.AddAccountContract(
 		nftStorefrontAddress,
@@ -142,7 +156,11 @@ func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain) Contract
 		exampleNFTSigner,
 		nftStorefrontAddress,
 		nftStorefrontSigner,
+		resolverAddress,
 		metadataAddress,
+		ftMetadataAddress,
+		exampleFTAddress,
+		exampleFTSigner,
 	}
 }
 
@@ -306,7 +324,8 @@ func setupAccount(
 ) (sdk.Address, crypto.Signer) {
 	setupNFTStorefront(t, b, address, signer, contracts)
 	setupExampleNFTCollection(t, b, address, signer, contracts.NFTAddress, contracts.ExampleNFTAddress, contracts.MetadataViewsAddress)
-	fundAccount(t, b, address, defaultAccountFunding)
+	setupExampleTokenVault(t, b, address, signer, ftAddress, contracts.ExampleFTAddress, contracts.ViewResolverAddress, contracts.MetadataViewsAddress, contracts.FTMetadataViewsAddress)
+	fundAccount(t, b, contracts.ExampleFTAddress, contracts.exampleFTSigner, contracts.MetadataViewsAddress, contracts.FTMetadataViewsAddress, contracts.ViewResolverAddress, address, defaultAccountFunding)
 
 	return address, signer
 }
