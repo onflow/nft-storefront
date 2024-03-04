@@ -2,20 +2,17 @@
 
 ## The Flow Non-Fungible Token standard
 
-## `NonFungibleToken` contract interface
+## `NonFungibleToken` contract
 
 The interface that all Non-Fungible Token contracts should conform to.
-If a user wants to deploy a new NFT contract, their contract would need
-to implement the NonFungibleToken interface.
+If a user wants to deploy a new NFT contract, their contract should implement
+The types defined here
 
-Their contract must follow all the rules and naming
-that the interface specifies.
-
-## `NFT` resource
+## `NFT` resource interface
 
 The core resource type that represents an NFT in the smart contract.
 
-## `Collection` Resource
+## `Collection` Resource interface
 
 The resource that stores a user's NFT collection.
 It includes a few functions to allow the owner to easily
@@ -26,10 +23,8 @@ move tokens in and out of the collection.
 These interfaces declare functions with some pre and post conditions
 that require the Collection to follow certain naming and behavior standards.
 
-They are separate because it gives the user the ability to share a reference
-to their Collection that only exposes the fields and functions in one or more
-of the interfaces. It also gives users the ability to make custom resources
-that implement these interfaces to do various things with the tokens.
+They are separate because it gives developers the ability to define functions
+that can use any type that implements these interfaces
 
 By using resources and interfaces, users of NFT smart contracts can send
 and receive tokens peer-to-peer, without having to interact with a central ledger
@@ -41,155 +36,117 @@ Collection to complete the transfer.
 
 */
 
-import ViewResolver from "./ViewResolver.cdc"
+import ViewResolver from "ViewResolver"
 
-/// The main NFT contract interface. Other NFT contracts will
-/// import and implement this interface
+/// The main NFT contract. Other NFT contracts will
+/// import and implement the interfaces defined in this contract
 ///
-access(all) contract NonFungibleToken {
+access(all) contract interface NonFungibleToken: ViewResolver {
 
-    // An entitlement for allowing the withdrawal of tokens from a Vault
-    access(all) entitlement Withdrawable
+    /// An entitlement for allowing the withdrawal of tokens from a Vault
+    access(all) entitlement Withdraw
+
+    /// An entitlement for allowing updates and update events for an NFT
+    access(all) entitlement Update
+
+    /// entitlement for owner that grants Withdraw and Update
+    access(all) entitlement Owner
+
+    /// Event that contracts should emit when the metadata of an NFT is updated
+    /// It can only be emitted by calling the `emitNFTUpdated` function
+    /// with an `Updatable` entitled reference to the NFT that was updated
+    /// The entitlement prevents spammers from calling this from other users' collections
+    /// because only code within a collection or that has special entitled access
+    /// to the collections methods will be able to get the entitled reference
+    /// 
+    /// The event makes it so that third-party indexers can monitor the events
+    /// and query the updated metadata from the owners' collections.
+    ///
+    access(all) event Updated(type: String, id: UInt64, uuid: UInt64, owner: Address?)
+    access(contract) view fun emitNFTUpdated(_ nftRef: auth(Update | Owner) &{NonFungibleToken.NFT})
+    {
+        emit Updated(type: nftRef.getType().identifier, id: nftRef.id, uuid: nftRef.uuid, owner: nftRef.owner?.address)
+    }
+
 
     /// Event that is emitted when a token is withdrawn,
-    /// indicating the owner of the collection that it was withdrawn from.
+    /// indicating the type, id, uuid, the owner of the collection that it was withdrawn from,
+    /// and the UUID of the resource it was withdrawn from, usually a collection.
     ///
     /// If the collection is not in an account's storage, `from` will be `nil`.
     ///
-    access(all) event Withdraw(id: UInt64, uuid: UInt64, from: Address?, type: String)
-
-    access(self) fun emitNFTWithdraw(id: UInt64, uuid: UInt64, from: Address?, type: String): Bool
-    {
-        emit Withdraw(id: id, uuid: uuid, from: from, type: type)
-        return true
-    }
+    access(all) event Withdrawn(type: String, id: UInt64, uuid: UInt64, from: Address?, providerUUID: UInt64)
 
     /// Event that emitted when a token is deposited to a collection.
+    /// Indicates the type, id, uuid, the owner of the collection that it was deposited to,
+    /// and the UUID of the collection it was deposited to
     ///
-    /// It indicates the owner of the collection that it was deposited to.
+    /// If the collection is not in an account's storage, `from`, will be `nil`.
     ///
-    access(all) event Deposit(id: UInt64, uuid: UInt64, to: Address?, type: String)
+    access(all) event Deposited(type: String, id: UInt64, uuid: UInt64, to: Address?, collectionUUID: UInt64)
 
-    access(self) fun emitNFTDeposit(id: UInt64, uuid: UInt64, to: Address?, type: String): Bool
-    {
-        emit Deposit(id: id, uuid: uuid, to: to, type: type)
-        return true
-    }
-
-    /// Transfer
-    ///
-    /// The event that should be emitted when tokens are transferred from one account to another
-    ///
-    access(all) event Transfer(id: UInt64, uuid: UInt64, from: Address?, to: Address?, type: String)
-
-    access(self) fun emitNFTTransfer(id: UInt64, uuid: UInt64?, from: Address?, to: Address?, type: String?): Bool
-    {
-        // The transfer method can return false even if it didn't do a transfer
-        // in which case we don't want the event to be emitted
-        if uuid != nil && type != nil {
-            emit Transfer(id: id, uuid: uuid!, from: from, to: to, type: type!)
-            return true
-        } else {
-            return true
-        }
-    }
-
-    /// Destroy
-    ///
-    /// The event that should be emitted when an NFT is destroyed
-    access(all) event Destroy(id: UInt64, uuid: UInt64, type: String)
-
-    access(self) fun emitNFTDestroy(id: UInt64, uuid: UInt64, type: String): Bool
-    {
-        emit Destroy(id: id, uuid: uuid, type: type)
-        return true
-    }
+    /// Included for backwards-compatibility
+    access(all) resource interface INFT: NFT {}
 
     /// Interface that the NFTs must conform to
     ///
     access(all) resource interface NFT: ViewResolver.Resolver {
-        /// The unique ID that each NFT has
-        access(all) view fun getID(): UInt64 {
-            return self.uuid
+
+        /// unique ID for the NFT
+        access(all) let id: UInt64
+
+        /// Event that is emitted automatically every time a resource is destroyed
+        /// The type information is included in the metadata event so it is not needed as an argument
+        access(all) event ResourceDestroyed(id: UInt64 = self.id, uuid: UInt64 = self.uuid)
+
+        /// createEmptyCollection creates an empty Collection that is able to store the NFT
+        /// and returns it to the caller so that they can own NFTs
+        /// @return A an empty collection that can store this NFT
+        access(all) fun createEmptyCollection(): @{Collection} {
+            post {
+                result.getLength() == 0: "The created collection must be empty!"
+            }
         }
 
-        // access(all) view fun getViews(): [Type] {
-        //     return []
-        // }
-        // access(all) fun resolveView(_ view: Type): AnyStruct? {
-        //     return nil
-        // }
+        /// Gets all the NFTs that this NFT directly owns
+        /// @return A dictionary of all subNFTS keyed by type
+        access(all) view fun getAvailableSubNFTS(): {Type: UInt64} {
+            return {}
+        }
 
-        destroy() {
-            pre {
-                //NonFungibleToken.emitNFTDestroy(id: self.getID(), uuid: self.uuid, type: self.getType().identifier)
-            }
+        /// Get a reference to an NFT that this NFT owns
+        /// Both arguments are optional to allow the NFT to choose
+        /// how it returns sub NFTs depending on what arguments are provided
+        /// For example, if `type` has a value, but `id` doesn't, the NFT 
+        /// can choose which NFT of that type to return if there is a "default"
+        /// If both are `nil`, then NFTs that only store a single NFT can just return
+        /// that. This helps callers who aren't sure what they are looking for 
+        ///
+        /// @param type: The Type of the desired NFT
+        /// @param id: The id of the NFT to borrow
+        ///
+        /// @return A structure representing the requested view.
+        access(all) fun getSubNFT(type: Type, id: UInt64) : &{NonFungibleToken.NFT}? {
+            return nil
         }
     }
 
-    /// Interface to mediate withdraws from the Collection
+    /// Interface to mediate withdrawals from a resource, usually a Collection
     ///
     access(all) resource interface Provider {
-        /// Function for projects to indicate if they are using UUID or not
-        access(all) view fun usesUUID(): Bool {
-            return false
-        }
 
         // We emit withdraw events from the provider interface because conficting withdraw
         // events aren't as confusing to event listeners as conflicting deposit events
 
         /// withdraw removes an NFT from the collection and moves it to the caller
         /// It does not specify whether the ID is UUID or not
-        access(Withdrawable) fun withdraw(withdrawID: UInt64): @{NFT} {
+        /// @param withdrawID: The id of the NFT to withdraw from the collection
+        access(Withdraw | Owner) fun withdraw(withdrawID: UInt64): @{NFT} {
             post {
-                result.getID() == withdrawID: "The ID of the withdrawn token must be the same as the requested ID"
-                //NonFungibleToken.emitNFTWithdraw(id: result.getID(), uuid: result.uuid, from: self.owner?.address, type: result.getType().identifier)
+                result.id == withdrawID: "The ID of the withdrawn token must be the same as the requested ID"
+                emit Withdrawn(type: result.getType().identifier, id: result.id, uuid: result.uuid, from: self.owner?.address, providerUUID: self.uuid)
             }
         }
-
-        /// Alternate withdraw methods
-        /// The next three withdraw methods allow projects to have more flexibility
-        /// to indicate how their NFTs are meant to be used
-        /// With the v2 upgrade, some projects will be using UUID and others
-        /// will be using custom IDs, so projects can pick and choose which
-        /// of these withdraw methods applies to them
-
-        /// TODO: These will eventually have optional return types, but don't right now
-        /// because of a bug in Cadence
-
-        /// withdrawWithUUID removes an NFT from the collection, using its UUID, and moves it to the caller
-        access(Withdrawable) fun withdrawWithUUID(_ uuid: UInt64): @{NFT} {
-            post {
-                result == nil || result!.uuid == uuid: "The ID of the withdrawn token must be the same as the requested ID"
-                //NonFungibleToken.emitNFTWithdraw(id: result.getID(), uuid: result.uuid, from: self.owner?.address, type: result.getType().identifier)
-            }
-        }
-
-        /// withdrawWithType removes an NFT from the collection, using its Type and ID and moves it to the caller
-        /// This would be used by a collection that can store multiple NFT types
-        access(Withdrawable) fun withdrawWithType(type: Type, withdrawID: UInt64): @{NFT} {
-            post {
-                result == nil || result.getID() == withdrawID: "The ID of the withdrawn token must be the same as the requested ID"
-                //NonFungibleToken.emitNFTWithdraw(id: result.getID(), uuid: result.uuid, from: self.owner?.address, type: result.getType().identifier)
-            }
-        }
-
-        /// withdrawWithTypeAndUUID removes an NFT from the collection using its type and uuid and moves it to the caller
-        /// This would be used by a collection that can store multiple NFT types
-        access(Withdrawable) fun withdrawWithTypeAndUUID(type: Type, uuid: UInt64): @{NFT} {
-            post {
-                result == nil || result!.uuid == uuid: "The ID of the withdrawn token must be the same as the requested ID"
-                //NonFungibleToken.emitNFTWithdraw(id: result.getID(), uuid: result.uuid, from: self.owner?.address, type: result.getType().identifier)
-            }
-        }
-    }
-
-    /// Interface to mediate transfers between Collections
-    ///
-    access(all) resource interface Transferor {
-        /// transfer removes an NFT from the callers collection
-        /// and moves it to the collection specified by `receiver`
-        access(Withdrawable) fun transfer(id: UInt64, receiver: Capability<&{Receiver}>): Bool
     }
 
     /// Interface to mediate deposits to the Collection
@@ -197,118 +154,81 @@ access(all) contract NonFungibleToken {
     access(all) resource interface Receiver {
 
         /// deposit takes an NFT as an argument and adds it to the Collection
-        ///
+        /// @param token: The NFT to deposit
         access(all) fun deposit(token: @{NFT})
 
-        // /// getSupportedNFTTypes returns a list of NFT types that this receiver accepts
-        // access(all) view fun getSupportedNFTTypes(): {Type: Bool} {
-        //     return {}
-        // }
+        /// getSupportedNFTTypes returns a list of NFT types that this receiver accepts
+        /// @return A dictionary of types mapped to booleans indicating if this
+        ///         reciever supports it
+        access(all) view fun getSupportedNFTTypes(): {Type: Bool}
 
-        // /// Returns whether or not the given type is accepted by the collection
-        // /// A collection that can accept any type should just return true by default
-        // access(all) view fun isSupportedNFTType(type: Type): Bool {
-        //     return false
-        // }
+        /// Returns whether or not the given type is accepted by the collection
+        /// A collection that can accept any type should just return true by default
+        /// @param type: An NFT type
+        /// @return A boolean indicating if this receiver can recieve the desired NFT type
+        access(all) view fun isSupportedNFTType(type: Type): Bool
+    }
+
+    /// Kept for backwards-compatibility reasons
+    access(all) resource interface CollectionPublic {
+        access(all) fun deposit(token: @{NFT})
+        access(all) view fun getLength(): Int
+        access(all) view fun getIDs(): [UInt64]
+        access(all) view fun borrowNFT(_ id: UInt64): &{NFT}?
     }
 
     /// Requirement for the concrete resource type
     /// to be declared in the implementing contract
     ///
-    access(all) resource interface Collection: Provider, Receiver, Transferor, ViewResolver.ResolverCollection {
+    access(all) resource interface Collection: Provider, Receiver, CollectionPublic, ViewResolver.ResolverCollection {
 
-        /// Return the default storage path for the collection
-        access(all) view fun getDefaultStoragePath(): StoragePath? {
-            return nil
-        }
-
-        /// Return the default public path for the collection
-        access(all) view fun getDefaultPublicPath(): PublicPath? {
-            return nil
-        }
-
-        /// Normally we would require that the collection specify
-        /// a specific dictionary to store the NFTs, but this isn't necessary any more
-        /// as long as all the other functions are there
-
-        /// Returns the NFT types that this collection can store
-        /// If the collection can accept any NFT type, it should return
-        /// a one element dictionary with the key type as `@{NonFungibleToken.NFT}`
-        access(all) view fun getSupportedNFTTypes(): {Type: Bool} {
-            pre { true: "dummy" }
-        }
-
-        /// Returns whether or not the given type is accepted by the collection
-        access(all) view fun isSupportedNFTType(type: Type): Bool {
-            pre { true: "dummy" }
-        }
-
-        /// createEmptyCollection creates an empty Collection
-        /// and returns it to the caller so that they can own NFTs
-        access(all) fun createEmptyCollection(): @{Collection} {
-            post {
-                result.getIDs().length == 0: "The created collection must be empty!"
-            }
-        }
-
-        // access(all) view fun usesUUID(): Bool {
-        //     return false
-        // }
-
-        /// withdraw removes an NFT from the collection and moves it to the caller
-        access(Withdrawable) fun withdraw(withdrawID: UInt64): @{NonFungibleToken.NFT}
-
-        /// deposit takes a NFT and adds it to the collections dictionary
-        /// and adds the ID to the id array
-        access(all) fun deposit(token: @{NonFungibleToken.NFT})
-        // {
-        //     pre {
-        //         // We emit the deposit event in the `Collection` interface
-        //         // because the `Collection` interface is almost always the final destination
-        //         // of tokens and deposit emissions from custom receivers could be confusing
-        //         // and hard to reconcile to event listeners
-        //         //NonFungibleToken.emitNFTDeposit(id: token.getID(), uuid: token.uuid, to: self.owner?.address, type: token.getType().identifier)
-        //     }
-        // }
-
-        /// Function for a direct transfer instead of having to do a deposit and withdrawal
-        /// This can and should return false if the transfer doesn't succeed and true if it does succeed
-        ///
-        access(Withdrawable) fun transfer(id: UInt64, receiver: Capability<&{NonFungibleToken.Receiver}>): Bool {
+        /// deposit takes a NFT as an argument and stores it in the collection
+        /// @param token: The NFT to deposit into the collection
+        access(all) fun deposit(token: @{NonFungibleToken.NFT}) {
             pre {
-                receiver.check(): "Could not borrow a reference to the NFT receiver"
-                //NonFungibleToken.emitNFTTransfer(id: id, uuid: self.borrowNFTSafe(id: id)?.uuid, from: self.owner?.address, to: receiver.borrow()?.owner?.address, type: self.borrowNFT(id).getType().identifier)
+                // We emit the deposit event in the `Collection` interface
+                // because the `Collection` interface is almost always the final destination
+                // of tokens and deposit emissions from custom receivers could be confusing
+                // and hard to reconcile to event listeners
+                emit Deposited(type: token.getType().identifier, id: token.id, uuid: token.uuid, to: self.owner?.address, collectionUUID: self.uuid)
             }
         }
-
-        /// getIDs returns an array of the IDs that are in the collection
-        access(all) view fun getIDs(): [UInt64]
 
         /// Gets the amount of NFTs stored in the collection
+        /// @return An integer indicating the size of the collection
         access(all) view fun getLength(): Int
 
-        /// getIDsWithTypes returns a list of IDs that are in the collection, keyed by type
-        /// Should only be used by collections that can store multiple NFT types
-        access(all) view fun getIDsWithTypes(): {Type: [UInt64]}
-
-        /// Returns a borrowed reference to an NFT in the collection
-        /// so that the caller can read data and call methods from it
-        access(all) view fun borrowNFT(_ id: UInt64): &{NonFungibleToken.NFT} {
-            pre { true: "dummy" }
-        }
-
-        /// From the ViewResolver Contract
-        /// borrows a reference to get metadata views for the NFTs that the contract contains
-        access(all) view fun borrowViewResolver(id: UInt64): &{ViewResolver.Resolver}? {
-            pre { true: "dummy" }
-        }
-
-        access(all) view fun borrowNFTSafe(id: UInt64): &{NonFungibleToken.NFT}? {
+        /// Borrows a reference to an NFT stored in the collection
+        /// If the NFT with the specified ID is not in the collection,
+        /// the function should return `nil` and not panic.
+        ///
+        /// @param id: The desired nft id in the collection to return a referece for.
+        /// @return An optional reference to the NFT
+        access(all) view fun borrowNFT(_ id: UInt64): &{NonFungibleToken.NFT}? {
             post {
-                (result == nil) || (result?.getID() == id):
+                (result == nil) || (result?.id == id): 
                     "Cannot borrow NFT reference: The ID of the returned reference does not match the ID that was specified"
             }
-            return nil
+        }
+
+        /// createEmptyCollection creates an empty Collection of the same type
+        /// and returns it to the caller
+        /// @return A an empty collection of the same type
+        access(all) fun createEmptyCollection(): @{Collection} {
+            post {
+                result.getType() == self.getType(): "The created collection does not have the same type as this collection"
+                result.getLength() == 0: "The created collection must be empty!"
+            }
+        }
+    }
+
+    /// createEmptyCollection creates an empty Collection for the specified NFT type
+    /// and returns it to the caller so that they can own NFTs
+    /// @param nftType: The desired nft type to return a collection for.
+    /// @return An array of NFT Types that the implementing contract defines.
+    access(all) fun createEmptyCollection(nftType: Type): @{NonFungibleToken.Collection} {
+        post {
+            result.getIDs().length == 0: "The created collection must be empty!"
         }
     }
 }
