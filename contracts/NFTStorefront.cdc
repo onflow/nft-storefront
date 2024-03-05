@@ -1,5 +1,5 @@
-import FungibleToken from "FungibleToken"
-import NonFungibleToken from "NonFungibleToken"
+import FungibleToken from "./utility/FungibleToken.cdc"
+import NonFungibleToken from "./utility/NonFungibleToken.cdc"
 
 /// NB: This contract is no longer supported. NFT Storefront V2 is recommended
 ///
