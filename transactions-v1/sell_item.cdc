@@ -1,24 +1,26 @@
-import FlowToken from "FlowToken"
-import FungibleToken from "FungibleToken"
-import NonFungibleToken from "NonFungibleToken"
-import ExampleNFT from "ExampleNFT"
-import NFTStorefront from "NFTStorefront"
+import ExampleToken from "../contracts/utility/ExampleToken.cdc"
+import FungibleToken from "../contracts/utility/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
+import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
+import NFTStorefront from "../contracts/NFTStorefront.cdc"
+import MetadataViews from "../contracts/utility/MetadataViews"
 
 transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
 
-    let flowReceiver: Capability<&{FungibleToken.Receiver}>
-    let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdrawable) &{NonFungibleToken.Collection}>
+    let exampleTokenReceiver: Capability<&{FungibleToken.Receiver}>
+    let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
     let storefront: auth(NFTStorefront.Creatable) &NFTStorefront.Storefront
 
     prepare(acct: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
 
-        let collectionData = ExampleNFT.getCollectionData(nftType: Type<@ExampleNFT.NFT>())
+        let collectionDataOpt = ExampleNFT.resolveContractView(resourceType: Type<@ExampleNFT.NFT>(), viewType: Type<MetadataViews.NFTCollectionData>())
             ?? panic("Missing collection data")
+        let collectionData = collectionDataOpt as! MetadataViews.NFTCollectionData
 
-        self.flowReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
-        assert(self.flowReceiver.check(), message: "Missing or mis-typed FlowToken Receiver")
+        self.exampleTokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)!
+        assert(self.exampleTokenReceiver.check(), message: "Missing or mis-typed ExampleToken Receiver")
 
-        self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdrawable) &{NonFungibleToken.Collection}>(
+        self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
                 collectionData.storagePath
             )
         assert(self.exampleNFTProvider.check(), message: "Missing or mis-typed ExampleNFT provider")
@@ -44,14 +46,14 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
 
     execute {
         let saleCut = NFTStorefront.SaleCut(
-            receiver: self.flowReceiver,
+            receiver: self.exampleTokenReceiver,
             amount: saleItemPrice
         )
         self.storefront.createListing(
             nftProviderCapability: self.exampleNFTProvider,
             nftType: Type<@ExampleNFT.NFT>(),
             nftID: saleItemID,
-            salePaymentVaultType: Type<@FlowToken.Vault>(),
+            salePaymentVaultType: Type<@ExampleToken.Vault>(),
             saleCuts: [saleCut]
         )
     }

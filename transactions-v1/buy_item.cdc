@@ -1,8 +1,9 @@
-import FlowToken from "FlowToken"
-import FungibleToken from "FungibleToken"
-import NonFungibleToken from "NonFungibleToken"
-import ExampleNFT from "ExampleNFT"
-import NFTStorefront from "NFTStorefront"
+import ExampleToken from "../contracts/utility/ExampleToken.cdc"
+import FungibleToken from "../contracts/utility/FungibleToken.cdc"
+import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
+import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
+import NFTStorefront from "../contracts/NFTStorefront.cdc"
+import MetadataViews from "../contracts/utility/MetadataViews"
 
 transaction(listingResourceID: UInt64, storefrontAddress: Address) {
 
@@ -20,12 +21,15 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address) {
                     ?? panic("No Offer with that ID in Storefront")
         let price = self.listing.getDetails().salePrice
 
-        let mainFlowVault = acct.storage.borrow<auth(FungibleToken.Withdrawable) &FlowToken.Vault>(from: /storage/flowTokenVault)
-            ?? panic("Cannot borrow FlowToken vault from acct storage")
-        self.paymentVault <- mainFlowVault.withdraw(amount: price)
+        let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
+            ?? panic("Cannot borrow ExampleToken vault from acct storage")
+        self.paymentVault <- mainVault.withdraw(amount: price)
 
-        let collectionData = ExampleNFT.getCollectionData(nftType: Type<@ExampleNFT.NFT>())
+        let collectionDataOpt = ExampleNFT.resolveContractView(resourceType: Type<@ExampleNFT.NFT>(), viewType: Type<MetadataViews.NFTCollectionData>())
             ?? panic("Missing collection data")
+        let collectionData = collectionDataOpt as! MetadataViews.NFTCollectionData
+
+
         self.exampleNFTReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
             ?? panic("Cannot borrow NFT collection receiver from account")
     }

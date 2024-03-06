@@ -341,9 +341,9 @@ access(all) contract NFTStorefront {
             let provider = self.nftProviderCapability.borrow()
             assert(provider != nil, message: "cannot borrow nftProviderCapability")
 
-            // This will precondition assert if the token is not available.
             let nft = provider!.borrowNFT(self.details.nftID)
-            assert(nft.isInstance(self.details.nftType), message: "token is not of specified type")
+            // This will precondition assert if the token is not available.
+            assert(nft!.getType() == self.details.nftType, message: "token is not of specified type")
             assert(nft?.id == self.details.nftID, message: "token does not have specified ID")
         }
     }

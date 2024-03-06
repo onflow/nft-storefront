@@ -179,8 +179,10 @@ func sellItem(
 	price string,
 	shouldFail bool,
 ) uint64 {
+	script := nftStorefrontGenerateSellItemScript(contracts)
+
 	tx := flow.NewTransaction().
-		SetScript(nftStorefrontGenerateSellItemScript(contracts)).
+		SetScript(script).
 		SetGasLimit(100).
 		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
 		SetPayer(b.ServiceKey().Address).

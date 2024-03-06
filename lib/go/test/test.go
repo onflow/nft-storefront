@@ -33,11 +33,13 @@ const (
 )
 
 var (
-	ftAddressPlaceholder            = regexp.MustCompile(`"[^"\s].*/FungibleToken.cdc"`)
-	flowTokenAddressPlaceHolder     = regexp.MustCompile(`"[^"\s].*/FlowToken.cdc"`)
-	nftAddressPlaceholder           = regexp.MustCompile(`"[^"\s].*/NonFungibleToken.cdc"`)
-	exampleNFTAddressPlaceHolder    = regexp.MustCompile(`"[^"\s].*/ExampleNFT.cdc"`)
-	nftStorefrontAddressPlaceholder = regexp.MustCompile(`"[^"\s].*/NFTStorefront.cdc"`)
+	ftAddressPlaceholder            = regexp.MustCompile(`"[^"\s].*/FungibleToken(.cdc)?"`)
+	flowTokenAddressPlaceHolder     = regexp.MustCompile(`"[^"\s].*/FlowToken(.cdc)?"`)
+	nftAddressPlaceholder           = regexp.MustCompile(`"[^"\s].*/NonFungibleToken(.cdc)?"`)
+	exampleNFTAddressPlaceHolder    = regexp.MustCompile(`"[^"\s].*/ExampleNFT(.cdc)?"`)
+	nftStorefrontAddressPlaceholder = regexp.MustCompile(`"[^"\s].*/NFTStorefront(.cdc)?"`)
+	metadataViewsAddressPlaceholder = regexp.MustCompile(`"[^"\s].*/MetadataViews(.cdc)?"`)
+	exampleTokenAddressPlaceholder  = regexp.MustCompile(`"[^"\s].*/ExampleToken(.cdc)?"`)
 )
 
 var (
