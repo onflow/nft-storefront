@@ -168,7 +168,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 		cadenceCollectionIDs := executeScriptAndCheck(
 			t,
 			b,
-			nfttemplates.GenerateGetCollectionIDsScript(flow.HexToAddress(NonFungibleTokenAddress), contracts.ExampleNFTAddress),
+			nfttemplates.G	 enerateGetCollectionIDsScript(flow.HexToAddress(NonFungibleTokenAddress), contracts.ExampleNFTAddress),
 			[][]byte{
 				jsoncdc.MustEncode(cadence.NewAddress(sellerAddress)),
 				jsoncdc.MustEncode(publicPath),
