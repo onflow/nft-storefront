@@ -2,6 +2,7 @@
 	"contracts": {
 		"ExampleNFT": "./contracts/utility/ExampleNFT.cdc",
 		"ExampleToken": "./contracts/utility/ExampleToken.cdc",
+		"TestContract": "./contracts/TestContract.cdc",
 		"FungibleTokenMetadataViews": "./contracts/utility/FungibleTokenMetadataViews.cdc",
 		"FlowToken": {
 			"source": "",

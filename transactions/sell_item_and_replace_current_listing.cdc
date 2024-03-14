@@ -1,4 +1,4 @@
-import FlowToken from 0x0ae53cb6e3f42a79
+import ExampleToken from "../contracts/utility/ExampleToken.cdc"
 import FungibleToken from "../contracts/utility/FungibleToken.cdc"
 import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
 import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
@@ -26,8 +26,8 @@ transaction(
     marketplacesAddress: [Address]
 ) {
 
-    let flowReceiver: Capability<&{FungibleToken.Receiver}>
-    let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdrawable) &{NonFungibleToken.Collection}>
+    let tokenReceiver: Capability<&{FungibleToken.Receiver}>
+    let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
     let storefront: auth(NFTStorefrontV2.Creatable, NFTStorefrontV2.Removable) &NFTStorefrontV2.Storefront
     var saleCuts: [NFTStorefrontV2.SaleCut]
     var marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]
@@ -36,14 +36,14 @@ transaction(
         self.saleCuts = []
         self.marketplacesCapability = []
 
-        let collectionData = ExampleNFT.getCollectionData(nftType: Type<@ExampleNFT.NFT>())
-            ?? panic("Missing collection data")
+        let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
+            ?? panic("ViewResolver does not resolve NFTCollectionData view")
 
         // Receiver for the sale cut.
-        self.flowReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
-        assert(self.flowReceiver.borrow() != nil, message: "Missing or mis-typed FlowToken receiver")
+        self.tokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)!
+        assert(self.tokenReceiver.borrow() != nil, message: "Missing or mis-typed ExampleToken receiver")
 
-        self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdrawable) &{NonFungibleToken.Collection}>(
+        self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
                 collectionData.storagePath
             )
         assert(self.exampleNFTProvider.check(), message: "Missing or mis-typed ExampleNFT provider")
@@ -73,7 +73,7 @@ transaction(
         // Append the cut for the seller.
         self.saleCuts.append(
             NFTStorefrontV2.SaleCut(
-                receiver: self.flowReceiver,
+                receiver: self.tokenReceiver,
                 amount: effectiveSaleItemPrice - totalRoyaltyCut
             )
         )
@@ -85,10 +85,10 @@ transaction(
 
         for marketplace in marketplacesAddress {
             // Here we are making a fair assumption that all given addresses would have
-            // the capability to receive the `FlowToken`
+            // the capability to receive the `ExampleToken`
             self.marketplacesCapability.append(
-                getAccount(marketplace).capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-                    ?? panic("Problem getting Marketplace FlowToken Receiver")
+                getAccount(marketplace).capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
+                    ?? panic("Problem getting Marketplace ExampleToken Receiver")
             )
         }
     }
@@ -108,7 +108,7 @@ transaction(
             nftProviderCapability: self.exampleNFTProvider,
             nftType: Type<@ExampleNFT.NFT>(),
             nftID: saleItemID,
-            salePaymentVaultType: Type<@FlowToken.Vault>(),
+            salePaymentVaultType: Type<@ExampleToken.Vault>(),
             saleCuts: self.saleCuts,
             marketplacesCapability: self.marketplacesCapability.length == 0 ? nil : self.marketplacesCapability,
             customID: customID,

@@ -364,7 +364,7 @@ access(all) contract NFTStorefrontV2 {
             // to implement the functionality behind the interface in any given way.
             // Therefore we cannot trust the Collection resource behind the interface,
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
-            assert(nft.isInstance(self.details.nftType), message: "withdrawn NFT is not of specified type")
+            assert(nft.getType() == self.details.nftType, message: "withdrawn NFT is not of specified type")
             assert(nft.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
 
             // Fetch the duplicate listing for the given NFT
@@ -412,6 +412,11 @@ access(all) contract NFTStorefrontV2 {
             // If the listing is purchased, we regard it as completed here.
             // Otherwise we regard it as completed in the destructor.
 
+            var commissionReceiver: Address?  = nil
+            if (self.details.commissionAmount != 0.0) {
+                commissionReceiver = commissionRecipient!.address
+            }
+
             emit ListingCompleted(
                 listingResourceID: self.uuid,
                 storefrontResourceID: self.details.storefrontID,
@@ -423,7 +428,7 @@ access(all) contract NFTStorefrontV2 {
                 salePrice: self.details.salePrice,
                 customID: self.details.customID,
                 commissionAmount: self.details.commissionAmount,
-                commissionReceiver: self.details.commissionAmount != 0.0 ? commissionRecipient!.address : nil,
+                commissionReceiver: commissionReceiver,
                 expiry: self.details.expiry
             )
 
@@ -487,7 +492,7 @@ access(all) contract NFTStorefrontV2 {
 
             // This will precondition assert if the token is not available.
             let nft = provider!.borrowNFT(self.details.nftID)
-            assert(nft.isInstance(self.details.nftType), message: "token is not of specified type")
+            assert(nft!.getType() == self.details.nftType, message: "token is not of specified type")
             assert(nft?.id == self.details.nftID, message: "token does not have specified ID")
         }
     }

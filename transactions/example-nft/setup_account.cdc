@@ -1,31 +1,31 @@
 /// This transaction is what an account would run
 /// to set itself up to receive NFTs
 
-import NonFungibleToken from "NonFungibleToken"
-import ExampleNFT from "ExampleNFT"
-import MetadataViews from "MetadataViews"
-import ViewResolver from "ViewResolver"
+import "NonFungibleToken"
+import "ExampleNFT"
+import "MetadataViews"
 
 transaction {
 
-    prepare(signer: auth(StorageCapabilities, PublishCapability, BorrowValue, SaveValue) &Account) {
-        let collectionData = ExampleNFT.getCollectionData(nftType: Type<@ExampleNFT.NFT>())
-            ?? panic("Missing collection data")
+    prepare(signer: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue, UnpublishCapability) &Account) {
         
+        let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
+            ?? panic("ViewResolver does not resolve NFTCollectionData view")
+
         // Return early if the account already has a collection
         if signer.storage.borrow<&ExampleNFT.Collection>(from: collectionData.storagePath) != nil {
             return
         }
 
         // Create a new empty collection
-        let collection <- ExampleNFT.createEmptyCollection(collectionType: Type<@ExampleNFT.Collection>())
+        let collection <- ExampleNFT.createEmptyCollection(nftType: Type<@ExampleNFT.NFT>())
 
         // save it to the account
         signer.storage.save(<-collection, to: collectionData.storagePath)
 
         // create a public capability for the collection
-        let collectionCap = signer.capabilities.storage.issue<&{NonFungibleToken.Collection}>(collectionData.storagePath)
-
+        signer.capabilities.unpublish(collectionData.publicPath)
+        let collectionCap = signer.capabilities.storage.issue<&ExampleNFT.Collection>(collectionData.storagePath)
         signer.capabilities.publish(collectionCap, at: collectionData.publicPath)
     }
 }
