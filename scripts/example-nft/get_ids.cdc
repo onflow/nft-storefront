@@ -1,11 +1,14 @@
-import NonFungibleToken from "NonFungibleToken"
-import ExampleNFT from "ExampleNFT"
+/// Script to get NFT IDs in an account's collection
 
-access(all) fun main(address: Address): [UInt64] {
-    let collectionData = ExampleNFT.getCollectionData(nftType: Type<@ExampleNFT.NFT>())
-        ?? panic("Could not get ExampleNFT Collection data")
-    
-    return getAccount(address).capabilities.borrow<&{NonFungibleToken.Collection}>(
-            collectionData.publicPath
-        )?.getIDs() ?? panic("No Collection Capability found for the given address")
+import "NonFungibleToken"
+import "ExampleNFT"
+
+access(all) fun main(address: Address, collectionPublicPath: PublicPath): [UInt64] {
+    let account = getAccount(address)
+
+    let collectionRef = account.capabilities.borrow<&{NonFungibleToken.Collection}>(
+            collectionPublicPath
+        ) ?? panic("Could not borrow capability from collection at specified path")
+
+    return collectionRef.getIDs()
 }

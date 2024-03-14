@@ -15,6 +15,7 @@ import ViewResolver from "ViewResolver"
 import MetadataViews from "MetadataViews"
 
 access(all) contract ExampleNFT: NonFungibleToken {
+    access(all) event Minted(id: UInt64, uuid: UInt64)
 
     /// Path where the minter should be stored
     /// The standard paths for the collection are stored in the collection resource type
@@ -292,6 +293,8 @@ access(all) contract ExampleNFT: NonFungibleToken {
                 royalties: royalties,
                 metadata: metadata,
             )
+
+            emit Minted(id: newNFT.id, uuid: newNFT.uuid)
 
             return <-newNFT
         }

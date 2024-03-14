@@ -9,7 +9,7 @@ import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 transaction(fromIndex: UInt64, toIndex: UInt64, storefrontAddress: Address) {
     let storefront: &{NFTStorefrontV2.StorefrontPublic}
 
-    prepare(acct: AuthAccount) {
+    prepare(acct: &Account) {
         // Access the storefront public resource of the seller to purchase the listing.
         self.storefront = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
                 NFTStorefrontV2.StorefrontPublicPath
