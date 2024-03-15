@@ -3,6 +3,12 @@ package test
 // go test -timeout 30s . -run ^TestNFTStorefront -v
 
 import (
+	"github.com/onflow/cadence"
+	jsoncdc "github.com/onflow/cadence/encoding/json"
+	"github.com/onflow/cadence/runtime/common"
+	"github.com/onflow/flow-go-sdk"
+	nfttemplates "github.com/onflow/flow-nft/lib/go/templates"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -31,7 +37,6 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 	contracts := nftStorefrontDeployContracts(t, b, a, 1)
 
 	t.Run("Should be able to list a sale offer", func(t *testing.T) {
-		tokenToList := uint64(0)
 		tokenPrice := "1.11"
 
 		sellerAddress, sellerSigner := createAccount(t, b, a)
@@ -48,6 +53,20 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			contracts.MetadataViewsAddress,
 			contracts.ExampleNFTSigner,
 		)
+
+		publicPath, err := cadence.NewPath(common.PathDomainPublic, "cadenceExampleNFTCollection")
+		require.NoError(t, err)
+
+		cadenceCollectionIDs := executeScriptAndCheck(
+			t,
+			b,
+			nfttemplates.GenerateGetCollectionIDsScript(flow.HexToAddress(NonFungibleTokenAddress), contracts.ExampleNFTAddress),
+			[][]byte{
+				jsoncdc.MustEncode(cadence.NewAddress(sellerAddress)),
+				jsoncdc.MustEncode(publicPath),
+			},
+		)
+		collectionIDs := cadenceCollectionIDs.ToGoValue().([]interface{})
 
 		// Seller account lists the item
 		sellItem(
@@ -57,14 +76,13 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			contracts,
 			sellerAddress,
 			sellerSigner,
-			tokenToList,
+			collectionIDs[0].(uint64),
 			tokenPrice,
 			false,
 		)
 	})
 
 	t.Run("Should be able to purchase a sale offer", func(t *testing.T) {
-		tokenToList := uint64(1)
 		tokenPrice := "1.11"
 
 		sellerAddress, sellerSigner := createAccount(t, b, a)
@@ -82,6 +100,20 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			contracts.ExampleNFTSigner,
 		)
 
+		publicPath, err := cadence.NewPath(common.PathDomainPublic, "cadenceExampleNFTCollection")
+		require.NoError(t, err)
+
+		cadenceCollectionIDs := executeScriptAndCheck(
+			t,
+			b,
+			nfttemplates.GenerateGetCollectionIDsScript(flow.HexToAddress(NonFungibleTokenAddress), contracts.ExampleNFTAddress),
+			[][]byte{
+				jsoncdc.MustEncode(cadence.NewAddress(sellerAddress)),
+				jsoncdc.MustEncode(publicPath),
+			},
+		)
+		collectionIDs := cadenceCollectionIDs.ToGoValue().([]interface{})
+
 		// Seller account lists the item
 		listingResourceID := sellItem(
 			t,
@@ -90,7 +122,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			contracts,
 			sellerAddress,
 			sellerSigner,
-			tokenToList,
+			collectionIDs[0].(uint64),
 			tokenPrice,
 			false,
 		)
@@ -113,7 +145,6 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 	})
 
 	t.Run("Should be able to remove a sale offer", func(t *testing.T) {
-		tokenToList := uint64(2)
 		tokenPrice := "1.11"
 
 		sellerAddress, sellerSigner := createAccount(t, b, a)
@@ -131,6 +162,20 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			contracts.ExampleNFTSigner,
 		)
 
+		publicPath, err := cadence.NewPath(common.PathDomainPublic, "cadenceExampleNFTCollection")
+		require.NoError(t, err)
+
+		cadenceCollectionIDs := executeScriptAndCheck(
+			t,
+			b,
+			nfttemplates.G	 enerateGetCollectionIDsScript(flow.HexToAddress(NonFungibleTokenAddress), contracts.ExampleNFTAddress),
+			[][]byte{
+				jsoncdc.MustEncode(cadence.NewAddress(sellerAddress)),
+				jsoncdc.MustEncode(publicPath),
+			},
+		)
+		collectionIDs := cadenceCollectionIDs.ToGoValue().([]interface{})
+
 		// Seller account lists the item
 		listingResourceID := sellItem(
 			t,
@@ -139,7 +184,7 @@ func TestNFTStorefrontCreateSaleSell(t *testing.T) {
 			contracts,
 			sellerAddress,
 			sellerSigner,
-			tokenToList,
+			collectionIDs[0].(uint64),
 			tokenPrice,
 			false,
 		)

@@ -269,7 +269,7 @@ access(all) contract NFTStorefrontV2 {
         /// This capability allows the resource to withdraw *any* NFT, so you should be careful when giving
         /// such a capability to a resource and always check its code to make sure it will use it in the
         /// way that it claims.
-        access(contract) let nftProviderCapability: Capability<auth(NonFungibleToken.Withdrawable) &{NonFungibleToken.Collection}>
+        access(contract) let nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
 
         /// An optional list of marketplaces capabilities that are approved 
         /// to receive the marketplace commission.
@@ -282,7 +282,7 @@ access(all) contract NFTStorefrontV2 {
         ///
         access(all) fun borrowNFT(): &{NonFungibleToken.NFT}? {
             let ref = self.nftProviderCapability.borrow()!.borrowNFT(self.details.nftID)
-            if ref.isInstance(self.details.nftType) && ref.getID() == self.details.nftID {
+            if ref.isInstance(self.details.nftType) && ref?.id == self.details.nftID {
                 return ref as &{NonFungibleToken.NFT}?  
             } 
             return nil
@@ -325,7 +325,7 @@ access(all) contract NFTStorefrontV2 {
             pre {
                 self.details.purchased == false: "listing has already been purchased"
                 payment.isInstance(self.details.salePaymentVaultType): "payment vault is not requested fungible token"
-                payment.getBalance() == self.details.salePrice: "payment vault does not contain requested price"
+                payment.balance == self.details.salePrice: "payment vault does not contain requested price"
                 self.details.expiry > UInt64(getCurrentBlock().timestamp): "Listing is expired"
                 self.owner != nil : "Resource doesn't have the assigned owner"
             }
@@ -364,8 +364,8 @@ access(all) contract NFTStorefrontV2 {
             // to implement the functionality behind the interface in any given way.
             // Therefore we cannot trust the Collection resource behind the interface,
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
-            assert(nft.isInstance(self.details.nftType), message: "withdrawn NFT is not of specified type")
-            assert(nft.getID() == self.details.nftID, message: "withdrawn NFT does not have specified ID")
+            assert(nft.getType() == self.details.nftType, message: "withdrawn NFT is not of specified type")
+            assert(nft.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
 
             // Fetch the duplicate listing for the given NFT
             // Access the StoreFrontManager resource reference to remove the duplicate listings if purchase would happen successfully.
@@ -412,6 +412,11 @@ access(all) contract NFTStorefrontV2 {
             // If the listing is purchased, we regard it as completed here.
             // Otherwise we regard it as completed in the destructor.
 
+            var commissionReceiver: Address?  = nil
+            if (self.details.commissionAmount != 0.0) {
+                commissionReceiver = commissionRecipient!.address
+            }
+
             emit ListingCompleted(
                 listingResourceID: self.uuid,
                 storefrontResourceID: self.details.storefrontID,
@@ -423,43 +428,34 @@ access(all) contract NFTStorefrontV2 {
                 salePrice: self.details.salePrice,
                 customID: self.details.customID,
                 commissionAmount: self.details.commissionAmount,
-                commissionReceiver: self.details.commissionAmount != 0.0 ? commissionRecipient!.address : nil,
+                commissionReceiver: commissionReceiver,
                 expiry: self.details.expiry
             )
 
             return <-nft
         }
 
-        /// destructor
-        ///
-        destroy () {
-            // If the listing has not been purchased, we regard it as completed here.
-            // Otherwise we regard it as completed in purchase().
-            // This is because we destroy the listing in Storefront.removeListing()
-            // or Storefront.cleanup() .
-            // If we change this destructor, revisit those functions.
-            if !self.details.purchased {
-                emit ListingCompleted(
-                    listingResourceID: self.uuid,
-                    storefrontResourceID: self.details.storefrontID,
-                    purchased: self.details.purchased,
-                    nftType: self.details.nftType,
-                    nftUUID: self.details.nftUUID,
-                    nftID: self.details.nftID,
-                    salePaymentVaultType: self.details.salePaymentVaultType,
-                    salePrice: self.details.salePrice,
-                    customID: self.details.customID,
-                    commissionAmount: self.details.commissionAmount,
-                    commissionReceiver: nil,
-                    expiry: self.details.expiry
-                )
-            }
-        }
+        // destructor event
+        //
+        access(all) event ResourceDestroyed(
+            listingResourceID: UInt64 = self.uuid,
+            storefrontResourceID: UInt64 = self.details.storefrontID,
+            purchased: Bool = self.details.purchased,
+            nftType: String = self.details.nftType.identifier,
+            nftUUID: UInt64 = self.details.nftUUID,
+            nftID: UInt64 = self.details.nftID,
+            salePaymentVaultType: String = self.details.salePaymentVaultType.identifier,
+            salePrice: UFix64 = self.details.salePrice,
+            customID: String? = self.details.customID,
+            commissionAmount: UFix64 = self.details.commissionAmount,
+            commissionReceiver: Address? = nil,
+            expiry: UInt64 = self.details.expiry
+        )
 
         /// initializer
         ///
         init (
-            nftProviderCapability: Capability<auth(NonFungibleToken.Withdrawable) &{NonFungibleToken.Collection}>,
+            nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>,
             nftType: Type,
             nftUUID: UInt64,
             nftID: UInt64,
@@ -496,8 +492,8 @@ access(all) contract NFTStorefrontV2 {
 
             // This will precondition assert if the token is not available.
             let nft = provider!.borrowNFT(self.details.nftID)
-            assert(nft.isInstance(self.details.nftType), message: "token is not of specified type")
-            assert(nft.getID() == self.details.nftID, message: "token does not have specified ID")
+            assert(nft!.getType() == self.details.nftType, message: "token is not of specified type")
+            assert(nft?.id == self.details.nftID, message: "token does not have specified ID")
         }
     }
 
@@ -510,7 +506,7 @@ access(all) contract NFTStorefrontV2 {
         /// Allows the Storefront owner to create and insert Listings.
         ///
         access(Creatable) fun createListing(
-            nftProviderCapability: Capability<auth(NonFungibleToken.Withdrawable) &{NonFungibleToken.Collection}>,
+            nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>,
             nftType: Type,
             nftID: UInt64,
             salePaymentVaultType: Type,
@@ -547,6 +543,11 @@ access(all) contract NFTStorefrontV2 {
     /// in order to query their details and purchase the NFTs that they represent.
     ///
     access(all) resource Storefront : StorefrontManager, StorefrontPublic {
+        // Resource destroyed event
+        access(all) event ResourceDestroyed(
+            storefrontResourceID: UInt64 = self.uuid
+        )
+
         /// The dictionary of Listing uuids to Listing resources.
         access(contract) var listings: @{UInt64: Listing}
         /// Dictionary to keep track of listing ids for same NFTs listing.
@@ -557,7 +558,7 @@ access(all) contract NFTStorefrontV2 {
         /// Create and publish a Listing for an NFT.
         ///
          access(Creatable) fun createListing(
-            nftProviderCapability: Capability<auth(NonFungibleToken.Withdrawable) &{NonFungibleToken.Collection}>,
+            nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>,
             nftType: Type,
             nftID: UInt64,
             salePaymentVaultType: Type,
@@ -575,11 +576,11 @@ access(all) contract NFTStorefrontV2 {
 
             // Instead of letting an arbitrary value be set for the UUID of a given NFT, the contract
             // should fetch it itself     
-            let uuid = nftRef.uuid
+            let uuid = nftRef?.uuid
             let listing <- create Listing(
                 nftProviderCapability: nftProviderCapability,
                 nftType: nftType,
-                nftUUID: uuid,
+                nftUUID: uuid!,
                 nftID: nftID,
                 salePaymentVaultType: salePaymentVaultType,
                 saleCuts: saleCuts,
@@ -616,7 +617,7 @@ access(all) contract NFTStorefrontV2 {
                 storefrontAddress: self.owner?.address!,
                 listingResourceID: listingResourceID,
                 nftType: nftType,
-                nftUUID: uuid,
+                nftUUID: uuid!,
                 nftID: nftID,
                 salePaymentVaultType: salePaymentVaultType,
                 salePrice: listingPrice,
@@ -789,15 +790,6 @@ access(all) contract NFTStorefrontV2 {
                 self.cleanup(listingResourceID: listingID)
             }
             destroy listing
-        }
-
-        /// destructor
-        ///
-        destroy () {
-            destroy self.listings
-
-            // Let event consumers know that this storefront will no longer exist
-            emit StorefrontDestroyed(storefrontResourceID: self.uuid)
         }
 
         /// constructor

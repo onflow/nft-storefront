@@ -46,6 +46,46 @@ func setupExampleNFTCollection(
 	)
 }
 
+func setupExampleTokenVault(
+	t *testing.T,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
+	userAddress flow.Address,
+	userSigner crypto.Signer,
+	ftTokenAddress, exampleTokenAddress, viewResolverAddress, metadataAddress, ftMetadataAddress flow.Address,
+) {
+	script := fttemplates.GenerateCreateTokenScript(
+		fttemplates.Environment{
+			"emulator",
+			ftTokenAddress.String(),
+			exampleTokenAddress.String(),
+			"",
+			"",
+			metadataAddress.String(),
+			ftMetadataAddress.String(),
+			viewResolverAddress.String(),
+			"",
+			"",
+		},
+	)
+
+	tx := flow.NewTransaction().
+		SetScript(script).
+		SetGasLimit(100).
+		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
+		SetPayer(b.ServiceKey().Address).
+		AddAuthorizer(userAddress)
+
+	serviceSigner, _ := b.ServiceKey().Signer()
+
+	signAndSubmit(
+		t, b, a, tx,
+		[]flow.Address{b.ServiceKey().Address, userAddress},
+		[]crypto.Signer{serviceSigner, userSigner},
+		false,
+	)
+}
+
 func mintExampleNFT(
 	t *testing.T,
 	b emulator.Emulator,
@@ -90,12 +130,22 @@ func fundAccount(
 	b emulator.Emulator,
 	a *adapters.SDKAdapter,
 	receiverAddress flow.Address,
+	contracts Contracts,
 	amount string,
 ) {
 	script := fttemplates.GenerateMintTokensScript(
-		ftAddress,
-		flowTokenAddress,
-		flowTokenName,
+		fttemplates.Environment{
+			"emulator",
+			ftAddress.String(),
+			contracts.ExampleTokenAddress.String(),
+			"",
+			"",
+			contracts.MetadataViewsAddress.String(),
+			contracts.FungibleTokenMetadataViewsAddress.String(),
+			contracts.MetadataViewsAddress.String(),
+			"",
+			"",
+		},
 	)
 
 	tx := flow.NewTransaction().
@@ -103,7 +153,7 @@ func fundAccount(
 		SetGasLimit(100).
 		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
 		SetPayer(b.ServiceKey().Address).
-		AddAuthorizer(b.ServiceKey().Address)
+		AddAuthorizer(contracts.ExampleTokenAddress)
 
 	tx.AddArgument(cadence.NewAddress(receiverAddress))
 	tx.AddArgument(cadenceUFix64(amount))
@@ -112,8 +162,8 @@ func fundAccount(
 
 	signAndSubmit(
 		t, b, a, tx,
-		[]flow.Address{b.ServiceKey().Address},
-		[]crypto.Signer{serviceSigner},
+		[]flow.Address{b.ServiceKey().Address, contracts.ExampleTokenAddress},
+		[]crypto.Signer{serviceSigner, contracts.ExampleTokenSigner},
 		false,
 	)
 }
@@ -129,8 +179,10 @@ func sellItem(
 	price string,
 	shouldFail bool,
 ) uint64 {
+	script := nftStorefrontGenerateSellItemScript(contracts)
+
 	tx := flow.NewTransaction().
-		SetScript(nftStorefrontGenerateSellItemScript(contracts)).
+		SetScript(script).
 		SetGasLimit(100).
 		SetProposalKey(b.ServiceKey().Address, b.ServiceKey().Index, b.ServiceKey().SequenceNumber).
 		SetPayer(b.ServiceKey().Address).

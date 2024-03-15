@@ -1,6 +1,9 @@
 {
 	"contracts": {
 		"ExampleNFT": "./contracts/utility/ExampleNFT.cdc",
+		"ExampleToken": "./contracts/utility/ExampleToken.cdc",
+		"TestContract": "./contracts/TestContract.cdc",
+		"FungibleTokenMetadataViews": "./contracts/utility/FungibleTokenMetadataViews.cdc",
 		"FlowToken": {
 			"source": "",
 			"aliases": {
@@ -12,7 +15,7 @@
 		"FungibleToken": {
 			"source": "./contracts/utility/FungibleToken.cdc",
 			"aliases": {
-				"emulator": "ee82856bf20e2aa6",
+				"emulator": "0xee82856bf20e2aa6",
 				"mainnet": "f233dcee88fe0abe",
 				"testnet": "9a0766d93b6608b7"
 			}
@@ -72,11 +75,11 @@
 	"deployments": {
 		"emulator": {
 			"emulator-account": [
-				"FungibleToken",
-				"NonFungibleToken",
-				"NFTStorefrontV2",
+				"FungibleTokenMetadataViews",
+				"ExampleNFT",
+				"ExampleToken",
 				"NFTStorefront",
-				"ExampleNFT"
+				"NFTStorefrontV2"
 			]
 		}
 	}

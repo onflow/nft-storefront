@@ -1,0 +1,62 @@
+{
+	"contracts": {
+		"ExampleNFT": {
+			"source": "./contracts/utility/ExampleNFT.cdc",
+			"aliases": {
+				"testing": "0000000000000008"
+			}
+		},
+		"ExampleToken": {
+			"source": "./contracts/utility/ExampleToken.cdc",
+			"aliases": {
+				"testing": "0000000000000009"
+			}
+		},
+		"TestContract": "./contracts/TestContract.cdc",
+		"FungibleTokenMetadataViews": "./contracts/utility/FungibleTokenMetadataViews.cdc",
+		"MultipleNFT": {
+			"source": "./contracts/utility/MultipleNFT.cdc",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7"
+			}
+		},
+		"NFTCatalog": {
+			"source": "./contracts/utility/NFTCatalog.cdc",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "49a7cda3a1eecc29",
+				"testnet": "324c34e1c517e4db"
+			}
+		},
+		"NFTStorefront": "./contracts/NFTStorefront.cdc",
+		"NFTStorefrontV2": {
+      "source": "./.contracts/NFTStorefrontV2.cdc",
+      "aliases": {
+        "testing": "0000000000000007"
+      }
+    }
+	},
+	"networks": {
+		"testing": "0000000000000007",
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
+	},
+	"accounts": {
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"key": "ca102a35963666f3b517a903b747da4eece5e0553523cb8e59a851e162c85db2"
+		}
+	},
+	"deployments": {
+		"emulator": {
+			"emulator-account": [
+				"FungibleTokenMetadataViews",
+				"ExampleNFT",
+				"ExampleToken",
+				"NFTStorefront",
+				"NFTStorefrontV2"
+			]
+		}
+	}
+}

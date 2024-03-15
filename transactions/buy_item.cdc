@@ -1,8 +1,9 @@
-import FlowToken from "FlowToken"
+import ExampleToken from "ExampleToken"
 import FungibleToken from "FungibleToken"
 import NonFungibleToken from "NonFungibleToken"
 import ExampleNFT from "ExampleNFT"
 import NFTStorefrontV2 from "NFTStorefrontV2"
+import MetadataViews from "MetadataViews"
 
 /// Transaction facilitates the purcahse of listed NFT. It takes the storefront address, listing resource that need to be
 /// purchased & a address that will takeaway the commission.
@@ -31,13 +32,13 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRec
         let price = self.listing.getDetails().salePrice
 
         // Access the vault of the buyer to pay the sale price of the listing.
-        let mainFlowVault = acct.storage.borrow<auth(FungibleToken.Withdrawable) &FlowToken.Vault>(from: /storage/flowTokenVault)
-            ?? panic("Cannot borrow FlowToken vault from acct storage")
-        self.paymentVault <- mainFlowVault.withdraw(amount: price)
+        let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
+            ?? panic("Cannot borrow ExampleToken vault from acct storage")
+        self.paymentVault <- mainVault.withdraw(amount: price)
 
         // Access the buyer's NFT collection to store the purchased NFT.
-        let collectionData = ExampleNFT.getCollectionData(nftType: Type<@ExampleNFT.NFT>())
-            ?? panic("Missing collection data")
+        let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
+            ?? panic("ViewResolver does not resolve NFTCollectionData view")
         self.exampleNFTReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
             ?? panic("Cannot borrow NFT collection receiver from account")
 
@@ -47,9 +48,9 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRec
         if commissionRecipient != nil && commissionAmount != 0.0 {
             // Access the capability to receive the commission.
             let _commissionRecipientCap = getAccount(commissionRecipient!).capabilities.get<&{FungibleToken.Receiver}>(
-                    /public/flowTokenReceiver
-                ) ?? panic("Problem getting commission recipient's FlowToken Receiver")
-            assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have flowtoken receiving capability")
+                    /public/exampleTokenReceiver
+                ) ?? panic("Problem getting commission recipient's ExampleToken Receiver")
+            assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have exampletoken receiving capability")
             self.commissionRecipientCap = _commissionRecipientCap
         } else if commissionAmount == 0.0 {
             self.commissionRecipientCap = nil
