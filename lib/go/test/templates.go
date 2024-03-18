@@ -15,6 +15,9 @@ const (
 	nftStorefrontRemoveItemPath        = nftStorefrontRootPath + "/remove_item.cdc"
 	nftStorefrontGetIDsPath            = nftStorefrontRootPath + "/scripts-v1/read_storefront_ids.cdc"
 	nftStorefrontGetListingDetailsPath = nftStorefrontRootPath + "/scripts-v1/read_listing_details.cdc"
+
+	exampleNFTSetupAccountPath = nftStorefrontRootPath + "/utility/setup_account_for_example_nft.cdc"
+	mintExampleNFTPath         = nftStorefrontRootPath + "/utility/mint_example_nft.cdc"
 )
 
 func replaceAddresses(codeBytes []byte, contracts Contracts) []byte {
@@ -25,6 +28,8 @@ func replaceAddresses(codeBytes []byte, contracts Contracts) []byte {
 	code = nftAddressPlaceholder.ReplaceAllString(code, "0x"+contracts.NFTAddress.String())
 	code = exampleNFTAddressPlaceHolder.ReplaceAllString(code, "0x"+contracts.ExampleNFTAddress.String())
 	code = nftStorefrontAddressPlaceholder.ReplaceAllString(code, "0x"+contracts.NFTStorefrontAddress.String())
+	code = metadataViewsAddressPlaceholder.ReplaceAllString(code, "0x"+contracts.MetadataViewsAddress.String())
+	code = exampleTokenAddressPlaceholder.ReplaceAllString(code, "0x"+contracts.ExampleTokenAddress.String())
 
 	return []byte(code)
 }
@@ -85,6 +90,20 @@ func nftStorefrontGenerateGetIDsScript(contracts Contracts) []byte {
 func nftStorefrontGenerateGetListingDetailsScript(contracts Contracts) []byte {
 	return replaceAddresses(
 		readFile(nftStorefrontGetListingDetailsPath),
+		contracts,
+	)
+}
+
+func GenerateSetupAccountScriptExampleNFT(contracts Contracts) []byte {
+	return replaceAddresses(
+		readFile(exampleNFTSetupAccountPath),
+		contracts,
+	)
+}
+
+func GenerateMintExampleNFTScript(contracts Contracts) []byte {
+	return replaceAddresses(
+		readFile(mintExampleNFTPath),
 		contracts,
 	)
 }

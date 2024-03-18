@@ -1,14 +1,10 @@
-import NFTStorefront from "../../contracts/NFTStorefront.cdc"
+import "NFTStorefront"
 
-// This script returns an array of all the nft uuids for sale through a Storefront
-
-pub fun main(account: Address): [UInt64] {
-    let storefrontRef = getAccount(account)
-        .getCapability<&NFTStorefront.Storefront{NFTStorefront.StorefrontPublic}>(
+/// This script returns an array of all the Listing IDs for sale through a Storefront
+///
+access(all) fun main(account: Address): [UInt64] {
+    return getAccount(account).capabilities.borrow<&{NFTStorefront.StorefrontPublic}>(
             NFTStorefront.StorefrontPublicPath
-        )
-        .borrow()
+        )?.getListingIDs()
         ?? panic("Could not borrow public storefront from address")
-    
-    return storefrontRef.getListingIDs()
 }

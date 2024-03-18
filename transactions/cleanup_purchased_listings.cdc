@@ -1,20 +1,17 @@
 import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 
-/// Transaction to facilitate the cleanup of the purchased listings of a given
-/// storefront resource account holder.
+/// Transaction to facilitate the cleanup of the purchased listings of a given storefront resource account holder.
+/// Cleanup is publicly accessible so can be executed by anyone.
 ///
-/// It can be sign/authorize by anyone.
-
 transaction(storefrontAddress: Address, listingResourceID: UInt64) {
-    let storefront: &NFTStorefrontV2.Storefront{NFTStorefrontV2.StorefrontPublic}
 
-    prepare(acct: AuthAccount) {
-        self.storefront = getAccount(storefrontAddress)
-            .getCapability<&NFTStorefrontV2.Storefront{NFTStorefrontV2.StorefrontPublic}>(
+    let storefront: &{NFTStorefrontV2.StorefrontPublic}
+
+    prepare(acct: &Account) {
+        // Access the storefront public resource of the seller to purchase the listing.
+        self.storefront = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
                 NFTStorefrontV2.StorefrontPublicPath
-            )!
-            .borrow()
-            ?? panic("Could not borrow Storefront from provided address")
+            ) ?? panic("Could not borrow Storefront from provided address")
     }
 
     execute {

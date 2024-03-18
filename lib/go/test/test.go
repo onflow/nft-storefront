@@ -1,18 +1,22 @@
 package test
 
 import (
+	"context"
 	"io/ioutil"
 	"regexp"
 	"testing"
 
 	"github.com/onflow/cadence"
-	emulator "github.com/onflow/flow-emulator"
+	"github.com/onflow/flow-emulator/adapters"
+	"github.com/onflow/flow-emulator/convert"
+	"github.com/onflow/flow-emulator/emulator"
+	ftcontracts "github.com/onflow/flow-ft/lib/go/contracts"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
 	sdktemplates "github.com/onflow/flow-go-sdk/templates"
 	"github.com/onflow/flow-go-sdk/test"
-	"github.com/onflow/flow-nft/lib/go/contracts"
 	nftcontracts "github.com/onflow/flow-nft/lib/go/contracts"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -20,18 +24,22 @@ import (
 )
 
 const (
-	flowTokenName         = "FlowToken"
-	nonFungibleTokenName  = "NonFungibleToken"
-	defaultAccountFunding = "1000.0"
-	emulatorFTAddress     = "ee82856bf20e2aa6"
+	flowTokenName           = "FlowToken"
+	nonFungibleTokenName    = "NonFungibleToken"
+	defaultAccountFunding   = "1000.0"
+	emulatorFTAddress       = "ee82856bf20e2aa6"
+	metadataViewsAddress    = "f8d6e0586b0a20c7"
+	NonFungibleTokenAddress = "f8d6e0586b0a20c7"
 )
 
 var (
-	ftAddressPlaceholder            = regexp.MustCompile(`"[^"\s].*/FungibleToken.cdc"`)
-	flowTokenAddressPlaceHolder     = regexp.MustCompile(`"[^"\s].*/FlowToken.cdc"`)
-	nftAddressPlaceholder           = regexp.MustCompile(`"[^"\s].*/NonFungibleToken.cdc"`)
-	exampleNFTAddressPlaceHolder    = regexp.MustCompile(`"[^"\s].*/ExampleNFT.cdc"`)
-	nftStorefrontAddressPlaceholder = regexp.MustCompile(`"[^"\s].*/NFTStorefront.cdc"`)
+	ftAddressPlaceholder            = regexp.MustCompile(`"[^"\s].*/FungibleToken(.cdc)?"`)
+	flowTokenAddressPlaceHolder     = regexp.MustCompile(`"[^"\s].*/FlowToken(.cdc)?"`)
+	nftAddressPlaceholder           = regexp.MustCompile(`"[^"\s].*/NonFungibleToken(.cdc)?"`)
+	exampleNFTAddressPlaceHolder    = regexp.MustCompile(`"[^"\s].*/ExampleNFT(.cdc)?"`)
+	nftStorefrontAddressPlaceholder = regexp.MustCompile(`"[^"\s].*/NFTStorefront(.cdc)?"`)
+	metadataViewsAddressPlaceholder = regexp.MustCompile(`"[^"\s].*/MetadataViews(.cdc)?"`)
+	exampleTokenAddressPlaceholder  = regexp.MustCompile(`"[^"\s].*/ExampleToken(.cdc)?"`)
 )
 
 var (
@@ -40,37 +48,27 @@ var (
 )
 
 type Contracts struct {
-	NFTAddress           flow.Address
-	ExampleNFTAddress    flow.Address
-	ExampleNFTSigner     crypto.Signer
-	NFTStorefrontAddress flow.Address
-	NFTStorefrontSigner  crypto.Signer
-	MetadataViewsAddress flow.Address
+	NFTAddress                        flow.Address
+	ExampleNFTAddress                 flow.Address
+	ExampleNFTSigner                  crypto.Signer
+	ExampleTokenAddress               flow.Address
+	ExampleTokenSigner                crypto.Signer
+	NFTStorefrontAddress              flow.Address
+	NFTStorefrontSigner               crypto.Signer
+	MetadataViewsAddress              flow.Address
+	FungibleTokenMetadataViewsAddress flow.Address
+	FungibleTokenMetadataViewsSigner  crypto.Signer
 }
 
-func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flow.Address, flow.Address, crypto.Signer) {
-	nftCode := nftcontracts.NonFungibleToken()
-	nftAddress, err := b.CreateAccount(nil,
-		[]sdktemplates.Contract{
-			{
-				Name:   nonFungibleTokenName,
-				Source: string(nftCode),
-			},
-		},
-	)
-	require.NoError(t, err)
-
-	_, err = b.CommitBlock()
-	require.NoError(t, err)
+func deployExampleContracts(t *testing.T, b emulator.Emulator, a *adapters.SDKAdapter) (flow.Address, flow.Address, flow.Address, flow.Address, flow.Address, crypto.Signer, crypto.Signer, crypto.Signer) {
 
 	accountKeys := test.AccountKeyGenerator()
 
-	metadataAddress := deploy(t, b, "MetadataViews", contracts.MetadataViews(flow.HexToAddress(emulatorFTAddress), nftAddress))
-
 	exampleNFTAccountKey, exampleNFTSigner := accountKeys.NewWithSigner()
 
-	exampleNFTCode := nftcontracts.ExampleNFT(nftAddress, metadataAddress)
-	exampleNFTAddress, err := b.CreateAccount(
+	exampleNFTCode := nftcontracts.ExampleNFT(flow.HexToAddress(NonFungibleTokenAddress), flow.HexToAddress(metadataViewsAddress), flow.HexToAddress(metadataViewsAddress))
+	exampleNFTAddress, err := a.CreateAccount(
+		context.Background(),
 		[]*flow.AccountKey{exampleNFTAccountKey},
 		[]sdktemplates.Contract{
 			{
@@ -81,27 +79,69 @@ func deployNFTContracts(t *testing.T, b *emulator.Blockchain) (flow.Address, flo
 	)
 	require.NoError(t, err)
 
+	fungibleTokenMetadataViewsAccountKey, fungibleTokenMetadataViewsSigner := accountKeys.NewWithSigner()
+	fungibleTokenMetadataViews := ftcontracts.FungibleTokenMetadataViews(emulatorFTAddress, metadataViewsAddress, metadataViewsAddress)
+	ftMetadataViewsAddress, err := a.CreateAccount(
+		context.Background(),
+		[]*flow.AccountKey{fungibleTokenMetadataViewsAccountKey},
+		[]sdktemplates.Contract{
+			{
+				Name:   "FungibleTokenMetadataViews",
+				Source: string(fungibleTokenMetadataViews),
+			},
+		},
+	)
+
+	exampleTokenAccountKey, exampleTokenSigner := accountKeys.NewWithSigner()
+	exampleTokenCode := ftcontracts.ExampleToken(emulatorFTAddress, metadataViewsAddress, ftMetadataViewsAddress.String(), metadataViewsAddress)
+
+	exampleTokenAddress, err := a.CreateAccount(
+		context.Background(),
+		[]*flow.AccountKey{exampleTokenAccountKey},
+		[]sdktemplates.Contract{
+			{
+				Name:   "ExampleToken",
+				Source: string(exampleTokenCode),
+			},
+		},
+	)
+
 	_, err = b.CommitBlock()
 	require.NoError(t, err)
 
-	return nftAddress, exampleNFTAddress, metadataAddress, exampleNFTSigner
+	return flow.HexToAddress(NonFungibleTokenAddress), exampleNFTAddress, exampleTokenAddress, flow.HexToAddress(metadataViewsAddress), ftMetadataViewsAddress, exampleNFTSigner, exampleTokenSigner, fungibleTokenMetadataViewsSigner
 }
 
-func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain, version int) Contracts {
+func nftStorefrontDeployContracts(t *testing.T, b emulator.Emulator, a *adapters.SDKAdapter, version int) Contracts {
 	accountKeys := test.AccountKeyGenerator()
 
-	nftAddress, exampleNFTAddress, metadataAddress, exampleNFTSigner := deployNFTContracts(t, b)
+	nftAddress, exampleNFTAddress, exampleTokenAddress, metadataAddress, ftMetadataViewsAddress, exampleNFTSigner, exampleTokenSigner, ftMetadataViewsSigner := deployExampleContracts(t, b, a)
 
 	nftStorefrontAccountKey, nftStorefrontSigner := accountKeys.NewWithSigner()
 	nftStorefrontCode, nftStorefrontName := loadNFTStorefront(ftAddress, nftAddress, version)
 
-	nftStorefrontAddress, err := b.CreateAccount(
+	nftStorefrontAddress, err := a.CreateAccount(
+		context.Background(),
 		[]*flow.AccountKey{nftStorefrontAccountKey},
 		nil,
 	)
 	require.NoError(t, err)
 
-	fundAccount(t, b, nftStorefrontAddress, defaultAccountFunding)
+	contracts := Contracts{
+		nftAddress,
+		exampleNFTAddress,
+		exampleNFTSigner,
+		exampleTokenAddress,
+		exampleTokenSigner,
+		nftStorefrontAddress,
+		nftStorefrontSigner,
+		metadataAddress,
+		ftMetadataViewsAddress,
+		ftMetadataViewsSigner,
+	}
+
+	setupExampleTokenVault(t, b, a, nftStorefrontAddress, nftStorefrontSigner, ftAddress, contracts.ExampleTokenAddress, flow.HexToAddress(metadataViewsAddress), contracts.MetadataViewsAddress, contracts.FungibleTokenMetadataViewsAddress)
+	fundAccount(t, b, a, nftStorefrontAddress, contracts, defaultAccountFunding)
 
 	tx := sdktemplates.AddAccountContract(
 		nftStorefrontAddress,
@@ -119,7 +159,7 @@ func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain, version 
 	serviceSigner, _ := b.ServiceKey().Signer()
 
 	signAndSubmit(
-		t, b, tx,
+		t, b, a, tx,
 		[]flow.Address{b.ServiceKey().Address, nftStorefrontAddress},
 		[]crypto.Signer{serviceSigner, exampleNFTSigner},
 		false,
@@ -128,23 +168,27 @@ func nftStorefrontDeployContracts(t *testing.T, b *emulator.Blockchain, version 
 	_, err = b.CommitBlock()
 	require.NoError(t, err)
 
-	return Contracts{
-		nftAddress,
-		exampleNFTAddress,
-		exampleNFTSigner,
-		nftStorefrontAddress,
-		nftStorefrontSigner,
-		metadataAddress,
-	}
+	return contracts
 }
 
 // newEmulator returns a emulator object for testing
-func newEmulator() *emulator.Blockchain {
-	b, err := emulator.NewBlockchain()
+func newEmulator() (*emulator.Blockchain, *adapters.SDKAdapter) {
+	b, err := emulator.New(
+		append(
+			[]emulator.Option{
+				// No storage limit
+				emulator.WithStorageLimitEnabled(false),
+			},
+		)...,
+	)
 	if err != nil {
 		panic(err)
 	}
-	return b
+
+	logger := zerolog.Nop()
+	adapter := adapters.NewSDKAdapter(&logger, b)
+
+	return b, adapter
 }
 
 // signAndSubmit signs a transaction with an array of signers and adds their signatures to the transaction
@@ -154,7 +198,8 @@ func newEmulator() *emulator.Blockchain {
 // This function asserts the correct result and commits the block if it passed
 func signAndSubmit(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	tx *flow.Transaction,
 	signerAddresses []flow.Address,
 	signers []crypto.Signer,
@@ -174,19 +219,21 @@ func signAndSubmit(
 		}
 	}
 
-	submit(t, b, tx, shouldRevert)
+	submit(t, b, a, tx, shouldRevert)
 }
 
 // submit submits a transaction and checks
 // if it fails or not
 func submit(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	tx *flow.Transaction,
 	shouldRevert bool,
 ) {
 	// submit the signed transaction
-	err := b.AddTransaction(*tx)
+	flowTx := convert.SDKTransactionToFlow(*tx)
+	err := b.AddTransaction(*flowTx)
 	require.NoError(t, err)
 
 	result, err := b.ExecuteNextTransaction()
@@ -246,11 +293,11 @@ func cadenceString(value string) cadence.Value {
 }
 
 // Simple error-handling wrapper for Flow account creation.
-func createAccount(t *testing.T, b *emulator.Blockchain) (sdk.Address, crypto.Signer) {
+func createAccount(t *testing.T, b emulator.Emulator, a *adapters.SDKAdapter) (sdk.Address, crypto.Signer) {
 	accountKeys := test.AccountKeyGenerator()
 	accountKey, signer := accountKeys.NewWithSigner()
 
-	address, err := b.CreateAccount([]*sdk.AccountKey{accountKey}, nil)
+	address, err := a.CreateAccount(context.Background(), []*sdk.AccountKey{accountKey}, nil)
 	require.NoError(t, err)
 
 	return address, signer
@@ -258,7 +305,8 @@ func createAccount(t *testing.T, b *emulator.Blockchain) (sdk.Address, crypto.Si
 
 func setupNFTStorefront(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	userAddress sdk.Address,
 	userSigner crypto.Signer,
 	contracts Contracts,
@@ -273,7 +321,7 @@ func setupNFTStorefront(
 	serviceSigner, _ := b.ServiceKey().Signer()
 
 	signAndSubmit(
-		t, b, tx,
+		t, b, a, tx,
 		[]flow.Address{b.ServiceKey().Address, userAddress},
 		[]crypto.Signer{serviceSigner, userSigner},
 		false,
@@ -282,14 +330,16 @@ func setupNFTStorefront(
 
 func setupAccount(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	address flow.Address,
 	signer crypto.Signer,
 	contracts Contracts,
 ) (sdk.Address, crypto.Signer) {
-	setupNFTStorefront(t, b, address, signer, contracts)
-	setupExampleNFTCollection(t, b, address, signer, contracts.NFTAddress, contracts.ExampleNFTAddress, contracts.MetadataViewsAddress)
-	fundAccount(t, b, address, defaultAccountFunding)
+	setupNFTStorefront(t, b, a, address, signer, contracts)
+	setupExampleNFTCollection(t, b, a, address, signer, contracts.NFTAddress, contracts.ExampleNFTAddress, contracts.MetadataViewsAddress)
+	setupExampleTokenVault(t, b, a, address, signer, ftAddress, contracts.ExampleTokenAddress, flow.HexToAddress(metadataViewsAddress), contracts.MetadataViewsAddress, contracts.FungibleTokenMetadataViewsAddress)
+	fundAccount(t, b, a, address, contracts, defaultAccountFunding)
 
 	return address, signer
 }
@@ -297,12 +347,14 @@ func setupAccount(
 // Deploy a contract to a new account with the specified name, code, and keys
 func deploy(
 	t *testing.T,
-	b *emulator.Blockchain,
+	b emulator.Emulator,
+	a *adapters.SDKAdapter,
 	name string,
 	code []byte,
 	keys ...*flow.AccountKey,
 ) flow.Address {
-	address, err := b.CreateAccount(
+	address, err := a.CreateAccount(
+		context.Background(),
 		keys,
 		[]sdktemplates.Contract{
 			{

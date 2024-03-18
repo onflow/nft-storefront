@@ -9,6 +9,7 @@ import MetadataViews from "./MetadataViews.cdc"
 //
 // To make an addition to the catalog you can propose an NFT and provide its metadata.
 // An Admin can approve a proposal which would add the NFT to the catalog
+
 pub contract NFTCatalog {
     // EntryAdded
     // An NFT collection has been added to the catalog
@@ -46,7 +47,7 @@ pub contract NFTCatalog {
 
     // EntryRemoved
     // An NFT Collection has been removed from the catalog
-    pub event EntryRemoved(collectionIdentifier : String)
+    pub event EntryRemoved(collectionIdentifier : String, nftType: Type)
 
     // ProposalEntryAdded
     // A new proposal to make an addtion to the catalog has been made
@@ -66,11 +67,14 @@ pub contract NFTCatalog {
 
     access(self) let catalog: {String : NFTCatalog.NFTCatalogMetadata} // { collectionIdentifier -> Metadata }
     access(self) let catalogTypeData: {String : {String : Bool}} // Additional view to go from { NFT Type Identifier -> {Collection Identifier : Bool } }
+
     access(self) let catalogProposals : {UInt64 : NFTCatalogProposal} // { ProposalID : Metadata }
+
     access(self) var totalProposals : UInt64
 
     // NFTCatalogProposalManager
     // Used to authenticate proposals made to the catalog
+
     pub resource interface NFTCatalogProposalManagerPublic {
         pub fun getCurrentProposalEntry(): String?
     }
@@ -88,6 +92,33 @@ pub contract NFTCatalog {
             init () {
                 self.currentProposalEntry = nil
             }
+    }
+
+
+    pub resource Snapshot {
+        pub var catalogSnapshot: {String : NFTCatalogMetadata}
+        pub var shouldUseSnapshot: Bool
+
+        pub fun setPartialSnapshot(_ snapshotKey: String, _ snapshotEntry: NFTCatalogMetadata) {
+            self.catalogSnapshot[snapshotKey] = snapshotEntry
+        }
+
+        pub fun setShouldUseSnapshot(_ shouldUseSnapshot: Bool) {
+            self.shouldUseSnapshot = shouldUseSnapshot
+        }
+
+        pub fun getCatalogSnapshot(): {String : NFTCatalogMetadata} {
+            return self.catalogSnapshot
+        }
+
+        init() {
+            self.shouldUseSnapshot = false
+            self.catalogSnapshot = {}
+        }
+    }
+
+    pub fun createEmptySnapshot(): @Snapshot {
+        return <- create Snapshot()
     }
 
     // NFTCollectionData
@@ -156,8 +187,31 @@ pub contract NFTCatalog {
         }
     }
 
+    /*
+        DEPRECATED
+        If obtaining all elements from the catalog is essential, please
+        use the getCatalogKeys and forEachCatalogKey methods instead.
+     */
     pub fun getCatalog() : {String : NFTCatalogMetadata} {
-        return self.catalog
+        let snapshot = self.account.borrow<&NFTCatalog.Snapshot>(from: /storage/CatalogSnapshot)
+        if snapshot != nil {
+            let snapshot = snapshot!
+            if snapshot.shouldUseSnapshot {
+                return snapshot.getCatalogSnapshot()
+            } else {
+                return self.catalog
+            }
+        } else {
+            return self.catalog
+        }
+    }
+
+    pub fun getCatalogKeys(): [String] {
+        return self.catalog.keys
+    }
+
+    pub fun forEachCatalogKey(_ function: ((String): Bool)) {
+        self.catalog.forEachKey(function)
     }
 
     pub fun getCatalogEntry(collectionIdentifier : String) : NFTCatalogMetadata? {
@@ -222,12 +276,19 @@ pub contract NFTCatalog {
         return self.catalogProposals[proposalID]
     }
 
+    pub fun getCatalogProposalKeys() : [UInt64] {
+        return self.catalogProposals.keys
+    }
+
+    pub fun forEachCatalogProposalKey(_ function: ((UInt64): Bool)) {
+        self.catalogProposals.forEachKey(function)
+    }
+
     pub fun createNFTCatalogProposalManager(): @NFTCatalogProposalManager {
         return <-create NFTCatalogProposalManager()
     }
 
-    // NOTE: Made pub for testing.
-    pub fun addCatalogEntry(collectionIdentifier : String, metadata: NFTCatalogMetadata) {
+    access(account) fun addCatalogEntry(collectionIdentifier : String, metadata: NFTCatalogMetadata) {
         pre {
             self.catalog[collectionIdentifier] == nil : "The nft name has already been added to the catalog"
         }
@@ -286,10 +347,10 @@ pub contract NFTCatalog {
             self.catalog[collectionIdentifier] != nil : "Invalid collection identifier"
         }
 
-        self.removeCatalogTypeEntry(collectionIdentifier : collectionIdentifier , metadata: self.catalog[collectionIdentifier]!)
+        let removedType = self.removeCatalogTypeEntry(collectionIdentifier : collectionIdentifier , metadata: self.catalog[collectionIdentifier]!)
         self.catalog.remove(key: collectionIdentifier)
 
-        emit EntryRemoved(collectionIdentifier : collectionIdentifier)
+        emit EntryRemoved(collectionIdentifier : collectionIdentifier, nftType: removedType)
     }
 
     access(account) fun updateCatalogProposal(proposalID: UInt64, proposalMetadata : NFTCatalogProposal) {
@@ -317,7 +378,7 @@ pub contract NFTCatalog {
         }
     }
 
-    access(contract) fun removeCatalogTypeEntry(collectionIdentifier : String , metadata: NFTCatalogMetadata) {
+    access(contract) fun removeCatalogTypeEntry(collectionIdentifier : String , metadata: NFTCatalogMetadata): Type {
         let prevMetadata = self.catalog[collectionIdentifier]!
         let prevCollectionsForType = self.catalogTypeData[prevMetadata.nftType.identifier]!
         prevCollectionsForType.remove(key : collectionIdentifier)
@@ -326,6 +387,8 @@ pub contract NFTCatalog {
         } else {
             self.catalogTypeData[prevMetadata.nftType.identifier] = prevCollectionsForType
         }
+
+        return metadata.nftType
     }
 
     init() {
@@ -340,3 +403,4 @@ pub contract NFTCatalog {
     }
 
 }
+ 
