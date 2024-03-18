@@ -5,13 +5,13 @@ import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 ///
 /// @param storefront Address of the storefront resource whose ghost listings get queried.
 ///
-pub fun main(storefront: Address): [UInt64] {
+access(all) fun main(storefrontAddress: Address): [UInt64] {
 
     var duplicateListings: [UInt64] = []
     var ghostListings: [UInt64] = []
 
-    let storefrontPublicRefgetAccount(account).capabilities.borrow<&{NFTStorefront.StorefrontPublic}>(
-            NFTStorefront.StorefrontPublicPath
+    let storefrontPublicRef = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
+            NFTStorefrontV2.StorefrontPublicPath
         ) ?? panic("Given account does not has storefront resource")
 
     // Access all the listings under the given storefront account

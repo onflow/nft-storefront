@@ -1,11 +1,11 @@
 import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
-import FungibleToken   from "../contracts/utility/FungibleToken.cdc"
+import "FungibleToken"
 
 /// This script returns the list of allowed commission receivers supported by the given listing Id.
 ///
-pub fun main(account: Address, listingResourceID: UInt64): [Capability<&{FungibleToken.Receiver}>]? {
-    let storefrontRef = getAccount(account).capabilities.borrow<&{NFTStorefront.StorefrontPublic}>(
-            NFTStorefront.StorefrontPublicPath
+access(all) fun main(account: Address, listingResourceID: UInt64): [Capability<&{FungibleToken.Receiver}>]? {
+    let storefrontRef = getAccount(account).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
+            NFTStorefrontV2.StorefrontPublicPath
         ) ?? panic("Could not borrow public storefront from address")
 
     let listing = storefrontRef.borrowListing(listingResourceID: listingResourceID)

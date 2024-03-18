@@ -3,10 +3,10 @@ import "test_helpers.cdc"
 import "FungibleToken"
 import "NonFungibleToken"
 
-
 access(all) let buyer = Test.createAccount()
 access(all) let seller = Test.createAccount()
 access(all) let marketplace = Test.createAccount()
+access(all) let storefrontAccount = Test.getAccount(0x0000000000000007)
 access(all) let exampleNFTAccount = Test.getAccount(0x0000000000000008)
 access(all) let exampleTokenAccount = Test.getAccount(0x0000000000000009)
 access(all) var nftCount = 1
@@ -30,9 +30,16 @@ access(all)
 fun setup() {
     let serviceAccount = Test.serviceAccount()
 
-    deploy("NFTStorefrontV2", "../contracts/NFTStorefrontV2.cdc")
-
     var err = Test.deployContract(
+        name: "NFTStorefrontV2",
+        path: "../contracts/NFTStorefrontV2.cdc",
+        arguments: [],
+    )
+    Test.expect(err, Test.beNil())
+
+    //deploy("NFTStorefrontV2", "../contracts/NFTStorefrontV2.cdc")
+
+    err = Test.deployContract(
         name: "ExampleNFT",
         path: "../contracts/utility/exampleNFT.cdc",
         arguments: [],
@@ -128,6 +135,8 @@ fun testSetupAccount() {
     Test.expect(txResult, Test.beSucceeded())
 }
 
+access(all) var listedNFTID: UInt64 = 0
+
 access(all)
 fun testSellItem() {
     var code = loadCode("get_ids.cdc", "scripts/example-nft")
@@ -136,6 +145,7 @@ fun testSellItem() {
     Test.expect(result, Test.beSucceeded())
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
     let nftID = (result.returnValue! as! [UInt64])[0]
+    listedNFTID = nftID
 
     code = loadCode("sell_item.cdc", "transactions")
     var tx = Test.Transaction(
@@ -169,6 +179,13 @@ fun testBuyItem() {
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
     let listingID = (result.returnValue! as! [UInt64])[0]!
     listingIDPurchased = listingID
+
+    // Test that script executions run as expected
+    let allowedCommissionReceivers = scriptExecutor("read_allowed_commission_receivers.cdc", [seller.address, listingID])
+    let listingDetails = scriptExecutor("read_listing_details.cdc", [seller.address, listingID])
+    Test.assert(listingDetails != nil, message: "Received invalid result from reading listing details")
+    let duplicateListingIDs = scriptExecutor("read_duplicate_listing_ids.cdc", [seller.address, listedNFTID, listingID])
+    Test.assertEqual((duplicateListingIDs as! [UInt64]?)!.length, 0)
 
     let code = loadCode("buy_item.cdc", "transactions")
     var tx = Test.Transaction(
@@ -245,6 +262,16 @@ fun testCleanupGhostListings() {
     var txResult = Test.executeTransaction(tx)
     Test.expect(txResult, Test.beSucceeded())
 
+    let getListingIDCode = loadCode("read_storefront_ids.cdc", "scripts")
+    result = Test.executeScript(getListingIDCode, [seller.address])
+    Test.expect(result, Test.beSucceeded())
+    Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
+    let ghostedListingID = (result.returnValue! as! [UInt64])[0]
+
+    // Check if the listing is ghosted.
+    var listingIsAvailable = scriptExecutor("has_listing_become_ghosted.cdc", [seller.address, ghostedListingID])
+    Test.assertEqual(listingIsAvailable!, true)
+
     // Burn the NFT
     let burnNFTCode = loadCode("burn_nft.cdc", "transactions/example-nft")
     tx = Test.Transaction(
@@ -258,13 +285,12 @@ fun testCleanupGhostListings() {
     txResult = Test.executeTransaction(tx)
     Test.expect(txResult, Test.beSucceeded())
 
-    // Check that the listing still exists as a ghost listing
-    let getListingIDCode = loadCode("read_storefront_ids.cdc", "scripts")
-    
-    result = Test.executeScript(getListingIDCode, [seller.address])
-    Test.expect(result, Test.beSucceeded())
-    Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
-    let ghostedListingID = (result.returnValue! as! [UInt64])[0]
+    // Check if the listing is ghosted.
+    listingIsAvailable = scriptExecutor("has_listing_become_ghosted.cdc", [seller.address, ghostedListingID])
+    Test.assertEqual(listingIsAvailable!, false)
+
+    let allGhostListingIDs = scriptExecutor("read_all_unique_ghost_listings.cdc", [seller.address])
+    Test.assertEqual((allGhostListingIDs as! [UInt64]?)!.length, 1)
 
     // Try cleaning up the ghost listing
     let cleanupGhostListingsCode = loadCode("cleanup_ghost_listing.cdc", "transactions")
