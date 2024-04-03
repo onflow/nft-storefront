@@ -28,7 +28,12 @@
 				"testnet": "324c34e1c517e4db"
 			}
 		},
-		"NFTStorefront": "./contracts/NFTStorefront.cdc",
+		"NFTStorefront": {
+			"source": "./contracts/NFTStorefront.cdc",
+			"aliases": {
+				"testing": "0000000000000006"
+			}
+		},
 		"NFTStorefrontV2": {
       "source": "./.contracts/NFTStorefrontV2.cdc",
       "aliases": {

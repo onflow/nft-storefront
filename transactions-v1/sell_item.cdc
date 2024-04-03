@@ -1,15 +1,15 @@
-import ExampleToken from "../contracts/utility/ExampleToken.cdc"
-import FungibleToken from "../contracts/utility/FungibleToken.cdc"
-import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
-import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
-import NFTStorefront from "../contracts/NFTStorefront.cdc"
-import MetadataViews from "../contracts/utility/MetadataViews"
+import "ExampleToken"
+import "FungibleToken"
+import "NonFungibleToken"
+import "ExampleNFT"
+import "NFTStorefront"
+import "MetadataViews"
 
 transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
 
     let exampleTokenReceiver: Capability<&{FungibleToken.Receiver}>
     let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
-    let storefront: auth(NFTStorefront.Creatable) &NFTStorefront.Storefront
+    let storefront: auth(NFTStorefront.CreateListing) &NFTStorefront.Storefront
 
     prepare(acct: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
 
@@ -39,7 +39,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
             acct.capabilities.publish(storefrontPublicCap, at: NFTStorefront.StorefrontPublicPath)
         }
 
-        self.storefront = acct.storage.borrow<auth(NFTStorefront.Creatable) &NFTStorefront.Storefront>(
+        self.storefront = acct.storage.borrow<auth(NFTStorefront.CreateListing) &NFTStorefront.Storefront>(
                 from: NFTStorefront.StorefrontStoragePath
             ) ?? panic("Missing or mis-typed NFTStorefront Storefront")
     }

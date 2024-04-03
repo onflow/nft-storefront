@@ -1,5 +1,5 @@
-import FungibleToken from "./utility/FungibleToken.cdc"
-import NonFungibleToken from "./utility/NonFungibleToken.cdc"
+import "FungibleToken"
+import "NonFungibleToken"
 
 /// NB: This contract is no longer supported. NFT Storefront V2 is recommended
 ///
@@ -25,14 +25,8 @@ import NonFungibleToken from "./utility/NonFungibleToken.cdc"
 ///
 access(all) contract NFTStorefront {
 
-    access(all) entitlement Creatable
-    access(all) entitlement Removable
-
-    /// NFTStorefrontInitialized
-    /// This contract has been deployed.
-    /// Event consumers can now expect events from this contract.
-    ///
-    access(all) event NFTStorefrontInitialized()
+    access(all) entitlement CreateListing
+    access(all) entitlement RemoveListing
 
     /// StorefrontInitialized
     /// A Storefront resource has been created.
@@ -189,7 +183,7 @@ access(all) contract NFTStorefront {
         /// This will assert in the same way as the NFT standard borrowNFT()
         /// if the NFT is absent, for example if it has been sold via another listing.
         ///
-        access(all) fun borrowNFT(): &{NonFungibleToken.NFT}
+        access(all) fun borrowNFT(): &{NonFungibleToken.NFT}?
 
         /// purchase
         /// Purchase the listing, buying the token.
@@ -233,13 +227,13 @@ access(all) contract NFTStorefront {
         /// This will assert in the same way as the NFT standard borrowNFT()
         /// if the NFT is absent, for example if it has been sold via another listing.
         ///
-        access(all) fun borrowNFT(): &{NonFungibleToken.NFT} {
+        access(all) fun borrowNFT(): &{NonFungibleToken.NFT}? {
             let ref = self.nftProviderCapability.borrow()!.borrowNFT(self.getDetails().nftID)
             //- CANNOT DO THIS IN PRECONDITION: "member of restricted type is not accessible: isInstance"
             //  result.isInstance(self.getDetails().nftType): "token has wrong type"
             assert(ref.isInstance(self.getDetails().nftType), message: "token has wrong type")
             assert(ref?.id == self.getDetails().nftID, message: "token has wrong ID")
-            return (ref as &{NonFungibleToken.NFT}?)!
+            return (ref as &{NonFungibleToken.NFT}?)
         }
 
         /// getDetails
@@ -356,7 +350,7 @@ access(all) contract NFTStorefront {
         /// createListing
         /// Allows the Storefront owner to create and insert Listings.
         ///
-        access(Creatable) fun createListing(
+        access(CreateListing) fun createListing(
             nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>,
             nftType: Type,
             nftID: UInt64,
@@ -366,7 +360,7 @@ access(all) contract NFTStorefront {
         /// removeListing
         /// Allows the Storefront owner to remove any sale listing, acepted or not.
         ///
-        access(Removable) fun removeListing(listingResourceID: UInt64)
+        access(RemoveListing) fun removeListing(listingResourceID: UInt64)
     }
 
     /// StorefrontPublic
@@ -395,7 +389,7 @@ access(all) contract NFTStorefront {
         /// insert
         /// Create and publish a Listing for an NFT.
         ///
-         access(Creatable) fun createListing(
+         access(CreateListing) fun createListing(
             nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>,
             nftType: Type,
             nftID: UInt64,
@@ -436,7 +430,7 @@ access(all) contract NFTStorefront {
         /// removeListing
         /// Remove a Listing that has not yet been purchased from the collection and destroy it.
         ///
-        access(Removable) fun removeListing(listingResourceID: UInt64) {
+        access(RemoveListing) fun removeListing(listingResourceID: UInt64) {
             let listing <- self.listings.remove(key: listingResourceID)
                 ?? panic("missing Listing")
     
@@ -497,7 +491,5 @@ access(all) contract NFTStorefront {
     init () {
         self.StorefrontStoragePath = /storage/NFTStorefront
         self.StorefrontPublicPath = /public/NFTStorefront
-
-        emit NFTStorefrontInitialized()
     }
 }

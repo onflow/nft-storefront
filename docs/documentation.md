@@ -133,13 +133,14 @@ Complete transaction available [here](https://github.com/onflow/nft-storefront/b
 
 ```cadence
 resource interface ListingPublic {
-    pub fun borrowNFT(): &NonFungibleToken.NFT?
-    pub fun purchase(
-          payment: @FungibleToken.Vault, 
-          commissionRecipient: Capability<&{FungibleToken.Receiver}>?,
-      ): @NonFungibleToken.NFT
-    pub fun getDetails(): ListingDetail
-    pub fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
+    access(all) fun borrowNFT(): &{NonFungibleToken.NFT}?
+    access(all) fun purchase(
+        payment: @{FungibleToken.Vault}, 
+        commissionRecipient: Capability<&{FungibleToken.Receiver}>?,
+      ): @{NonFungibleToken.NFT}
+    access(all) view fun getDetails(): ListingDetails
+    access(all) fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
+    access(all) fun hasListingBecomeGhosted(): Bool
 }
 ```
 An interface providing a useful public interface to a Listing.
@@ -149,7 +150,7 @@ An interface providing a useful public interface to a Listing.
 **fun `borrowNFT()`**
 
 ```cadence
-fun borrowNFT(): &NonFungibleToken.NFT?
+fun borrowNFT(): &{NonFungibleToken.NFT}?
 ```
 This will assert in the same way as the NFT standard borrowNFT()
 if the NFT is absent, for example if it has been sold via another listing.
@@ -159,7 +160,7 @@ if the NFT is absent, for example if it has been sold via another listing.
 **fun `purchase()`**
 
 ```cadence
-fun purchase(payment FungibleToken.Vault, commissionRecipient Capability<&{FungibleToken.Receiver}>?): NonFungibleToken.NFT
+fun purchase(payment FungibleToken.Vault, commissionRecipient Capability<&{FungibleToken.Receiver}>?): @{NonFungibleToken.NFT}
 ```
 Facilitates the purchase of the listing by providing the payment vault
 and the commission recipient capability if there is a non-zero commission for the given listing.
@@ -189,10 +190,10 @@ If it returns `nil` then commission paid to the receiver by default.
 **fun `hasListingBecomeGhosted()`**
 
 ```cadence
-pub fun hasListingBecomeGhosted(): Bool
+fun hasListingBecomeGhosted(): Bool
 ```
-Tells whether listed NFT is present in provided capability.
-If it returns `false` then it means listing becomes ghost or sold out.
+Tells whether a listed NFT that was put up for sale is still available in the provided listing.
+If it returns `true` then it means the listing is "ghosted" because there is no available nft to fulfill the listing.
 
 ---
 
@@ -200,8 +201,8 @@ If it returns `false` then it means listing becomes ghost or sold out.
 
 ```cadence
 resource Storefront {
-    pub fun createListing(
-            nftProviderCapability: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>,
+    access(Creatable) fun createListing(
+            nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>,
             nftType: Type,
             nftID: UInt64,
             salePaymentVaultType: Type,
@@ -211,11 +212,11 @@ resource Storefront {
             commissionAmount: UFix64,
             expiry: UInt64
          ): UInt64
-    pub fun removeListing(listingResourceID: UInt64)
-    pub fun getListingIDs(): [UInt64]
-    pub fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64]
-    pub fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64)
-    pub fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}?
+    access(Removable) fun removeListing(listingResourceID: UInt64)
+    access(all) view fun getListingIDs(): [UInt64]
+    access(all) fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64]
+    access(all) fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64)
+    access(all) view fun borrowListing(listingResourceID: UInt64): &{ListingPublic}?
 }
 ```
 A resource that allows it's owner to manage a list of Listings, and anyone to interact with them
@@ -298,13 +299,14 @@ Returns a read-only view of the listing for the given listingID if it is contain
 
 ```cadence
 resource interface StorefrontPublic {
-    pub fun getListingIDs(): [UInt64]
-    pub fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64]
-    pub fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64)
-    pub fun borrowListing(listingResourceID: UInt64): &Listing{ListingPublic}?
-    pub fun cleanupPurchasedListings(listingResourceID: UInt64)
-    pub fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64]
-    pub fun cleanupGhostListings(listingResourceID: UInt64)
+    access(all) view fun getListingIDs(): [UInt64]
+    access(all) fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64]
+    access(all) view fun borrowListing(listingResourceID: UInt64): &{ListingPublic}?
+    access(all) fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64)
+    access(contract) fun cleanup(listingResourceID: UInt64)
+    access(all) fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64]
+    access(all) fun cleanupPurchasedListings(listingResourceID: UInt64)
+    access(all) fun cleanupGhostListings(listingResourceID: UInt64)
 }
 ```
 
@@ -393,10 +395,10 @@ of the owner of the Storefront at the time of the listing but only at that exact
 
 ---
 
-**event `StorefrontDestroyed`**
+**event `ResourceDestroyed`**
 
 ```cadence
-event StorefrontDestroyed(storefrontResourceID: UInt64)
+event ResourceDestroyed(storefrontResourceID: UInt64 = self.uuid)
 ```
 A Storefront has been destroyed. Event consumers can now stop processing events from this Storefront.
 Note - we do not specify an address.

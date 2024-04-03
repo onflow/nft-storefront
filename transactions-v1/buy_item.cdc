@@ -1,9 +1,9 @@
-import ExampleToken from "../contracts/utility/ExampleToken.cdc"
-import FungibleToken from "../contracts/utility/FungibleToken.cdc"
-import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
-import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
-import NFTStorefront from "../contracts/NFTStorefront.cdc"
-import MetadataViews from "../contracts/utility/MetadataViews"
+import "ExampleToken"
+import "FungibleToken"
+import "NonFungibleToken"
+import "ExampleNFT"
+import "NFTStorefront"
+import "MetadataViews"
 
 transaction(listingResourceID: UInt64, storefrontAddress: Address) {
 

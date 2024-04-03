@@ -45,13 +45,6 @@ access(all) contract NFTStorefrontV2 {
     ///
     access(all) event StorefrontInitialized(storefrontResourceID: UInt64)
 
-    /// StorefrontDestroyed
-    /// A Storefront has been destroyed.
-    /// Event consumers can now stop processing events from this Storefront.
-    /// Note that we do not specify an address.
-    ///
-    access(all) event StorefrontDestroyed(storefrontResourceID: UInt64)
-
     /// ListingAvailable
     /// A listing has been created and added to a Storefront resource.
     /// The Address values here are valid when the event is emitted, but
@@ -815,4 +808,3 @@ access(all) contract NFTStorefrontV2 {
         self.StorefrontPublicPath = /public/NFTStorefrontV2
     }
 }
- 

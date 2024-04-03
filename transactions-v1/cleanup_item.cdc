@@ -1,4 +1,4 @@
-import "NFTStorefront" from "../contracts/NFTStorefront.cdc"
+import "NFTStorefront"
 
 transaction(listingResourceID: UInt64, storefrontAddress: Address) {
 
