@@ -1,5 +1,6 @@
 {
   "contracts": {
+    "NFTStorefront": "./contracts/NFTStorefront.cdc",
     "NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc",
     "FungibleToken": {
       "source": "./contracts/utility/FungibleToken.cdc",
@@ -26,6 +27,7 @@
   "deployments": {
     "previewnet": {
       "previewnet-account": [
+        "NFTStorefront",
         "NFTStorefrontV2"
       ]
     }
