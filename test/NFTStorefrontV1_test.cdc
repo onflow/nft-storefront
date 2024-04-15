@@ -158,6 +158,20 @@ fun testSellItem() {
 }
 
 access(all)
+fun testBorrowNFT() {
+    let getListingIDCode = loadCode("read_storefront_ids.cdc", "transactions-v1/scripts-v1")
+    var result = Test.executeScript(getListingIDCode, [seller.address])
+    Test.expect(result, Test.beSucceeded())
+    Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
+    let listingID = (result.returnValue! as! [UInt64])[0]!
+
+    var code = loadCode("verify_listed_nft_exists.cdc", "transactions-v1/scripts-v1")
+    result = Test.executeScript(code, [seller.address, listingID])
+    Test.expect(result, Test.beSucceeded())
+    Test.assertEqual(result.returnValue! as! Bool, true)
+}
+
+access(all)
 fun testCleanupItem() {
     let getListingIDCode = loadCode("read_storefront_ids.cdc", "transactions-v1/scripts-v1")
     var result = Test.executeScript(getListingIDCode, [seller.address])

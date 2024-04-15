@@ -231,7 +231,7 @@ access(all) contract NFTStorefront {
             let ref = self.nftProviderCapability.borrow()!.borrowNFT(self.getDetails().nftID)
             //- CANNOT DO THIS IN PRECONDITION: "member of restricted type is not accessible: isInstance"
             //  result.isInstance(self.getDetails().nftType): "token has wrong type"
-            assert(ref.isInstance(self.getDetails().nftType), message: "token has wrong type")
+            assert(ref!.isInstance(self.getDetails().nftType), message: "token has wrong type")
             assert(ref?.id == self.getDetails().nftID, message: "token has wrong ID")
             return (ref as &{NonFungibleToken.NFT}?)
         }
@@ -337,7 +337,7 @@ access(all) contract NFTStorefront {
 
             let nft = provider!.borrowNFT(self.details.nftID)
             // This will precondition assert if the token is not available.
-            assert(nft!.getType() == self.details.nftType, message: "token is not of specified type")
+            assert(nft!.isInstance(self.details.nftType), message: "token is not of specified type")
             assert(nft?.id == self.details.nftID, message: "token does not have specified ID")
         }
     }
