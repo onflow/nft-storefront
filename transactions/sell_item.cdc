@@ -28,7 +28,7 @@ transaction(
     
     let tokenReceiver: Capability<&{FungibleToken.Receiver}>
     let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
-    let storefront: auth(NFTStorefrontV2.Creatable) &NFTStorefrontV2.Storefront
+    let storefront: auth(NFTStorefrontV2.CreateListing) &NFTStorefrontV2.Storefront
     var saleCuts: [NFTStorefrontV2.SaleCut]
     var marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]
 
@@ -78,7 +78,7 @@ transaction(
             )
         )
 
-        self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.Creatable) &NFTStorefrontV2.Storefront>(
+        self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.CreateListing) &NFTStorefrontV2.Storefront>(
                 from: NFTStorefrontV2.StorefrontStoragePath
             ) ?? panic("Missing or mis-typed NFTStorefront Storefront")
 

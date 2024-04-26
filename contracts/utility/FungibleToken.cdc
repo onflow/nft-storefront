@@ -31,26 +31,23 @@ to the Provider interface.
 
 */
 
-import ViewResolver from "ViewResolver"
-import Burner from "Burner"
+import "ViewResolver"
+import "Burner"
 
 /// FungibleToken
 ///
-/// Fungible Token implementations are no longer required to implement the fungible token
-/// interface. We still have it as an interface here because there are some useful
-/// utility methods that many projects will still want to have on their contracts,
-/// but they are by no means required. all that is required is that the token
-/// implements the `Vault` interface
+/// Fungible Token implementations should implement the fungible token
+/// interface.
 access(all) contract interface FungibleToken: ViewResolver {
 
     // An entitlement for allowing the withdrawal of tokens from a Vault
     access(all) entitlement Withdraw
 
     /// The event that is emitted when tokens are withdrawn from a Vault
-    access(all) event Withdrawn(type: String, amount: UFix64, from: Address?, fromUUID: UInt64, withdrawnUUID: UInt64)
+    access(all) event Withdrawn(type: String, amount: UFix64, from: Address?, fromUUID: UInt64, withdrawnUUID: UInt64, balanceAfter: UFix64)
 
     /// The event that is emitted when tokens are deposited to a Vault
-    access(all) event Deposited(type: String, amount: UFix64, to: Address?, toUUID: UInt64, depositedUUID: UInt64)
+    access(all) event Deposited(type: String, amount: UFix64, to: Address?, toUUID: UInt64, depositedUUID: UInt64, balanceAfter: UFix64)
 
     /// Event that is emitted when the global burn method is called with a non-zero balance
     access(all) event Burned(type: String, amount: UFix64, fromUUID: UInt64)
@@ -97,7 +94,6 @@ access(all) contract interface FungibleToken: ViewResolver {
                 // `result` refers to the return value
                 result.balance == amount:
                     "Withdrawal amount must be the same as the balance of the withdrawn Vault"
-                emit Withdrawn(type: self.getType().identifier, amount: amount, from: self.owner?.address, fromUUID: self.uuid, withdrawnUUID: result.uuid)
             }
         }
     }
@@ -118,7 +114,8 @@ access(all) contract interface FungibleToken: ViewResolver {
         ///
         access(all) fun deposit(from: @{Vault})
 
-        /// getSupportedVaultTypes optionally returns a list of vault types that this receiver accepts
+        /// getSupportedVaultTypes returns a dictionary of Vault types
+        /// and whether the type is currently supported by this Receiver
         access(all) view fun getSupportedVaultTypes(): {Type: Bool}
 
         /// Returns whether or not the given type is accepted by the Receiver
@@ -150,9 +147,10 @@ access(all) contract interface FungibleToken: ViewResolver {
             post {
                 self.balance == 0.0: "The balance must be set to zero during the burnCallback method so that it cannot be spammed"
             }
+            self.balance = 0.0
         }
 
-        /// getSupportedVaultTypes optionally returns a list of vault types that this receiver accepts
+        /// getSupportedVaultTypes returns a dictionary of vault types and whether this receiver accepts the indexed type
         /// The default implementation is included here because vaults are expected
         /// to only accepted their own type, so they have no need to provide an implementation
         /// for this function
@@ -188,6 +186,14 @@ access(all) contract interface FungibleToken: ViewResolver {
                 //
                 self.balance == before(self.balance) - amount:
                     "New Vault balance must be the difference of the previous balance and the withdrawn Vault balance"
+                emit Withdrawn(
+                        type: result.getType().identifier,
+                        amount: amount,
+                        from: self.owner?.address,
+                        fromUUID: self.uuid,
+                        withdrawnUUID: result.uuid,
+                        balanceAfter: self.balance
+                )
             }
         }
 
@@ -199,9 +205,16 @@ access(all) contract interface FungibleToken: ViewResolver {
             pre {
                 from.isInstance(self.getType()): 
                     "Cannot deposit an incompatible token type"
-                emit Deposited(type: from.getType().identifier, amount: from.balance, to: self.owner?.address, toUUID: self.uuid, depositedUUID: from.uuid)
             }
             post {
+                emit Deposited(
+                        type: before(from.getType().identifier),
+                        amount: before(from.balance),
+                        to: self.owner?.address,
+                        toUUID: self.uuid,
+                        depositedUUID: before(from.uuid),
+                        balanceAfter: self.balance
+                )
                 self.balance == before(self.balance) + before(from.balance):
                     "New Vault balance must be the sum of the previous balance and the deposited Vault"
             }
@@ -212,6 +225,7 @@ access(all) contract interface FungibleToken: ViewResolver {
         access(all) fun createEmptyVault(): @{Vault} {
             post {
                 result.balance == 0.0: "The newly created Vault must have zero balance"
+                result.getType() == self.getType(): "The newly created Vault must have the same type as the creating vault"
             }
         }
     }

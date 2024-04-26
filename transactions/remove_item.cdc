@@ -5,10 +5,10 @@ import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
 ///
 transaction(listingResourceID: UInt64) {
 
-    let storefront: auth(NFTStorefrontV2.Removable) &{NFTStorefrontV2.StorefrontManager}
+    let storefront: auth(NFTStorefrontV2.RemoveListing) &{NFTStorefrontV2.StorefrontManager}
 
     prepare(acct: auth(BorrowValue) &Account) {
-        self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.Removable) &NFTStorefrontV2.Storefront>(
+        self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.RemoveListing) &NFTStorefrontV2.Storefront>(
                 from: NFTStorefrontV2.StorefrontStoragePath
             ) ?? panic("Missing or mis-typed NFTStorefront.Storefront")
     }

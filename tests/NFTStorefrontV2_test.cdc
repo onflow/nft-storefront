@@ -141,7 +141,7 @@ access(all)
 fun testSellItem() {
     var code = loadCode("get_ids.cdc", "scripts/example-nft")
 
-    var result = Test.executeScript(code, [seller.address, /public/cadenceExampleNFTCollection])
+    var result = Test.executeScript(code, [seller.address, /public/exampleNFTCollection])
     Test.expect(result, Test.beSucceeded())
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
     let nftID = (result.returnValue! as! [UInt64])[0]
@@ -239,7 +239,7 @@ fun testCleanupGhostListings() {
 
     // Get the newly minted NFT's ID
     var code = loadCode("get_ids.cdc", "scripts/example-nft")
-    var result = Test.executeScript(code, [seller.address, /public/cadenceExampleNFTCollection])
+    var result = Test.executeScript(code, [seller.address, /public/exampleNFTCollection])
     Test.expect(result, Test.beSucceeded())
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
     let nftID = (result.returnValue! as! [UInt64])[0]
@@ -316,7 +316,7 @@ fun testSellItemWithMarketplaceCut() {
 
     var code = loadCode("get_ids.cdc", "scripts/example-nft")
 
-    var result = Test.executeScript(code, [seller.address, /public/cadenceExampleNFTCollection])
+    var result = Test.executeScript(code, [seller.address, /public/exampleNFTCollection])
     Test.expect(result, Test.beSucceeded())
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
     let nftID = (result.returnValue! as! [UInt64])[0]
@@ -350,7 +350,7 @@ fun testSellItemAndReplaceCurrentListing() {
     var getIDsCode = loadCode("get_ids.cdc", "scripts/example-nft")
     let getListingIDCode = loadCode("read_storefront_ids.cdc", "scripts")
 
-    var result = Test.executeScript(getIDsCode, [seller.address, /public/cadenceExampleNFTCollection])
+    var result = Test.executeScript(getIDsCode, [seller.address, /public/exampleNFTCollection])
     Test.expect(result, Test.beSucceeded())
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
     let nftID = (result.returnValue! as! [UInt64])[0]
@@ -437,7 +437,7 @@ fun testRemoveItem() {
     // list the new NFT for sale
     var code = loadCode("get_ids.cdc", "scripts/example-nft")
 
-    var result = Test.executeScript(code, [seller.address, /public/cadenceExampleNFTCollection])
+    var result = Test.executeScript(code, [seller.address, /public/exampleNFTCollection])
     Test.expect(result, Test.beSucceeded())
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
     let nftID = (result.returnValue! as! [UInt64])[0]

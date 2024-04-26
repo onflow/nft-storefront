@@ -1,4 +1,4 @@
-/* 
+/*
 *
 *  This is an example implementation of a Flow Non-Fungible Token
 *  using the V2 standard.
@@ -7,15 +7,18 @@
 *
 *  This contract does not implement any sophisticated classification
 *  system for its NFTs. It defines a simple NFT with minimal metadata.
-*   
+*
 */
 
-import NonFungibleToken from "NonFungibleToken"
-import ViewResolver from "ViewResolver"
-import MetadataViews from "MetadataViews"
+import "NonFungibleToken"
+import "ViewResolver"
+import "MetadataViews"
 
 access(all) contract ExampleNFT: NonFungibleToken {
-    access(all) event Minted(id: UInt64, uuid: UInt64)
+
+    /// Standard Paths
+    access(all) let CollectionStoragePath: StoragePath
+    access(all) let CollectionPublicPath: PublicPath
 
     /// Path where the minter should be stored
     /// The standard paths for the collection are stored in the collection resource type
@@ -23,7 +26,7 @@ access(all) contract ExampleNFT: NonFungibleToken {
 
     /// We choose the name NFT here, but this type can have any name now
     /// because the interface does not require it to have a specific name any more
-    access(all) resource NFT: NonFungibleToken.NFT, ViewResolver.Resolver {
+    access(all) resource NFT: NonFungibleToken.NFT {
 
         access(all) let id: UInt64
 
@@ -37,7 +40,7 @@ access(all) contract ExampleNFT: NonFungibleToken {
 
         /// Generic dictionary of traits the NFT has
         access(self) let metadata: {String: AnyStruct}
-    
+
         init(
             name: String,
             description: String,
@@ -59,7 +62,7 @@ access(all) contract ExampleNFT: NonFungibleToken {
         access(all) fun createEmptyCollection(): @{NonFungibleToken.Collection} {
             return <-ExampleNFT.createEmptyCollection(nftType: Type<@ExampleNFT.NFT>())
         }
-    
+
         access(all) view fun getViews(): [Type] {
             return [
                 Type<MetadataViews.Display>(),
@@ -118,26 +121,23 @@ access(all) contract ExampleNFT: NonFungibleToken {
                     let fooTraitRarity = MetadataViews.Rarity(score: 10.0, max: 100.0, description: "Common")
                     let fooTrait = MetadataViews.Trait(name: "foo", value: self.metadata["foo"], displayType: nil, rarity: fooTraitRarity)
                     traitsView.addTrait(fooTrait)
-                    
+
                     return traitsView
             }
             return nil
         }
     }
 
-    access(all) resource Collection: NonFungibleToken.Collection {
+    // Deprecated: Only here for backward compatibility.
+    access(all) resource interface ExampleNFTCollectionPublic {}
+
+    access(all) resource Collection: NonFungibleToken.Collection, ExampleNFTCollectionPublic {
         /// dictionary of NFT conforming tokens
         /// NFT is a resource type with an `UInt64` ID field
-        access(contract) var ownedNFTs: @{UInt64: ExampleNFT.NFT}
-
-        access(all) var storagePath: StoragePath
-        access(all) var publicPath: PublicPath
+        access(all) var ownedNFTs: @{UInt64: {NonFungibleToken.NFT}}
 
         init () {
             self.ownedNFTs <- {}
-            let identifier = "cadenceExampleNFTCollection"
-            self.storagePath = StoragePath(identifier: identifier)!
-            self.publicPath = PublicPath(identifier: identifier)!
         }
 
         /// getSupportedNFTTypes returns a list of NFT types that this receiver accepts
@@ -150,11 +150,7 @@ access(all) contract ExampleNFT: NonFungibleToken {
         /// Returns whether or not the given type is accepted by the collection
         /// A collection that can accept any type should just return true by default
         access(all) view fun isSupportedNFTType(type: Type): Bool {
-           if type == Type<@ExampleNFT.NFT>() {
-            return true
-           } else {
-            return false
-           }
+            return type == Type<@ExampleNFT.NFT>()
         }
 
         /// withdraw removes an NFT from the collection and moves it to the caller
@@ -169,11 +165,20 @@ access(all) contract ExampleNFT: NonFungibleToken {
         /// and adds the ID to the id array
         access(all) fun deposit(token: @{NonFungibleToken.NFT}) {
             let token <- token as! @ExampleNFT.NFT
+            let id = token.id
 
             // add the new token to the dictionary which removes the old one
             let oldToken <- self.ownedNFTs[token.id] <- token
 
             destroy oldToken
+
+            // This code is for testing purposes only
+            // Do not add to your contract unless you have a specific
+            // reason to want to emit the NFTUpdated event somewhere
+            // in your contract
+            let authTokenRef = (&self.ownedNFTs[id] as auth(NonFungibleToken.Owner) &{NonFungibleToken.NFT}?)!
+            //authTokenRef.updateTransferDate(date: getCurrentBlock().timestamp)
+            ExampleNFT.emitNFTUpdated(authTokenRef)
         }
 
         /// getIDs returns an array of the IDs that are in the collection
@@ -183,7 +188,7 @@ access(all) contract ExampleNFT: NonFungibleToken {
 
         /// Gets the amount of NFTs stored in the collection
         access(all) view fun getLength(): Int {
-            return self.ownedNFTs.keys.length
+            return self.ownedNFTs.length
         }
 
         access(all) view fun borrowNFT(_ id: UInt64): &{NonFungibleToken.NFT}? {
@@ -192,7 +197,7 @@ access(all) contract ExampleNFT: NonFungibleToken {
 
         /// Borrow the view resolver for the specified NFT ID
         access(all) view fun borrowViewResolver(id: UInt64): &{ViewResolver.Resolver}? {
-            if let nft = &self.ownedNFTs[id] as &ExampleNFT.NFT? {
+            if let nft = &self.ownedNFTs[id] as &{NonFungibleToken.NFT}? {
                 return nft as &{ViewResolver.Resolver}
             }
             return nil
@@ -233,8 +238,8 @@ access(all) contract ExampleNFT: NonFungibleToken {
         switch viewType {
             case Type<MetadataViews.NFTCollectionData>():
                 let collectionData = MetadataViews.NFTCollectionData(
-                    storagePath: /storage/cadenceExampleNFTCollection,
-                    publicPath: /public/cadenceExampleNFTCollection,
+                    storagePath: self.CollectionStoragePath,
+                    publicPath: self.CollectionPublicPath,
                     publicCollection: Type<&ExampleNFT.Collection>(),
                     publicLinkedType: Type<&ExampleNFT.Collection>(),
                     createEmptyCollectionFunction: (fun(): @{NonFungibleToken.Collection} {
@@ -294,8 +299,6 @@ access(all) contract ExampleNFT: NonFungibleToken {
                 metadata: metadata,
             )
 
-            emit Minted(id: newNFT.id, uuid: newNFT.uuid)
-
             return <-newNFT
         }
     }
@@ -303,21 +306,20 @@ access(all) contract ExampleNFT: NonFungibleToken {
     init() {
 
         // Set the named paths
-        self.MinterStoragePath = /storage/cadenceExampleNFTMinter
+        self.CollectionStoragePath = /storage/exampleNFTCollection
+        self.CollectionPublicPath = /public/exampleNFTCollection
+        self.MinterStoragePath = /storage/exampleNFTMinter
 
         // Create a Collection resource and save it to storage
         let collection <- create Collection()
-        let defaultStoragePath = collection.storagePath
-        let defaultPublicPath = collection.publicPath
-        self.account.storage.save(<-collection, to: defaultStoragePath)
+        self.account.storage.save(<-collection, to: self.CollectionStoragePath)
 
         // create a public capability for the collection
-        let collectionCap = self.account.capabilities.storage.issue<&ExampleNFT.Collection>(defaultStoragePath)
-        self.account.capabilities.publish(collectionCap, at: defaultPublicPath)
+        let collectionCap = self.account.capabilities.storage.issue<&ExampleNFT.Collection>(self.CollectionStoragePath)
+        self.account.capabilities.publish(collectionCap, at: self.CollectionPublicPath)
 
         // Create a Minter resource and save it to storage
         let minter <- create NFTMinter()
         self.account.storage.save(<-minter, to: self.MinterStoragePath)
     }
 }
- 

@@ -1,4 +1,4 @@
-import MetadataViews from "./MetadataViews.cdc"
+import "MetadataViews"
 
 // NFTCatalog
 //
@@ -10,19 +10,17 @@ import MetadataViews from "./MetadataViews.cdc"
 // To make an addition to the catalog you can propose an NFT and provide its metadata.
 // An Admin can approve a proposal which would add the NFT to the catalog
 
-pub contract NFTCatalog {
+access(all) contract NFTCatalog {
     // EntryAdded
     // An NFT collection has been added to the catalog
-    pub event EntryAdded(
+    access(all) event EntryAdded(
         collectionIdentifier : String,
         contractName : String,
         contractAddress : Address,
         nftType : Type,
         storagePath: StoragePath,
         publicPath: PublicPath,
-        privatePath: PrivatePath,
         publicLinkedType : Type,
-        privateLinkedType : Type,
         displayName : String,
         description: String,
         externalURL : String
@@ -30,16 +28,14 @@ pub contract NFTCatalog {
 
     // EntryUpdated
     // An NFT Collection has been updated in the catalog
-    pub event EntryUpdated(
+    access(all) event EntryUpdated(
         collectionIdentifier : String,
         contractName : String,
         contractAddress : Address,
         nftType : Type,
         storagePath: StoragePath,
         publicPath: PublicPath,
-        privatePath: PrivatePath,
         publicLinkedType : Type,
-        privateLinkedType : Type,
         displayName : String,
         description: String,
         externalURL : String
@@ -47,23 +43,23 @@ pub contract NFTCatalog {
 
     // EntryRemoved
     // An NFT Collection has been removed from the catalog
-    pub event EntryRemoved(collectionIdentifier : String, nftType: Type)
+    access(all) event EntryRemoved(collectionIdentifier : String, nftType: Type)
 
     // ProposalEntryAdded
     // A new proposal to make an addtion to the catalog has been made
-    pub event ProposalEntryAdded(proposalID : UInt64, collectionIdentifier : String, message: String, status: String, proposer : Address)
+    access(all) event ProposalEntryAdded(proposalID : UInt64, collectionIdentifier : String, message: String, status: String, proposer : Address)
 
     // ProposalEntryUpdated
     // A proposal has been updated
-    pub event ProposalEntryUpdated(proposalID : UInt64, collectionIdentifier : String, message: String, status: String, proposer : Address)
+    access(all) event ProposalEntryUpdated(proposalID : UInt64, collectionIdentifier : String, message: String, status: String, proposer : Address)
 
     // ProposalEntryRemoved
     // A proposal has been removed from storage
-    pub event ProposalEntryRemoved(proposalID : UInt64)
+    access(all) event ProposalEntryRemoved(proposalID : UInt64)
 
-    pub let ProposalManagerStoragePath: StoragePath
+    access(all) let ProposalManagerStoragePath: StoragePath
 
-    pub let ProposalManagerPublicPath: PublicPath
+    access(all) let ProposalManagerPublicPath: PublicPath
 
     access(self) let catalog: {String : NFTCatalog.NFTCatalogMetadata} // { collectionIdentifier -> Metadata }
     access(self) let catalogTypeData: {String : {String : Bool}} // Additional view to go from { NFT Type Identifier -> {Collection Identifier : Bool } }
@@ -75,17 +71,16 @@ pub contract NFTCatalog {
     // NFTCatalogProposalManager
     // Used to authenticate proposals made to the catalog
 
-    pub resource interface NFTCatalogProposalManagerPublic {
-        pub fun getCurrentProposalEntry(): String?
-    }
-    pub resource NFTCatalogProposalManager : NFTCatalogProposalManagerPublic {
+    access(all) entitlement ProposalActionOwner
+
+    access(all) resource NFTCatalogProposalManager {
             access(self) var currentProposalEntry: String?
 
-            pub fun getCurrentProposalEntry(): String? {
+            access(all) fun getCurrentProposalEntry(): String? {
                 return self.currentProposalEntry
             }
 
-            pub fun setCurrentProposalEntry(identifier: String?) {
+            access(ProposalActionOwner) fun setCurrentProposalEntry(identifier: String?) {
                 self.currentProposalEntry = identifier
             }
 
@@ -95,19 +90,19 @@ pub contract NFTCatalog {
     }
 
 
-    pub resource Snapshot {
-        pub var catalogSnapshot: {String : NFTCatalogMetadata}
-        pub var shouldUseSnapshot: Bool
+    access(all) resource Snapshot {
+        access(all) var catalogSnapshot: {String : NFTCatalogMetadata}
+        access(all) var shouldUseSnapshot: Bool
 
-        pub fun setPartialSnapshot(_ snapshotKey: String, _ snapshotEntry: NFTCatalogMetadata) {
+        access(all) fun setPartialSnapshot(_ snapshotKey: String, _ snapshotEntry: NFTCatalogMetadata) {
             self.catalogSnapshot[snapshotKey] = snapshotEntry
         }
 
-        pub fun setShouldUseSnapshot(_ shouldUseSnapshot: Bool) {
+        access(all) fun setShouldUseSnapshot(_ shouldUseSnapshot: Bool) {
             self.shouldUseSnapshot = shouldUseSnapshot
         }
 
-        pub fun getCatalogSnapshot(): {String : NFTCatalogMetadata} {
+        access(all) view fun getCatalogSnapshot(): {String : NFTCatalogMetadata} {
             return self.catalogSnapshot
         }
 
@@ -117,7 +112,7 @@ pub contract NFTCatalog {
         }
     }
 
-    pub fun createEmptySnapshot(): @Snapshot {
+    access(all) fun createEmptySnapshot(): @Snapshot {
         return <- create Snapshot()
     }
 
@@ -125,37 +120,31 @@ pub contract NFTCatalog {
     // Represents information about an NFT collection resource
     // Note: Not suing the struct from Metadata standard due to
     // inability to store functions
-    pub struct NFTCollectionData {
+    access(all) struct NFTCollectionData {
 
-        pub let storagePath : StoragePath
-        pub let publicPath : PublicPath
-        pub let privatePath: PrivatePath
-        pub let publicLinkedType: Type
-        pub let privateLinkedType: Type
+        access(all) let storagePath : StoragePath
+        access(all) let publicPath : PublicPath
+        access(all) let publicLinkedType: Type
 
         init(
             storagePath : StoragePath,
             publicPath : PublicPath,
-            privatePath : PrivatePath,
             publicLinkedType : Type,
-            privateLinkedType : Type
         ) {
             self.storagePath = storagePath
             self.publicPath = publicPath
-            self.privatePath = privatePath
             self.publicLinkedType = publicLinkedType
-            self.privateLinkedType = privateLinkedType
         }
     }
 
     // NFTCatalogMetadata
     // Represents data about an NFT
-    pub struct NFTCatalogMetadata {
-        pub let contractName : String
-        pub let contractAddress : Address
-        pub let nftType: Type
-        pub let collectionData: NFTCollectionData
-        pub let collectionDisplay: MetadataViews.NFTCollectionDisplay
+    access(all) struct NFTCatalogMetadata {
+        access(all) let contractName : String
+        access(all) let contractAddress : Address
+        access(all) let nftType: Type
+        access(all) let collectionData: NFTCollectionData
+        access(all) let collectionDisplay: MetadataViews.NFTCollectionDisplay
 
         init (contractName : String, contractAddress : Address, nftType: Type, collectionData : NFTCollectionData, collectionDisplay : MetadataViews.NFTCollectionDisplay) {
             self.contractName = contractName
@@ -169,13 +158,13 @@ pub contract NFTCatalog {
     // NFTCatalogProposal
     // Represents a proposal to the catalog
     // Includes data about an NFT
-    pub struct NFTCatalogProposal {
-        pub let collectionIdentifier : String
-        pub let metadata : NFTCatalogMetadata
-        pub let message : String
-        pub let status : String
-        pub let proposer : Address
-        pub let createdTime : UFix64
+    access(all) struct NFTCatalogProposal {
+        access(all) let collectionIdentifier : String
+        access(all) let metadata : NFTCatalogMetadata
+        access(all) let message : String
+        access(all) let status : String
+        access(all) let proposer : Address
+        access(all) let createdTime : UFix64
 
         init(collectionIdentifier : String, metadata : NFTCatalogMetadata, message : String, status : String, proposer : Address) {
             self.collectionIdentifier = collectionIdentifier
@@ -192,8 +181,8 @@ pub contract NFTCatalog {
         If obtaining all elements from the catalog is essential, please
         use the getCatalogKeys and forEachCatalogKey methods instead.
      */
-    pub fun getCatalog() : {String : NFTCatalogMetadata} {
-        let snapshot = self.account.borrow<&NFTCatalog.Snapshot>(from: /storage/CatalogSnapshot)
+    access(all) view fun getCatalog() : {String : NFTCatalogMetadata} {
+        let snapshot = self.account.storage.borrow<&NFTCatalog.Snapshot>(from: /storage/CatalogSnapshot)
         if snapshot != nil {
             let snapshot = snapshot!
             if snapshot.shouldUseSnapshot {
@@ -206,23 +195,23 @@ pub contract NFTCatalog {
         }
     }
 
-    pub fun getCatalogKeys(): [String] {
+    access(all) view fun getCatalogKeys(): [String] {
         return self.catalog.keys
     }
 
-    pub fun forEachCatalogKey(_ function: ((String): Bool)) {
+    access(all) fun forEachCatalogKey(_ function: fun (String): Bool) {
         self.catalog.forEachKey(function)
     }
 
-    pub fun getCatalogEntry(collectionIdentifier : String) : NFTCatalogMetadata? {
+    access(all) view fun getCatalogEntry(collectionIdentifier : String) : NFTCatalogMetadata? {
         return self.catalog[collectionIdentifier]
     }
 
-    pub fun getCollectionsForType(nftTypeIdentifier: String) : {String : Bool}? {
+    access(all) view fun getCollectionsForType(nftTypeIdentifier: String) : {String : Bool}? {
         return self.catalogTypeData[nftTypeIdentifier]
     }
 
-    pub fun getCatalogTypeData() : {String : {String : Bool}} {
+    access(all) view fun getCatalogTypeData() : {String : {String : Bool}} {
         return self.catalogTypeData
     }
 
@@ -231,12 +220,10 @@ pub contract NFTCatalog {
     // @param metadata: The Metadata for the NFT collection that will be stored in the catalog
     // @param message: A message to the catalog owners
     // @param proposer: Who is making the proposition(the address needs to be verified)
-    pub fun proposeNFTMetadata(collectionIdentifier : String, metadata : NFTCatalogMetadata, message : String, proposer : Address) : UInt64 {
-        let proposerManagerCap = getAccount(proposer).getCapability<&NFTCatalogProposalManager{NFTCatalog.NFTCatalogProposalManagerPublic}>(NFTCatalog.ProposalManagerPublicPath)
-
-        assert(proposerManagerCap.check(), message : "Proposer needs to set up a manager")
-
-        let proposerManagerRef = proposerManagerCap.borrow()!
+    access(all) fun proposeNFTMetadata(collectionIdentifier : String, metadata : NFTCatalogMetadata, message : String, proposer : Address) : UInt64 {
+        let proposerManagerRef = getAccount(proposer).capabilities.borrow<&NFTCatalogProposalManager>(
+            NFTCatalog.ProposalManagerPublicPath
+        ) ?? panic("Proposer needs to set up a manager")
 
         assert(proposerManagerRef.getCurrentProposalEntry()! == collectionIdentifier, message: "Expected proposal entry does not match entry for the proposer")
 
@@ -250,41 +237,39 @@ pub contract NFTCatalog {
 
     // Withdraw a proposal from the catalog
     // @param proposalID: The ID of proposal you want to withdraw
-    pub fun withdrawNFTProposal(proposalID : UInt64) {
+    access(all) fun withdrawNFTProposal(proposalID : UInt64) {
         pre {
             self.catalogProposals[proposalID] != nil : "Invalid Proposal ID"
         }
         let proposal = self.catalogProposals[proposalID]!
         let proposer = proposal.proposer
 
-        let proposerManagerCap = getAccount(proposer).getCapability<&NFTCatalogProposalManager{NFTCatalog.NFTCatalogProposalManagerPublic}>(NFTCatalog.ProposalManagerPublicPath)
-
-        assert(proposerManagerCap.check(), message : "Proposer needs to set up a manager")
-
-        let proposerManagerRef = proposerManagerCap.borrow()!
+        let proposerManagerRef = getAccount(proposer).capabilities.borrow<&NFTCatalogProposalManager>(
+            NFTCatalog.ProposalManagerPublicPath
+        ) ?? panic("Proposer needs to set up a manager")
 
         assert(proposerManagerRef.getCurrentProposalEntry()! == proposal.collectionIdentifier, message: "Expected proposal entry does not match entry for the proposer")
 
         self.removeCatalogProposal(proposalID : proposalID)
     }
 
-    pub fun getCatalogProposals() : {UInt64 : NFTCatalogProposal} {
+    access(all) view fun getCatalogProposals() : {UInt64 : NFTCatalogProposal} {
         return self.catalogProposals
     }
 
-    pub fun getCatalogProposalEntry(proposalID : UInt64) : NFTCatalogProposal? {
+    access(all) view fun getCatalogProposalEntry(proposalID : UInt64) : NFTCatalogProposal? {
         return self.catalogProposals[proposalID]
     }
 
-    pub fun getCatalogProposalKeys() : [UInt64] {
+    access(all) view fun getCatalogProposalKeys() : [UInt64] {
         return self.catalogProposals.keys
     }
 
-    pub fun forEachCatalogProposalKey(_ function: ((UInt64): Bool)) {
+    access(all) fun forEachCatalogProposalKey(_ function: fun (UInt64): Bool) {
         self.catalogProposals.forEachKey(function)
     }
 
-    pub fun createNFTCatalogProposalManager(): @NFTCatalogProposalManager {
+    access(all) fun createNFTCatalogProposalManager(): @NFTCatalogProposalManager {
         return <-create NFTCatalogProposalManager()
     }
 
@@ -304,9 +289,7 @@ pub contract NFTCatalog {
             nftType: metadata.nftType,
             storagePath: metadata.collectionData.storagePath,
             publicPath: metadata.collectionData.publicPath,
-            privatePath: metadata.collectionData.privatePath,
             publicLinkedType : metadata.collectionData.publicLinkedType,
-            privateLinkedType : metadata.collectionData.privateLinkedType,
             displayName : metadata.collectionDisplay.name,
             description: metadata.collectionDisplay.description,
             externalURL : metadata.collectionDisplay.externalURL.url
@@ -333,9 +316,7 @@ pub contract NFTCatalog {
             nftType: metadata.nftType,
             storagePath: metadata.collectionData.storagePath,
             publicPath: metadata.collectionData.publicPath,
-            privatePath: metadata.collectionData.privatePath,
             publicLinkedType : metadata.collectionData.publicLinkedType,
-            privateLinkedType : metadata.collectionData.privateLinkedType,
             displayName : metadata.collectionDisplay.name,
             description: metadata.collectionDisplay.description,
             externalURL : metadata.collectionDisplay.externalURL.url
@@ -351,6 +332,22 @@ pub contract NFTCatalog {
         self.catalog.remove(key: collectionIdentifier)
 
         emit EntryRemoved(collectionIdentifier : collectionIdentifier, nftType: removedType)
+    }
+
+    // This function is not preferred, and was used for the following issue:
+    // https://github.com/onflow/cadence/issues/2649
+    // If a contract's type is no longer resolvable in cadence and crashing,
+    // this function can be used to remove it from the catalog.
+    access(account) fun removeCatalogEntryUnsafe(collectionIdentifier: String, nftTypeIdentifier: String) {
+        // Remove the catalog entry
+        self.catalog.remove(key: collectionIdentifier)
+
+        // Remove the type entry
+        if (self.catalogTypeData[nftTypeIdentifier]!.keys.length == 1) {
+            self.catalogTypeData.remove(key: nftTypeIdentifier)
+        } else {
+            self.catalogTypeData[nftTypeIdentifier]!.remove(key: collectionIdentifier)
+        }
     }
 
     access(account) fun updateCatalogProposal(proposalID: UInt64, proposalMetadata : NFTCatalogProposal) {

@@ -1,37 +1,53 @@
 {
 	"contracts": {
-		"ExampleNFT": "./contracts/utility/ExampleNFT.cdc",
-		"ExampleToken": "./contracts/utility/ExampleToken.cdc",
-		"TestContract": "./contracts/TestContract.cdc",
-		"FungibleTokenMetadataViews": "./contracts/utility/FungibleTokenMetadataViews.cdc",
-		"FlowToken": {
-			"source": "",
+		"ExampleNFT": {
+			"source": "./contracts/utility/ExampleNFT.cdc",
 			"aliases": {
-				"emulator": "0ae53cb6e3f42a79",
-				"mainnet": "1654653399040a61",
-				"testnet": "7e60df042a9c0868"
+				"testing": "0x0000000000000008"
+			}
+		},
+		"ExampleToken": {
+			"source": "./contracts/utility/ExampleToken.cdc",
+			"aliases": {
+				"testing": "0x0000000000000009"
+			}
+		},
+		"FungibleTokenMetadataViews": {
+			"source": "./contracts/utility/FungibleTokenMetadataViews.cdc",
+			"aliases": {
+			  	"emulator": "0xf8d6e0586b0a20c7",
+			  	"testing": "0x0000000000000002",
+			  	"previewnet": "0xa0225e7000ac82a9",
+			  	"mainnet": "0xf233dcee88fe0abe",
+			  	"testnet": "0x9a0766d93b6608b7"
 			}
 		},
 		"FungibleToken": {
 			"source": "./contracts/utility/FungibleToken.cdc",
 			"aliases": {
-				"emulator": "0xee82856bf20e2aa6",
-				"mainnet": "f233dcee88fe0abe",
-				"testnet": "9a0766d93b6608b7"
+			  	"emulator": "0xee82856bf20e2aa6",
+			  	"testing": "0x0000000000000002",
+			  	"previewnet": "0xa0225e7000ac82a9",
+			  	"testnet": "0x9a0766d93b6608b7",
+			  	"mainnet": "0xf233dcee88fe0abe"
+			}
+		},
+		"NonFungibleToken": {
+			"source": "./contracts/utility/NonFungibleToken.cdc",
+			"aliases": {
+			  "emulator": "0xf8d6e0586b0a20c7",
+			  "testing": "0x0000000000000001",
+			  "testnet": "0x631e88ae7f1d7c20",
+			  "mainnet": "0x1d7e57aa55817448"
 			}
 		},
 		"MetadataViews": {
 			"source": "./contracts/utility/MetadataViews.cdc",
 			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "1d7e57aa55817448",
-				"testnet": "631e88ae7f1d7c20"
-			}
-		},
-		"MultipleNFT": {
-			"source": "./contracts/utility/MultipleNFT.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7"
+				"emulator": "0xf8d6e0586b0a20c7",
+				"testing": "0x0000000000000001",
+				"testnet": "0x631e88ae7f1d7c20",
+				"mainnet": "0x1d7e57aa55817448"
 			}
 		},
 		"NFTCatalog": {
@@ -42,14 +58,22 @@
 				"testnet": "324c34e1c517e4db"
 			}
 		},
-		"NFTStorefront": "./contracts/NFTStorefront.cdc",
-		"NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc",
-		"NonFungibleToken": {
-			"source": "./contracts/utility/NonFungibleToken.cdc",
+		"NFTStorefront": {
+			"source": "./contracts/NFTStorefront.cdc",
 			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "1d7e57aa55817448",
-				"testnet": "631e88ae7f1d7c20"
+				"emulator": "0xf8d6e0586b0a20c7",
+				"testing": "0x0000000000000006",
+				"testnet": "0x631e88ae7f1d7c20",
+				"mainnet": "0x1d7e57aa55817448"
+			}
+		},
+		"NFTStorefrontV2": {
+			"source": "./contracts/NFTStorefrontV2.cdc",
+			"aliases": {
+				"emulator": "0xf8d6e0586b0a20c7",
+				"testing": "0x0000000000000007",
+				"testnet": "0x631e88ae7f1d7c20",
+				"mainnet": "0x1d7e57aa55817448"
 			}
 		},
 		"ViewResolver": {
@@ -62,7 +86,9 @@
 		}
 	},
 	"networks": {
+		"testing": "127.0.0.1:3569",
 		"emulator": "127.0.0.1:3569",
+		"previewnet": "access.previewnet.nodes.onflow.org:9000",
 		"mainnet": "access.mainnet.nodes.onflow.org:9000",
 		"testnet": "access.devnet.nodes.onflow.org:9000"
 	},

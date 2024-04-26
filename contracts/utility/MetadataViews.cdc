@@ -1,6 +1,6 @@
-import FungibleToken from 0xee82856bf20e2aa6
-import NonFungibleToken from 0xf8d6e0586b0a20c7
-import ViewResolver from 0xf8d6e0586b0a20c7
+import "FungibleToken"
+import "NonFungibleToken"
+import "ViewResolver"
 
 /// This contract implements the metadata standard proposed
 /// in FLIP-0636.
@@ -134,7 +134,7 @@ access(all) contract MetadataViews {
         ///
         access(all) let file: {File}
 
-        /// media-type comes on the form of type/subtype as described here
+        /// media-type comes on the form of type/subtype as described here 
         /// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types
         ///
         access(all) let mediaType: String
@@ -185,7 +185,7 @@ access(all) contract MetadataViews {
     /// Helper to get License in a typesafe way
     ///
     /// @param viewResolver: A reference to the resolver resource
-    /// @return A optional License struct
+    /// @return An optional License struct
     ///
     access(all) fun getLicense(_ viewResolver: &{ViewResolver.Resolver}) : License? {
         if let view = viewResolver.resolveView(Type<License>()) {
@@ -197,7 +197,7 @@ access(all) contract MetadataViews {
     }
 
     /// View to expose a URL to this item on an external site.
-    /// This can be used by applications like .find and Blocto to direct users
+    /// This can be used by applications like .find and Blocto to direct users 
     /// to the original link for an NFT or a project page that describes the NFT collection.
     /// eg https://www.my-nft-project.com/overview-of-nft-collection
     ///
@@ -212,7 +212,7 @@ access(all) contract MetadataViews {
     /// Helper to get ExternalURL in a typesafe way
     ///
     /// @param viewResolver: A reference to the resolver resource
-    /// @return A optional ExternalURL struct
+    /// @return An optional ExternalURL struct
     ///
     access(all) fun getExternalURL(_ viewResolver: &{ViewResolver.Resolver}) : ExternalURL? {
         if let view = viewResolver.resolveView(Type<ExternalURL>()) {
@@ -223,27 +223,27 @@ access(all) contract MetadataViews {
         return nil
     }
 
-    /// View that defines the composable royalty standard that gives marketplaces a
+    /// View that defines the composable royalty standard that gives marketplaces a 
     /// unified interface to support NFT royalties.
     ///
     access(all) struct Royalty {
 
         /// Generic FungibleToken Receiver for the beneficiary of the royalty
         /// Can get the concrete type of the receiver with receiver.getType()
-        /// Recommendation - Users should create a new link for a FlowToken
-        /// receiver for this using `getRoyaltyReceiverPublicPath()`, and not
-        /// use the default FlowToken receiver. This will allow users to update
+        /// Recommendation - Users should create a new link for a FlowToken 
+        /// receiver for this using `getRoyaltyReceiverPublicPath()`, and not 
+        /// use the default FlowToken receiver. This will allow users to update 
         /// the capability in the future to use a more generic capability
         access(all) let receiver: Capability<&{FungibleToken.Receiver}>
 
-        /// Multiplier used to calculate the amount of sale value transferred to
-        /// royalty receiver. Note - It should be between 0.0 and 1.0
-        /// Ex - If the sale value is x and multiplier is 0.56 then the royalty
+        /// Multiplier used to calculate the amount of sale value transferred to 
+        /// royalty receiver. Note - It should be between 0.0 and 1.0 
+        /// Ex - If the sale value is x and multiplier is 0.56 then the royalty 
         /// value would be 0.56 * x.
         /// Generally percentage get represented in terms of basis points
-        /// in solidity based smart contracts while cadence offers `UFix64`
-        /// that already supports the basis points use case because its
-        /// operations are entirely deterministic integer operations and support
+        /// in solidity based smart contracts while cadence offers `UFix64` 
+        /// that already supports the basis points use case because its 
+        /// operations are entirely deterministic integer operations and support 
         /// up to 8 points of precision.
         access(all) let cut: UFix64
 
@@ -263,7 +263,7 @@ access(all) contract MetadataViews {
     }
 
     /// Wrapper view for multiple Royalty views.
-    /// Marketplaces can query this `Royalties` struct from NFTs
+    /// Marketplaces can query this `Royalties` struct from NFTs 
     /// and are expected to pay royalties based on these specifications.
     ///
     access(all) struct Royalties {
@@ -353,9 +353,9 @@ access(all) contract MetadataViews {
         view init(_ traits: [Trait]) {
             self.traits = traits
         }
-
+            
         /// Adds a single Trait to the Traits view
-        ///
+        /// 
         /// @param Trait: The trait struct to be added
         ///
         access(all) fun addTrait(_ t: Trait) {
@@ -377,8 +377,8 @@ access(all) contract MetadataViews {
         return nil
     }
 
-    /// Helper function to easily convert a dictionary to traits. For NFT
-    /// collections that do not need either of the optional values of a Trait,
+    /// Helper function to easily convert a dictionary to traits. For NFT 
+    /// collections that do not need either of the optional values of a Trait, 
     /// this method should suffice to give them an array of valid traits.
     ///
     /// @param dict: The dictionary to be converted to Traits
@@ -494,7 +494,7 @@ access(all) contract MetadataViews {
     }
 
     /// View to expose rarity information for a single rarity
-    /// Note that a rarity needs to have either score or description but it can
+    /// Note that a rarity needs to have either score or description but it can 
     /// have both
     ///
     access(all) struct Rarity {
@@ -534,8 +534,8 @@ access(all) contract MetadataViews {
         return nil
     }
 
-    /// NFTView wraps all Core views along `id` and `uuid` fields, and is used
-    /// to give a complete picture of an NFT. Most NFTs should implement this
+    /// NFTView wraps all Core views along `id` and `uuid` fields, and is used 
+    /// to give a complete picture of an NFT. Most NFTs should implement this 
     /// view.
     ///
     access(all) struct NFTView {
@@ -569,7 +569,7 @@ access(all) contract MetadataViews {
         }
     }
 
-    /// Helper to get an NFT view
+    /// Helper to get an NFT view 
     ///
     /// @param id: The NFT id
     /// @param viewResolver: A reference to the resolver resource
@@ -594,7 +594,7 @@ access(all) contract MetadataViews {
     }
 
     /// View to expose the information needed store and retrieve an NFT.
-    /// This can be used by applications to setup a NFT collection with proper
+    /// This can be used by applications to setup a NFT collection with proper 
     /// storage and public capabilities.
     ///
     access(all) struct NFTCollectionData {
@@ -605,23 +605,12 @@ access(all) contract MetadataViews {
         /// including standard NFT interfaces and metadataviews interfaces
         access(all) let publicPath: PublicPath
 
-        /// Private path which should be linked to expose the provider
-        /// capability to withdraw NFTs from the collection holding NFTs
-        access(all) let providerPath: PrivatePath
-
-        /// Public collection type that is expected to provide sufficient read-only access to standard
-        /// functions (deposit + getIDs + borrowNFT). For new
-        /// collections, this may be set to be equal to the type specified in `publicLinkedType`.
+        /// The concrete type of the collection that is exposed to the public
+        /// now that entitlements exist, it no longer needs to be restricted to a specific interface
         access(all) let publicCollection: Type
 
-        /// Type that should be linked at the aforementioned public path. This is normally a
-        /// restricted type with many interfaces. Notably the
-        /// `NFT.Receiver`, and `ViewResolver.ResolverCollection` interfaces are required.
+        /// Type that should be linked at the aforementioned public path
         access(all) let publicLinkedType: Type
-
-        /// Type that should be linked at the aforementioned private path. This is normally
-        /// a restricted type with at a minimum the `NFT.Provider` interface
-        access(all) let providerLinkedType: Type
 
         /// Function that allows creation of an empty NFT collection that is intended to store
         /// this NFT.
@@ -630,22 +619,17 @@ access(all) contract MetadataViews {
         view init(
             storagePath: StoragePath,
             publicPath: PublicPath,
-            providerPath: PrivatePath,
             publicCollection: Type,
             publicLinkedType: Type,
-            providerLinkedType: Type,
             createEmptyCollectionFunction: fun(): @{NonFungibleToken.Collection}
         ) {
             pre {
-                publicLinkedType.isSubtype(of: Type<&{NonFungibleToken.Receiver, ViewResolver.ResolverCollection}>()): "Public type must include NonFungibleToken.Receiver and ViewResolver.ResolverCollection interfaces."
-                providerLinkedType.isSubtype(of: Type<&{NonFungibleToken.Provider, ViewResolver.ResolverCollection}>()): "Provider type must include NonFungibleToken.Provider and ViewResolver.ResolverCollection interface."
+                publicLinkedType.isSubtype(of: Type<&{NonFungibleToken.Collection}>()): "Public type must be a subtype of NonFungibleToken.Collection interface."
             }
             self.storagePath=storagePath
             self.publicPath=publicPath
-            self.providerPath = providerPath
             self.publicCollection=publicCollection
             self.publicLinkedType=publicLinkedType
-            self.providerLinkedType = providerLinkedType
             self.createEmptyCollection=createEmptyCollectionFunction
         }
     }
@@ -665,7 +649,7 @@ access(all) contract MetadataViews {
     }
 
     /// View to expose the information needed to showcase this NFT's
-    /// collection. This can be used by applications to give an overview and
+    /// collection. This can be used by applications to give an overview and 
     /// graphics of the NFT collection this NFT belongs to.
     ///
     access(all) struct NFTCollectionDisplay {
@@ -681,7 +665,7 @@ access(all) contract MetadataViews {
         // Square-sized image to represent this collection.
         access(all) let squareImage: MetadataViews.Media
 
-        // Banner-sized image for this collection, recommended to have a size near 1200x630.
+        // Banner-sized image for this collection, recommended to have a size near 1400x350.
         access(all) let bannerImage: MetadataViews.Media
 
         // Social links to reach this collection's social homepages.
@@ -705,7 +689,7 @@ access(all) contract MetadataViews {
         }
     }
 
-    /// Helper to get NFTCollectionDisplay in a way that will return a typed
+    /// Helper to get NFTCollectionDisplay in a way that will return a typed 
     /// Optional
     ///
     /// @param viewResolver: A reference to the resolver resource

@@ -12,21 +12,6 @@ access(all) let exampleTokenAccount = Test.getAccount(0x0000000000000009)
 access(all) var nftCount = 1
 
 access(all)
-fun mintNFTToSeller() {
-    // Mint some example NFTs
-    let code = loadCode("mint_nft.cdc", "transactions/example-nft")
-    let tx = Test.Transaction(
-        code: code,
-        authorizers: [exampleNFTAccount.address],
-        signers: [exampleNFTAccount],
-        arguments: [seller.address, "NFT".concat(nftCount.toString()), "nft descrip", "https://test", [], [], []]
-    )
-    nftCount = nftCount + 1
-    let txResult = Test.executeTransaction(tx)
-    Test.expect(txResult, Test.beSucceeded())
-}
-
-access(all)
 fun setup() {
     let serviceAccount = Test.serviceAccount()
 
@@ -119,6 +104,21 @@ fun setup() {
 }
 
 access(all)
+fun mintNFTToSeller() {
+    // Mint some example NFTs
+    let code = loadCode("mint_nft.cdc", "transactions/example-nft")
+    let tx = Test.Transaction(
+        code: code,
+        authorizers: [exampleNFTAccount.address],
+        signers: [exampleNFTAccount],
+        arguments: [seller.address, "NFT".concat(nftCount.toString()), "nft descrip", "https://test", [], [], []]
+    )
+    nftCount = nftCount + 1
+    let txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beSucceeded())
+}
+
+access(all)
 fun testSetupAccount() {
     let code = loadCode("setup_account.cdc", "transactions-v1")
     let tx = Test.Transaction(
@@ -137,7 +137,7 @@ access(all)
 fun testSellItem() {
     var code = loadCode("get_ids.cdc", "scripts/example-nft")
 
-    var result = Test.executeScript(code, [seller.address, /public/cadenceExampleNFTCollection])
+    var result = Test.executeScript(code, [seller.address, /public/exampleNFTCollection])
     Test.expect(result, Test.beSucceeded())
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 1)
     let nftID = (result.returnValue! as! [UInt64])[0]
@@ -239,7 +239,7 @@ fun testRemoveItem() {
     mintNFTToSeller()
 
     var code = loadCode("get_ids.cdc", "scripts/example-nft")
-    var result = Test.executeScript(code, [seller.address, /public/cadenceExampleNFTCollection])
+    var result = Test.executeScript(code, [seller.address, /public/exampleNFTCollection])
     let nftID = (result.returnValue! as! [UInt64])[0]
     listedNFTID = nftID
 

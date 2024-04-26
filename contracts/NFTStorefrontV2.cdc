@@ -28,8 +28,8 @@ import NonFungibleToken from "./utility/NonFungibleToken.cdc"
 ///
 access(all) contract NFTStorefrontV2 {
 
-    access(all) entitlement Creatable
-    access(all) entitlement Removable
+    access(all) entitlement CreateListing
+    access(all) entitlement RemoveListing
 
     /// StorefrontInitialized
     /// A Storefront resource has been created.
@@ -240,12 +240,12 @@ access(all) contract NFTStorefrontV2 {
         /// getAllowedCommissionReceivers
         /// Fetches the allowed marketplaces capabilities or commission receivers.
         /// If it returns `nil` then commission is up to grab by anyone.
-        access(all) fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
+        access(all) view fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
 
         /// hasListingBecomeGhosted
         /// Tells whether listed NFT is present in provided capability.
         /// If it returns `false` then it means listing becomes ghost or sold out.
-        access(all) fun hasListingBecomeGhosted(): Bool
+        access(all) view fun hasListingBecomeGhosted(): Bool
 
     }
 
@@ -291,14 +291,14 @@ access(all) contract NFTStorefrontV2 {
         /// getAllowedCommissionReceivers
         /// Fetches the allowed marketplaces capabilities or commission receivers.
         /// If it returns `nil` then commission is up to grab by anyone.
-        access(all) fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]? {
+        access(all) view fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]? {
             return self.marketplacesCapability
         }
 
         /// hasListingBecomeGhosted
         /// Tells whether listed NFT is present in provided capability.
         /// If it returns `false` then it means listing becomes ghost or sold out.
-        access(all) fun hasListingBecomeGhosted(): Bool {
+        access(all) view fun hasListingBecomeGhosted(): Bool {
             if let providerRef = self.nftProviderCapability.borrow() {
                 let availableIDs = providerRef.getIDs()
                 return availableIDs.contains(self.details.nftID)
@@ -498,7 +498,7 @@ access(all) contract NFTStorefrontV2 {
         /// createListing
         /// Allows the Storefront owner to create and insert Listings.
         ///
-        access(Creatable) fun createListing(
+        access(CreateListing) fun createListing(
             nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>,
             nftType: Type,
             nftID: UInt64,
@@ -513,7 +513,7 @@ access(all) contract NFTStorefrontV2 {
         /// removeListing
         /// Allows the Storefront owner to remove any sale listing, accepted or not.
         ///
-        access(Removable) fun removeListing(listingResourceID: UInt64)
+        access(RemoveListing) fun removeListing(listingResourceID: UInt64)
     }
 
     /// StorefrontPublic
@@ -550,7 +550,7 @@ access(all) contract NFTStorefrontV2 {
         /// insert
         /// Create and publish a Listing for an NFT.
         ///
-         access(Creatable) fun createListing(
+         access(CreateListing) fun createListing(
             nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>,
             nftType: Type,
             nftID: UInt64,
@@ -651,7 +651,7 @@ access(all) contract NFTStorefrontV2 {
         /// Remove a Listing that has not yet been purchased from the collection and destroy it.
         /// It can only be executed by the StorefrontManager resource owner.
         ///
-        access(Removable) fun removeListing(listingResourceID: UInt64) {
+        access(RemoveListing) fun removeListing(listingResourceID: UInt64) {
             let listing <- self.listings.remove(key: listingResourceID)
                 ?? panic("missing Listing")
             let listingDetails = listing.getDetails()
