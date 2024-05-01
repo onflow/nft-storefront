@@ -1,6 +1,17 @@
 {
   "contracts": {
-    "NFTStorefrontV2": "./contracts/NFTStorefrontV2.cdc",
+    "NFTStorefront": {
+      "source": "./contracts/NFTStorefront.cdc",
+      "aliases": {
+        "testnet": "0x94b06cfca1d8a476"
+      }
+    },
+    "NFTStorefrontV2": {
+      "source": "./contracts/NFTStorefrontV2.cdc",
+      "aliases": {
+        "testnet": "0x2d55b98eb200daef"
+      }
+    },
     "FungibleToken": {
       "source": "./contracts/utility/FungibleToken.cdc",
       "aliases": {
@@ -18,14 +29,21 @@
     "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
-    "testnet-account": {
+    "v1-account": {
+      "address": "0x94b06cfca1d8a476",
+      "key": "$V1-STOREFRONT-TESTNET"
+    },
+    "v2-account": {
       "address": "0x2d55b98eb200daef",
-      "key": "$TESTNET_KEY"
+      "key": "$V2-STOREFRONT-TESTNET"
     }
   },
   "deployments": {
     "testnet": {
-      "testnet-account": [
+      "v1-account": [
+        "NFTStorefront"
+      ],
+      "v2-account": [
         "NFTStorefrontV2"
       ]
     }
