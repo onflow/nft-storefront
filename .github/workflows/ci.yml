@@ -9,39 +9,32 @@ jobs:
     name: NFTStorefront V2 Integration Tests
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: ["1.16"]
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
       with:
-        node-version: 15.0.0
-        cache: 'npm'
-        cache-dependency-path: lib/js/test/package-lock.json
+        submodules: "true"
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.20
     - name: Install Flow CLI
-      run: sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)" -- v0.43.0
-    - name: Flow cli Version
-      run: flow version
-    - name: Update PATH
-      run: echo "/root/.local/bin" >> $GITHUB_PATH
-    - name: Install dependencies
-      run: cd lib/js/test && npm ci
+      run: sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/feature/stable-cadence/install.sh)"
     - name: Run tests
-      run: cd lib/js/test && npm run test
-  V1-Integration-Tests:
+      run: flow test -f ./flow.testing.json --cover --covercode="contracts/NFTStorefrontV2.cdc" ./test/NFTStorefrontV2_test.cdc
+  V2-Integration-Tests:
     name: NFTStorefront V1 Integration Tests
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: '1.16'
-      - uses: actions/cache@v1
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - run: make ci
+    - uses: actions/checkout@v3
+      with:
+        submodules: "true"
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.20
+    - name: Install Flow CLI
+      run: sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/feature/stable-cadence/install.sh)"
+    - name: Run tests
+      run: flow test -f ./flow.testing.json --cover --covercode="contracts/NFTStorefront.cdc" ./test/NFTStorefrontV1_test.cdc
 

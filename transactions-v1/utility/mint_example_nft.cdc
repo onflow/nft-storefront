@@ -2,10 +2,10 @@
 /// It must be run with the account that has the minter resource
 /// stored in /storage/NFTMinter
 
-import "NonFungibleToken"
-import "ExampleNFT"
-import "MetadataViews"
-import "FungibleToken"
+import NonFungibleToken from "NonFungibleToken"
+import ExampleNFT from "ExampleNFT"
+import MetadataViews from "MetadataViews"
+import FungibleToken from "FungibleToken"
 
 transaction(
     recipient: Address,
@@ -27,7 +27,7 @@ transaction(
 
         let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
             ?? panic("ViewResolver does not resolve NFTCollectionData view")
-        
+
         // borrow a reference to the NFTMinter resource in storage
         self.minter = signer.storage.borrow<&ExampleNFT.NFTMinter>(from: ExampleNFT.MinterStoragePath)
             ?? panic("Account does not store an object at the specified path")

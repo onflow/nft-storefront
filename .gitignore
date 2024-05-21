@@ -1,5 +1,6 @@
 lib/js/test/node_modules/*
 .idea
+coverage.json
 *.pkey
 *.pub
 .env

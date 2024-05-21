@@ -1,42 +1,59 @@
-import FlowToken from 0x0ae53cb6e3f42a79
-import FungibleToken from "../contracts/utility/FungibleToken.cdc"
-import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
-import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
-import NFTStorefront from "../contracts/NFTStorefront.cdc"
+import "ExampleToken"
+import "FungibleToken"
+import "NonFungibleToken"
+import "ExampleNFT"
+import "NFTStorefront"
+import "MetadataViews"
 
 transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
-    let flowReceiver: Capability<&FlowToken.Vault{FungibleToken.Receiver}>
-    let exampleNFTProvider: Capability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
-    let storefront: &NFTStorefront.Storefront
 
-    prepare(acct: AuthAccount) {
-        // We need a provider capability, but one is not provided by default so we create one if needed.
-        let exampleNFTCollectionProviderPrivatePath = /private/exampleNFTCollectionProviderForNFTStorefront
+    let exampleTokenReceiver: Capability<&{FungibleToken.Receiver}>
+    let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
+    let storefront: auth(NFTStorefront.CreateListing) &NFTStorefront.Storefront
 
-        self.flowReceiver = acct.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
-        assert(self.flowReceiver.borrow() != nil, message: "Missing or mis-typed FlowToken receiver")
+    prepare(acct: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
 
-        if !acct.getCapability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath)!.check() {
-            acct.link<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath, target: ExampleNFT.CollectionStoragePath)
+        let collectionDataOpt = ExampleNFT.resolveContractView(resourceType: Type<@ExampleNFT.NFT>(), viewType: Type<MetadataViews.NFTCollectionData>())
+            ?? panic("Missing collection data")
+        let collectionData = collectionDataOpt as! MetadataViews.NFTCollectionData
+
+        self.exampleTokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
+        assert(self.exampleTokenReceiver.check(), message: "Missing or mis-typed ExampleToken Receiver")
+
+        self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
+                collectionData.storagePath
+            )
+        assert(self.exampleNFTProvider.check(), message: "Missing or mis-typed ExampleNFT provider")
+
+        // If the account doesn't already have a Storefront
+        if acct.storage.borrow<&NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath) == nil {
+            // Save a new .Storefront to account storage
+            acct.storage.save(
+                <- NFTStorefront.createStorefront(),
+                to: NFTStorefront.StorefrontStoragePath
+            )
+            // create a public capability for the .Storefront & publish
+            let storefrontPublicCap = acct.capabilities.storage.issue<&{NFTStorefront.StorefrontPublic}>(
+                NFTStorefront.StorefrontStoragePath
+            )
+            acct.capabilities.publish(storefrontPublicCap, at: NFTStorefront.StorefrontPublicPath)
         }
 
-        self.exampleNFTProvider = acct.getCapability<&ExampleNFT.Collection{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>(exampleNFTCollectionProviderPrivatePath)!
-        assert(self.exampleNFTProvider.borrow() != nil, message: "Missing or mis-typed ExampleNFT.Collection provider")
-
-        self.storefront = acct.borrow<&NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath)
-            ?? panic("Missing or mis-typed NFTStorefront Storefront")
+        self.storefront = acct.storage.borrow<auth(NFTStorefront.CreateListing) &NFTStorefront.Storefront>(
+                from: NFTStorefront.StorefrontStoragePath
+            ) ?? panic("Missing or mis-typed NFTStorefront Storefront")
     }
 
     execute {
         let saleCut = NFTStorefront.SaleCut(
-            receiver: self.flowReceiver,
+            receiver: self.exampleTokenReceiver,
             amount: saleItemPrice
         )
         self.storefront.createListing(
             nftProviderCapability: self.exampleNFTProvider,
             nftType: Type<@ExampleNFT.NFT>(),
             nftID: saleItemID,
-            salePaymentVaultType: Type<@FlowToken.Vault>(),
+            salePaymentVaultType: Type<@ExampleToken.Vault>(),
             saleCuts: [saleCut]
         )
     }

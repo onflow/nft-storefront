@@ -1,4 +1,4 @@
-import NFTCatalog from "./NFTCatalog.cdc"
+import "NFTCatalog"
 
 // NFTCatalogAdmin
 //
@@ -6,11 +6,13 @@ import NFTCatalog from "./NFTCatalog.cdc"
 // a proxy resource to receive a capability that lets you make changes to the NFT Catalog
 // and manage proposals
 
-pub contract NFTCatalogAdmin {
+access(all) contract NFTCatalogAdmin {
+
+    access(all) entitlement CatalogActions
 
     // AddProposalAccepted
     // Emitted when a proposal to add a new catalog item has been approved by an admin
-    pub event AddProposalAccepted(
+    access(all) event AddProposalAccepted(
         proposer: Address,
         collectionIdentifier : String,
         contractName : String,
@@ -20,7 +22,7 @@ pub contract NFTCatalogAdmin {
 
     // UpdateProposalAccepted
     // Emitted when a proposal to update a catalog item has been approved by an admin
-    pub event UpdateProposalAccepted(
+    access(all) event UpdateProposalAccepted(
         proposer: Address,
         collectionIdentifier : String,
         contractName : String,
@@ -30,7 +32,7 @@ pub contract NFTCatalogAdmin {
 
     // ProposalRejected
     // Emitted when a proposal to add or update a catalog item has been rejected.
-    pub event ProposalRejected(
+    access(all) event ProposalRejected(
         proposer: Address,
         collectionIdentifier : String,
         contractName : String,
@@ -38,29 +40,33 @@ pub contract NFTCatalogAdmin {
         displayName : String
     )
 
-    pub let AdminPrivatePath: PrivatePath
-    pub let AdminStoragePath: StoragePath
+    access(all) let AdminPrivatePath: PrivatePath
+    access(all) let AdminStoragePath: StoragePath
 
-    pub let AdminProxyPublicPath: PublicPath
-    pub let AdminProxyStoragePath: StoragePath
+    access(all) let AdminProxyPublicPath: PublicPath
+    access(all) let AdminProxyStoragePath: StoragePath
 
     // Admin
     // Admin resource to manage NFT Catalog
-    pub resource Admin {
+    access(all) resource Admin {
 
-        pub fun addCatalogEntry(collectionIdentifier: String, metadata : NFTCatalog.NFTCatalogMetadata) {
+        access(CatalogActions) fun addCatalogEntry(collectionIdentifier: String, metadata : NFTCatalog.NFTCatalogMetadata) {
             NFTCatalog.addCatalogEntry(collectionIdentifier: collectionIdentifier, metadata : metadata)
         }
 
-        pub fun updateCatalogEntry(collectionIdentifier : String , metadata : NFTCatalog.NFTCatalogMetadata) {
+        access(CatalogActions) fun updateCatalogEntry(collectionIdentifier : String , metadata : NFTCatalog.NFTCatalogMetadata) {
             NFTCatalog.updateCatalogEntry(collectionIdentifier: collectionIdentifier, metadata : metadata)
         }
 
-        pub fun removeCatalogEntry(collectionIdentifier : String) {
+        access(CatalogActions) fun removeCatalogEntry(collectionIdentifier : String) {
             NFTCatalog.removeCatalogEntry(collectionIdentifier : collectionIdentifier)
         }
 
-        pub fun approveCatalogProposal(proposalID : UInt64) {
+        access(CatalogActions) fun removeCatalogEntryUnsafe(collectionIdentifier : String, nftTypeIdentifier: String) {
+            NFTCatalog.removeCatalogEntryUnsafe(collectionIdentifier : collectionIdentifier, nftTypeIdentifier: nftTypeIdentifier)
+        }
+
+        access(CatalogActions) fun approveCatalogProposal(proposalID : UInt64) {
             pre {
                 NFTCatalog.getCatalogProposalEntry(proposalID : proposalID) != nil : "Invalid Proposal ID"
                 NFTCatalog.getCatalogProposalEntry(proposalID : proposalID)!.status == "IN_REVIEW" : "Invalid Proposal"
@@ -90,7 +96,7 @@ pub contract NFTCatalogAdmin {
             }
         }
 
-        pub fun rejectCatalogProposal(proposalID : UInt64) {
+        access(CatalogActions) fun rejectCatalogProposal(proposalID : UInt64) {
             pre {
                 NFTCatalog.getCatalogProposalEntry(proposalID : proposalID) != nil : "Invalid Proposal ID"
                 NFTCatalog.getCatalogProposalEntry(proposalID : proposalID)!.status == "IN_REVIEW" : "Invalid Proposal"
@@ -107,7 +113,7 @@ pub contract NFTCatalogAdmin {
             )
         }
 
-        pub fun removeCatalogProposal(proposalID : UInt64) {
+        access(CatalogActions) fun removeCatalogProposal(proposalID : UInt64) {
             pre {
                 NFTCatalog.getCatalogProposalEntry(proposalID : proposalID) != nil : "Invalid Proposal ID"
             }
@@ -121,16 +127,16 @@ pub contract NFTCatalogAdmin {
     // AdminProxy
     // A proxy resource that can store
     // a capability to admin controls
-    pub resource interface IAdminProxy {
-        pub fun addCapability(capability : Capability<&Admin>)
-        pub fun hasCapability() : Bool
+    access(all) resource interface IAdminProxy {
+        access(all) fun addCapability(capability : Capability<auth(CatalogActions) &Admin>)
+        access(all) fun hasCapability() : Bool
     }
 
-    pub resource AdminProxy : IAdminProxy {
+    access(all) resource AdminProxy : IAdminProxy {
         
-        access(self) var capability : Capability<&Admin>?
+        access(self) var capability : Capability<auth(CatalogActions) &Admin>?
 
-        pub fun addCapability(capability : Capability<&Admin>) {
+        access(all) fun addCapability(capability : Capability<auth(CatalogActions) &Admin>) {
             pre {
                 capability.check() : "Invalid Admin Capability"
                 self.capability == nil : "Admin Proxy already set"
@@ -138,11 +144,11 @@ pub contract NFTCatalogAdmin {
             self.capability = capability
         }
 
-        pub fun getCapability() : Capability<&Admin>? {
+        access(all) view fun getCapability() : Capability<auth(CatalogActions) &Admin>? {
             return self.capability
         }
 
-        pub fun hasCapability() : Bool {
+        access(all) view fun hasCapability() : Bool {
             return self.capability != nil
         }
 
@@ -152,7 +158,7 @@ pub contract NFTCatalogAdmin {
         
     }
 
-    pub fun createAdminProxy() : @AdminProxy {
+    access(all) fun createAdminProxy() : @AdminProxy {
         return <- create AdminProxy()
     }
 
@@ -165,7 +171,6 @@ pub contract NFTCatalogAdmin {
 
         let admin    <- create Admin()
 
-        self.account.save(<-admin, to: self.AdminStoragePath)
-        self.account.link<&Admin>(self.AdminPrivatePath, target: self.AdminStoragePath)
+        self.account.storage.save(<-admin, to: self.AdminStoragePath)
     }
 }

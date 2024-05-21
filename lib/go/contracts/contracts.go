@@ -1,53 +1,32 @@
 package contracts
 
+//go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../../contracts -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../contracts/...
+
 import (
-	_ "embed"
-	"fmt"
-	"strings"
+	"regexp"
 
 	"github.com/onflow/nft-storefront/lib/go/contracts/internal/assets"
+
+	_ "github.com/kevinburke/go-bindata"
 )
 
-//go:generate go run github.com/kevinburke/go-bindata/go-bindata -prefix ../../../contracts -o internal/assets/assets.go -pkg assets -nometadata -nomemcopy ../../../contracts
+var (
+	placeholderFungibleToken    = regexp.MustCompile(`"FungibleToken"`)
+	fungibleTokenImport         = "FungibleToken from "
+	placeholderNonFungibleToken = regexp.MustCompile(`"NonFungibleToken"`)
+	nftImport                   = "NonFungibleToken from "
+)
 
 const (
-	placeholderFungibleTokenAddress    = `"./utility/FungibleToken.cdc"`
-	placeholderNonfungibleTokenAddress = `"./utility/NonFungibleToken.cdc"`
+	filenameNFTStorefrontV2 = "NFTStorefrontV2.cdc"
 )
 
-func NFTStorefront(version int, fungibleTokenAddress string, nonfungibleTokenAddress string) []byte {
-	storefrontFilename := "NFTStorefront.cdc"
-	if version == 2 {
-		storefrontFilename = "NFTStorefrontV2.cdc"
-	}
+// NFTStorefrontV2 returns the NFTStorefrontV2 contract.
+func NFTStorefrontV2(ftAddr, nftAddr string) []byte {
+	code := assets.MustAssetString(filenameNFTStorefrontV2)
 
-	code := assets.MustAssetString(storefrontFilename)
-
-	// Replace the fungible token address
-	code = strings.ReplaceAll(
-		code,
-		placeholderFungibleTokenAddress,
-		withHexPrefix(fungibleTokenAddress),
-	)
-
-	// Replace the non-fungible token address
-	code = strings.ReplaceAll(
-		code,
-		placeholderNonfungibleTokenAddress,
-		withHexPrefix(nonfungibleTokenAddress),
-	)
+	code = placeholderFungibleToken.ReplaceAllString(code, fungibleTokenImport+"0x"+ftAddr)
+	code = placeholderNonFungibleToken.ReplaceAllString(code, nftImport+"0x"+nftAddr)
 
 	return []byte(code)
-}
-
-func withHexPrefix(address string) string {
-	if address == "" {
-		return ""
-	}
-
-	if address[0:2] == "0x" {
-		return address
-	}
-
-	return fmt.Sprintf("0x%s", address)
 }
