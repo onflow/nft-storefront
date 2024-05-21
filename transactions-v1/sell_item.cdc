@@ -17,7 +17,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
             ?? panic("Missing collection data")
         let collectionData = collectionDataOpt as! MetadataViews.NFTCollectionData
 
-        self.exampleTokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)!
+        self.exampleTokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
         assert(self.exampleTokenReceiver.check(), message: "Missing or mis-typed ExampleToken Receiver")
 
         self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(

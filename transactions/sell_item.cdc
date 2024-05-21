@@ -40,7 +40,7 @@ transaction(
             ?? panic("ViewResolver does not resolve NFTCollectionData view")
 
         // Receiver for the sale cut.
-        self.tokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)!
+        self.tokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
         assert(self.tokenReceiver.borrow() != nil, message: "Missing or mis-typed ExampleToken receiver")
 
         self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
@@ -87,7 +87,6 @@ transaction(
             // the capability to receive the `ExampleToken`
             self.marketplacesCapability.append(
                 getAccount(marketplace).capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
-                    ?? panic("Problem getting Marketplace ExampleToken Receiver")
             )
         }
     }

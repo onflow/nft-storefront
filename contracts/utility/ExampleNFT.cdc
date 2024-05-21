@@ -72,7 +72,8 @@ access(all) contract ExampleNFT: NonFungibleToken {
                 Type<MetadataViews.NFTCollectionData>(),
                 Type<MetadataViews.NFTCollectionDisplay>(),
                 Type<MetadataViews.Serial>(),
-                Type<MetadataViews.Traits>()
+                Type<MetadataViews.Traits>(),
+                Type<MetadataViews.EVMBridgedMetadata>()
             ]
         }
 
@@ -123,6 +124,31 @@ access(all) contract ExampleNFT: NonFungibleToken {
                     traitsView.addTrait(fooTrait)
 
                     return traitsView
+                case Type<MetadataViews.EVMBridgedMetadata>():
+                    // Implementing this view gives the project control over how the bridged NFT is represented as an
+                    // ERC721 when bridged to EVM on Flow via the public infrastructure bridge.
+
+                    // Get the contract-level name and symbol values
+                    let contractLevel = ExampleNFT.resolveContractView(
+                            resourceType: nil,
+                            viewType: Type<MetadataViews.EVMBridgedMetadata>()
+                        ) as! MetadataViews.EVMBridgedMetadata?
+                        ?? panic("Could not resolve contract-level EVMBridgedMetadata")
+                    // Compose the token-level URI based on a base URI and the token ID, pointing to a JSON file. This
+                    // would be a file you've uploaded and are hosting somewhere - in this case HTTP, but this could be
+                    // IPFS, S3, a data URL containing the JSON directly, etc.
+                    let baseURI = "https://example-nft.onflow.org/token-metadata/"
+                    let uriValue = self.id.toString().concat(".json")
+
+                    return MetadataViews.EVMBridgedMetadata(
+                        name: contractLevel.name,
+                        symbol: contractLevel.symbol,
+                        uri: MetadataViews.URI(
+                            baseURI: baseURI, // defining baseURI results in a concatenation of baseURI and value
+                            value: self.id.toString().concat(".json")
+                        )
+                    )
+
             }
             return nil
         }
@@ -154,7 +180,7 @@ access(all) contract ExampleNFT: NonFungibleToken {
         }
 
         /// withdraw removes an NFT from the collection and moves it to the caller
-        access(NonFungibleToken.Withdraw | NonFungibleToken.Owner) fun withdraw(withdrawID: UInt64): @{NonFungibleToken.NFT} {
+        access(NonFungibleToken.Withdraw) fun withdraw(withdrawID: UInt64): @{NonFungibleToken.NFT} {
             let token <- self.ownedNFTs.remove(key: withdrawID)
                 ?? panic("Could not withdraw an NFT with the provided ID from the collection")
 
@@ -176,7 +202,7 @@ access(all) contract ExampleNFT: NonFungibleToken {
             // Do not add to your contract unless you have a specific
             // reason to want to emit the NFTUpdated event somewhere
             // in your contract
-            let authTokenRef = (&self.ownedNFTs[id] as auth(NonFungibleToken.Owner) &{NonFungibleToken.NFT}?)!
+            let authTokenRef = (&self.ownedNFTs[id] as auth(NonFungibleToken.Update) &{NonFungibleToken.NFT}?)!
             //authTokenRef.updateTransferDate(date: getCurrentBlock().timestamp)
             ExampleNFT.emitNFTUpdated(authTokenRef)
         }
@@ -225,7 +251,8 @@ access(all) contract ExampleNFT: NonFungibleToken {
     access(all) view fun getContractViews(resourceType: Type?): [Type] {
         return [
             Type<MetadataViews.NFTCollectionData>(),
-            Type<MetadataViews.NFTCollectionDisplay>()
+            Type<MetadataViews.NFTCollectionDisplay>(),
+            Type<MetadataViews.EVMBridgedMetadata>()
         ]
     }
 
@@ -263,6 +290,20 @@ access(all) contract ExampleNFT: NonFungibleToken {
                     socials: {
                         "twitter": MetadataViews.ExternalURL("https://twitter.com/flow_blockchain")
                     }
+                )
+            case Type<MetadataViews.EVMBridgedMetadata>():
+                // Implementing this view gives the project control over how the bridged NFT is represented as an ERC721
+                // when bridged to EVM on Flow via the public infrastructure bridge.
+
+                // Compose the contract-level URI. In this case, the contract metadata is located on some HTTP host,
+                // but it could be IPFS, S3, a data URL containing the JSON directly, etc.
+                return MetadataViews.EVMBridgedMetadata(
+                    name: "ExampleNFT",
+                    symbol: "XMPL",
+                    uri: MetadataViews.URI(
+                        baseURI: nil, // setting baseURI as nil sets the given value as the uri field value
+                        value: "https://example-nft.onflow.org/contract-metadata.json"
+                    )
                 )
         }
         return nil

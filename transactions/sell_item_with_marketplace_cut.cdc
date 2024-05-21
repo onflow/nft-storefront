@@ -40,7 +40,7 @@ transaction(
             ?? panic("ViewResolver does not resolve NFTCollectionData view")
 
         // Receiver for the sale cut.
-        self.flowReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
+        self.flowReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
         assert(self.flowReceiver.borrow() != nil, message: "Missing or mis-typed FlowToken receiver")
 
         self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
@@ -85,7 +85,7 @@ transaction(
         // Here we are making a fair assumption that all given addresses would have
         // the capability to receive the `FlowToken`
         let marketPlaceCapability = getAccount(marketPlaceSaleCutReceiver).capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-                    ?? panic("Problem getting Marketplace FlowToken Receiver")
+
         // Append the cut for the marketplace.
         self.saleCuts.append(
             NFTStorefrontV2.SaleCut(

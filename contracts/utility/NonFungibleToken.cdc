@@ -8,6 +8,17 @@ The interface that all Non-Fungible Token contracts should conform to.
 If a user wants to deploy a new NFT contract, their contract should implement
 The types defined here
 
+/// Contributors (please add to this list if you contribute!):
+/// - Joshua Hannan - https://github.com/joshuahannan
+/// - Bastian Müller - https://twitter.com/turbolent
+/// - Dete Shirley - https://twitter.com/dete73
+/// - Bjarte Karlsen - https://twitter.com/0xBjartek
+/// - Austin Kline - https://twitter.com/austin_flowty
+/// - Giovanni Sanchez - https://twitter.com/gio_incognito
+/// - Deniz Edincik - https://twitter.com/bluesign
+///
+/// Repo reference: https://github.com/onflow/flow-nft
+
 ## `NFT` resource interface
 
 The core resource type that represents an NFT in the smart contract.
@@ -49,9 +60,6 @@ access(all) contract interface NonFungibleToken: ViewResolver {
     /// An entitlement for allowing updates and update events for an NFT
     access(all) entitlement Update
 
-    /// entitlement for owner that grants Withdraw and Update
-    access(all) entitlement Owner
-
     /// Event that contracts should emit when the metadata of an NFT is updated
     /// It can only be emitted by calling the `emitNFTUpdated` function
     /// with an `Updatable` entitled reference to the NFT that was updated
@@ -63,7 +71,7 @@ access(all) contract interface NonFungibleToken: ViewResolver {
     /// and query the updated metadata from the owners' collections.
     ///
     access(all) event Updated(type: String, id: UInt64, uuid: UInt64, owner: Address?)
-    access(all) view fun emitNFTUpdated(_ nftRef: auth(Update | Owner) &{NonFungibleToken.NFT})
+    access(all) view fun emitNFTUpdated(_ nftRef: auth(Update) &{NonFungibleToken.NFT})
     {
         emit Updated(type: nftRef.getType().identifier, id: nftRef.id, uuid: nftRef.uuid, owner: nftRef.owner?.address)
     }
@@ -108,7 +116,7 @@ access(all) contract interface NonFungibleToken: ViewResolver {
 
         /// Gets all the NFTs that this NFT directly owns
         /// @return A dictionary of all subNFTS keyed by type
-        access(all) view fun getAvailableSubNFTS(): {Type: UInt64} {
+        access(all) view fun getAvailableSubNFTS(): {Type: [UInt64]} {
             return {}
         }
 
@@ -139,7 +147,7 @@ access(all) contract interface NonFungibleToken: ViewResolver {
         /// withdraw removes an NFT from the collection and moves it to the caller
         /// It does not specify whether the ID is UUID or not
         /// @param withdrawID: The id of the NFT to withdraw from the collection
-        access(Withdraw | Owner) fun withdraw(withdrawID: UInt64): @{NFT} {
+        access(Withdraw) fun withdraw(withdrawID: UInt64): @{NFT} {
             post {
                 result.id == withdrawID: "The ID of the withdrawn token must be the same as the requested ID"
                 emit Withdrawn(type: result.getType().identifier, id: result.id, uuid: result.uuid, from: self.owner?.address, providerUUID: self.uuid)

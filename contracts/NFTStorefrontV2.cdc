@@ -1,5 +1,5 @@
-import FungibleToken from "./utility/FungibleToken.cdc"
-import NonFungibleToken from "./utility/NonFungibleToken.cdc"
+import "FungibleToken"
+import "NonFungibleToken"
 
 /// NFTStorefrontV2
 ///
@@ -300,8 +300,7 @@ access(all) contract NFTStorefrontV2 {
         /// If it returns `false` then it means listing becomes ghost or sold out.
         access(all) view fun hasListingBecomeGhosted(): Bool {
             if let providerRef = self.nftProviderCapability.borrow() {
-                let availableIDs = providerRef.getIDs()
-                return availableIDs.contains(self.details.nftID)
+                return providerRef.borrowNFT(self.details.nftID) != nil
             }
             return false
         }
@@ -566,14 +565,15 @@ access(all) contract NFTStorefrontV2 {
             let collectionRef = nftProviderCapability.borrow()
                 ?? panic("Could not borrow reference to collection")
             let nftRef = collectionRef.borrowNFT(nftID)
+                ?? panic("Could not borrow a reference to the desired NFT ID")
 
             // Instead of letting an arbitrary value be set for the UUID of a given NFT, the contract
             // should fetch it itself     
-            let uuid = nftRef?.uuid
+            let uuid = nftRef.uuid
             let listing <- create Listing(
                 nftProviderCapability: nftProviderCapability,
                 nftType: nftType,
-                nftUUID: uuid!,
+                nftUUID: uuid,
                 nftID: nftID,
                 salePaymentVaultType: salePaymentVaultType,
                 saleCuts: saleCuts,
@@ -610,7 +610,7 @@ access(all) contract NFTStorefrontV2 {
                 storefrontAddress: self.owner?.address!,
                 listingResourceID: listingResourceID,
                 nftType: nftType,
-                nftUUID: uuid!,
+                nftUUID: uuid,
                 nftID: nftID,
                 salePaymentVaultType: salePaymentVaultType,
                 salePrice: listingPrice,

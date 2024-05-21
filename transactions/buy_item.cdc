@@ -49,7 +49,7 @@ transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRec
             // Access the capability to receive the commission.
             let _commissionRecipientCap = getAccount(commissionRecipient!).capabilities.get<&{FungibleToken.Receiver}>(
                     /public/exampleTokenReceiver
-                ) ?? panic("Problem getting commission recipient's ExampleToken Receiver")
+                )
             assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have exampletoken receiving capability")
             self.commissionRecipientCap = _commissionRecipientCap
         } else if commissionAmount == 0.0 {
