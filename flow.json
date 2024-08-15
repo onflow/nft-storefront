@@ -73,7 +73,7 @@
 			"aliases": {
 				"emulator": "0xf8d6e0586b0a20c7",
 				"testing": "0x0000000000000006",
-				"testnet": "0x631e88ae7f1d7c20",
+				"testnet": "0x94b06cfca1d8a476",
 				"mainnet": "0x1d7e57aa55817448"
 			}
 		},
@@ -82,7 +82,7 @@
 			"aliases": {
 				"emulator": "0xf8d6e0586b0a20c7",
 				"testing": "0x0000000000000007",
-				"testnet": "0x631e88ae7f1d7c20",
+				"testnet": "0x2d55b98eb200daef",
 				"mainnet": "0x1d7e57aa55817448"
 			}
 		},
