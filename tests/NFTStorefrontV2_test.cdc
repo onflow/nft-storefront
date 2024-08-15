@@ -2,6 +2,10 @@ import Test
 import "test_helpers.cdc"
 import "FungibleToken"
 import "NonFungibleToken"
+import "NFTStorefrontV2"
+import "ExampleNFT"
+import "ExampleToken"
+import "FlowToken"
 
 access(all) let buyer = Test.createAccount()
 access(all) let seller = Test.createAccount()
@@ -37,18 +41,16 @@ fun setup() {
     )
     Test.expect(err, Test.beNil())
 
-    //deploy("NFTStorefrontV2", "../contracts/NFTStorefrontV2.cdc")
-
     err = Test.deployContract(
         name: "ExampleNFT",
-        path: "../contracts/utility/exampleNFT.cdc",
+        path: "../contracts/utility/ExampleNFT.cdc",
         arguments: [],
     )
     Test.expect(err, Test.beNil())
 
     err = Test.deployContract(
         name: "ExampleToken",
-        path: "../contracts/utility/exampleToken.cdc",
+        path: "../contracts/utility/ExampleToken.cdc",
         arguments: [],
     )
     Test.expect(err, Test.beNil())
@@ -473,4 +475,21 @@ fun testRemoveItem() {
     )
     txResult = Test.executeTransaction(tx)
     Test.expect(txResult, Test.beSucceeded())
+
+    // Test that the proper events were emitted
+    var typ = Type<NFTStorefrontV2.ListingCompleted>()
+    var events = Test.eventsOfType(typ)
+    Test.assertEqual(5, events.length)
+
+    let completedEvent = events[4] as! NFTStorefrontV2.ListingCompleted
+    Test.assertEqual(listingID, completedEvent.listingResourceID)
+    Test.assertEqual(false, completedEvent.purchased)
+    Test.assertEqual(Type<@ExampleNFT.NFT>(), completedEvent.nftType)
+    Test.assertEqual(nftID, completedEvent.nftID)
+    Test.assertEqual(Type<@FlowToken.Vault>(), completedEvent.salePaymentVaultType)
+    Test.assertEqual(UFix64(10.0), completedEvent.salePrice)
+    Test.assertEqual("Custom1", completedEvent.customID!)
+    Test.assertEqual(UFix64(0.0), completedEvent.commissionAmount)
+    Test.assertEqual(nil, completedEvent.commissionReceiver)
+    Test.assertEqual(UInt64(2025908543), completedEvent.expiry)
 }
