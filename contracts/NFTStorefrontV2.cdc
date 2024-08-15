@@ -1,5 +1,6 @@
 import "FungibleToken"
 import "NonFungibleToken"
+import "Burner"
 
 /// NFTStorefrontV2
 ///
@@ -254,7 +255,7 @@ access(all) contract NFTStorefrontV2 {
     /// A resource that allows an NFT to be sold for an amount of a given FungibleToken,
     /// and for the proceeds of that sale to be split between several recipients.
     /// 
-    access(all) resource Listing: ListingPublic {
+    access(all) resource Listing: ListingPublic, Burner.Burnable {
         /// The simple (non-Capability, non-complex) details of the sale
         access(self) let details: ListingDetails
 
@@ -267,6 +268,30 @@ access(all) contract NFTStorefrontV2 {
         /// An optional list of marketplaces capabilities that are approved 
         /// to receive the marketplace commission.
         access(contract) let marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]?
+
+        access(contract) fun burnCallback() {
+            // If the listing has not been purchased, we regard it as completed here.
+            // Otherwise we regard it as completed in purchase().
+            // This is because we destroy the listing in Storefront.removeListing()
+            // or Storefront.cleanup() .
+            // If we change this destructor, revisit those functions.
+            if !self.details.purchased {
+                emit ListingCompleted(
+                    listingResourceID: self.uuid,
+                    storefrontResourceID: self.details.storefrontID,
+                    purchased: self.details.purchased,
+                    nftType: self.details.nftType,
+                    nftUUID: self.details.nftUUID,
+                    nftID: self.details.nftID,
+                    salePaymentVaultType: self.details.salePaymentVaultType,
+                    salePrice: self.details.salePrice,
+                    customID: self.details.customID,
+                    commissionAmount: self.details.commissionAmount,
+                    commissionReceiver: nil,
+                    expiry: self.details.expiry
+                )
+            }
+        }
 
         /// borrowNFT
         /// Return the reference of the NFT that is listed for sale.
@@ -590,7 +615,7 @@ access(all) contract NFTStorefrontV2 {
             let oldListing <- self.listings[listingResourceID] <- listing
             // Note that oldListing will always be nil, but we have to handle it.
 
-            destroy oldListing
+            Burner.burn(<-oldListing)
 
             // Add the `listingResourceID` in the tracked listings.
             self.addDuplicateListing(nftIdentifier: nftType.identifier, nftID: nftID, listingResourceID: listingResourceID)
@@ -657,7 +682,7 @@ access(all) contract NFTStorefrontV2 {
             let listingDetails = listing.getDetails()
             self.removeDuplicateListing(nftIdentifier: listingDetails.nftType.identifier, nftID: listingDetails.nftID, listingResourceID: listingResourceID)
             // This will emit a ListingCompleted event.
-            destroy listing
+            Burner.burn(<-listing)
         }
 
         /// getListingIDs
@@ -690,7 +715,7 @@ access(all) contract NFTStorefrontV2 {
             let listingDetails = listing.getDetails()
             self.removeDuplicateListing(nftIdentifier: listingDetails.nftType.identifier, nftID: listingDetails.nftID, listingResourceID: listingResourceID)
 
-            destroy listing
+            Burner.burn(<-listing)
         }
 
         /// getDuplicateListingIDs
@@ -758,7 +783,7 @@ access(all) contract NFTStorefrontV2 {
             let listingDetails = listing.getDetails()
             self.removeDuplicateListing(nftIdentifier: listingDetails.nftType.identifier, nftID: listingDetails.nftID, listingResourceID: listingResourceID)
 
-            destroy listing
+            Burner.burn(<-listing)
         }
 
         /// cleanupGhostListings
@@ -782,7 +807,7 @@ access(all) contract NFTStorefrontV2 {
             for listingID in duplicateListings {
                 self.cleanup(listingResourceID: listingID)
             }
-            destroy listing
+            Burner.burn(<-listing)
         }
 
         /// constructor

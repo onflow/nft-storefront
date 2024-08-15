@@ -32,6 +32,16 @@
 			  	"mainnet": "0xf233dcee88fe0abe"
 			}
 		},
+        "Burner": {
+			"source": "./contracts/utility/Burner.cdc",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"previewnet": "b6763b4399a888c8",
+				"testing": "0000000000000001",
+				"testnet": "9a0766d93b6608b7",
+                "mainnet": "0xf233dcee88fe0abe"
+			}
+		},
 		"NonFungibleToken": {
 			"source": "./contracts/utility/NonFungibleToken.cdc",
 			"aliases": {
@@ -191,7 +201,21 @@
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": "ca102a35963666f3b517a903b747da4eece5e0553523cb8e59a851e162c85db2"
-		}
+		},
+        "mainnet-account": {
+            "address": "0x4eb8a10cb9f87357",
+            "key": {
+				"type": "file",
+				"location": "./storefront-mainnet.pkey"
+			}
+        },
+        "testnet-storefront": {
+            "address": "0x94b06cfca1d8a476",
+            "key": {
+				"type": "file",
+				"location": "./storefront-testnet.pkey"
+			}
+        }
 	},
 	"deployments": {
 		"emulator": {
@@ -202,6 +226,12 @@
 				"NFTStorefront",
 				"NFTStorefrontV2"
 			]
-		}
+		},
+        "mainnet": {
+            "mainnet-account": [
+              "NFTStorefrontV2",
+              "NFTStorefront"
+            ]
+        }
 	}
 }

@@ -1,5 +1,6 @@
 import "FungibleToken"
 import "NonFungibleToken"
+import "Burner"
 
 /// NB: This contract is no longer supported. NFT Storefront V2 is recommended
 ///
@@ -202,7 +203,7 @@ access(all) contract NFTStorefront {
     /// A resource that allows an NFT to be sold for an amount of a given FungibleToken,
     /// and for the proceeds of that sale to be split between several recipients.
     /// 
-    access(all) resource Listing : ListingPublic {
+    access(all) resource Listing: ListingPublic, Burner.Burnable {
         // Event to be emitted when this listing is destroyed.
         // If the listing has not been purchased, we regard it as completed here.
         // There is a separate event in purchase for purchased listings
@@ -213,6 +214,23 @@ access(all) contract NFTStorefront {
             nftType: String = self.details.nftType.identifier,
             nftID: UInt64 = self.details.nftID
         )
+
+        access(contract) fun burnCallback() {
+            // If the listing has not been purchased, we regard it as completed here.
+            // Otherwise we regard it as completed in purchase().
+            // This is because we destroy the listing in Storefront.removeListing()
+            // or Storefront.cleanup() .
+            // If we change this destructor, revisit those functions.
+            if !self.details.purchased {
+                emit ListingCompleted(
+                    listingResourceID: self.uuid,
+                    storefrontResourceID: self.details.storefrontID,
+                    purchased: self.details.purchased,
+                    nftType: self.details.nftType,
+                    nftID: self.details.nftID
+                )
+            }
+        }
 
         /// The simple (non-Capability, non-complex) details of the sale
         access(self) let details: ListingDetails
@@ -412,7 +430,7 @@ access(all) contract NFTStorefront {
             let oldListing <- self.listings[listingResourceID] <- listing
             // Note that oldListing will always be nil, but we have to handle it.
 
-            destroy oldListing
+            Burner.burn(<-oldListing)
 
             emit ListingAvailable(
                 storefrontAddress: self.owner?.address!,
@@ -435,7 +453,7 @@ access(all) contract NFTStorefront {
                 ?? panic("missing Listing")
     
             // This will emit a ListingCompleted event.
-            destroy listing
+            Burner.burn(<-listing)
         }
 
         /// getListingIDs
@@ -468,7 +486,7 @@ access(all) contract NFTStorefront {
 
             let listing <- self.listings.remove(key: listingResourceID)!
             assert(listing.getDetails().purchased == true, message: "listing is not purchased, only admin can remove")
-            destroy listing
+            Burner.burn(<-listing)
         }
 
         /// constructor
