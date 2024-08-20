@@ -2,6 +2,8 @@ import Test
 import "test_helpers.cdc"
 import "FungibleToken"
 import "NonFungibleToken"
+import "NFTStorefront"
+import "ExampleNFT"
 
 access(all) let buyer = Test.createAccount()
 access(all) let seller = Test.createAccount()
@@ -24,14 +26,14 @@ fun setup() {
 
     err = Test.deployContract(
         name: "ExampleNFT",
-        path: "../contracts/utility/exampleNFT.cdc",
+        path: "../contracts/utility/ExampleNFT.cdc",
         arguments: [],
     )
     Test.expect(err, Test.beNil())
 
     err = Test.deployContract(
         name: "ExampleToken",
-        path: "../contracts/utility/exampleToken.cdc",
+        path: "../contracts/utility/ExampleToken.cdc",
         arguments: [],
     )
     Test.expect(err, Test.beNil())
@@ -271,6 +273,17 @@ fun testRemoveItem() {
     )
     txResult = Test.executeTransaction(tx)
     Test.expect(txResult, Test.beSucceeded())
+
+    // Test that the proper events were emitted
+    var typ = Type<NFTStorefront.ListingCompleted>()
+    var events = Test.eventsOfType(typ)
+    Test.assertEqual(2, events.length)
+
+    let completedEvent = events[1] as! NFTStorefront.ListingCompleted
+    Test.assertEqual(listingID, completedEvent.listingResourceID)
+    Test.assertEqual(false, completedEvent.purchased)
+    Test.assertEqual(Type<@ExampleNFT.NFT>(), completedEvent.nftType)
+    Test.assertEqual(nftID, completedEvent.nftID)
 
     result = Test.executeScript(getListingIDCode, [seller.address])
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 0)
