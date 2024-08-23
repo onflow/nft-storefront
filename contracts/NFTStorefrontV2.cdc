@@ -299,10 +299,12 @@ access(all) contract NFTStorefrontV2 {
         /// it will return nil.
         ///
         access(all) fun borrowNFT(): &{NonFungibleToken.NFT}? {
-            let ref = self.nftProviderCapability.borrow()!.borrowNFT(self.details.nftID)
-            if ref.isInstance(self.details.nftType) && ref?.id == self.details.nftID {
-                return ref as &{NonFungibleToken.NFT}?  
-            } 
+            if let ref = self.nftProviderCapability.borrow()!.borrowNFT(self.details.nftID) {
+                if ref.isInstance(self.details.nftType) && ref.id == self.details.nftID {
+                    return ref
+                }
+            }
+
             return nil
         }
 
