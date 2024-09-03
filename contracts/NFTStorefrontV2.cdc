@@ -549,7 +549,12 @@ access(all) contract NFTStorefrontV2 {
     access(all) resource interface StorefrontPublic {
         access(all) view fun getListingIDs(): [UInt64]
         access(all) fun getDuplicateListingIDs(nftType: Type, nftID: UInt64, listingID: UInt64): [UInt64]
-        access(all) view fun borrowListing(listingResourceID: UInt64): &{ListingPublic}?
+        access(all) view fun borrowListing(listingResourceID: UInt64): &{ListingPublic}? {
+            post {
+                result == nil || result!.getType() == Type<@Listing>():
+                    "Cannot borrow a non-NFTStorefrontV2.Listing!"
+            }
+        }
         access(all) fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64)
         access(contract) fun cleanup(listingResourceID: UInt64)
         access(all) fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64]

@@ -387,7 +387,12 @@ access(all) contract NFTStorefront {
     ///
     access(all) resource interface StorefrontPublic {
         access(all) view fun getListingIDs(): [UInt64]
-        access(all) view fun borrowListing(listingResourceID: UInt64): &{ListingPublic}?
+        access(all) view fun borrowListing(listingResourceID: UInt64): &{ListingPublic}? {
+            post {
+                result == nil || result!.getType() == Type<@Listing>():
+                    "Cannot borrow a non-NFTStorefront.Listing!"
+            }
+        }
         access(all) fun cleanup(listingResourceID: UInt64)
    }
 
@@ -395,7 +400,7 @@ access(all) contract NFTStorefront {
     /// A resource that allows its owner to manage a list of Listings, and anyone to interact with them
     /// in order to query their details and purchase the NFTs that they represent.
     ///
-    access(all) resource Storefront : StorefrontManager, StorefrontPublic {
+    access(all) resource Storefront: StorefrontManager, StorefrontPublic {
         // Event to be emitted when this storefront is destroyed.
         access(all) event ResourceDestroyed(
             storefrontResourceID: UInt64 = self.uuid
