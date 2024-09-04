@@ -16,6 +16,8 @@ import "MetadataViews"
 
 access(all) contract ExampleNFT: NonFungibleToken {
 
+    access(all) event Minted(newID: UInt64)
+
     /// Standard Paths
     access(all) let CollectionStoragePath: StoragePath
     access(all) let CollectionPublicPath: PublicPath
@@ -339,6 +341,8 @@ access(all) contract ExampleNFT: NonFungibleToken {
                 royalties: royalties,
                 metadata: metadata,
             )
+
+            emit Minted(newID: newNFT.id)
 
             return <-newNFT
         }

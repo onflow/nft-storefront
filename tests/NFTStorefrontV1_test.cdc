@@ -289,5 +289,49 @@ fun testRemoveItem() {
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 0)
 }
 
+access(all)
+fun testSellMaliciousListing() {
+
+    var err = Test.deployContract(
+        name: "MaliciousStorefrontV1",
+        path: "../contracts/utility/test/MaliciousStorefrontV1.cdc",
+        arguments: [],
+    )
+    Test.expect(err, Test.beNil())
+
+    var code = loadCode("../tests/transactions/create_malicious_listing_v1.cdc", "transactions")
+    var tx = Test.Transaction(
+        code: code,
+        authorizers: [exampleNFTAccount.address],
+        signers: [exampleNFTAccount],
+        arguments: [],
+    )
+    var txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beSucceeded())
+
+    var typ = Type<NFTStorefront.ListingAvailable>()
+    var events = Test.eventsOfType(typ)
+
+    let listingEvent = events[events.length-1] as! NFTStorefront.ListingAvailable
+    let listingID = listingEvent.listingResourceID
+
+    code = loadCode("buy_item.cdc", "transactions-v1")
+    tx = Test.Transaction(
+        code: code,
+        authorizers: [buyer.address],
+        signers: [buyer],
+        arguments: [
+            listingID, // listing resource id
+            exampleNFTAccount.address // storefront address
+        ],
+    )
+    txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beFailed())
+    Test.assertError(
+        txResult,
+        errorMessage: "Cannot borrow a non-NFTStorefront.Listing!"
+    )
+}
+
 
 

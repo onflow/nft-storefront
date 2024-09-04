@@ -493,3 +493,48 @@ fun testRemoveItem() {
     Test.assertEqual(nil, completedEvent.commissionReceiver)
     Test.assertEqual(UInt64(2025908543), completedEvent.expiry)
 }
+
+access(all)
+fun testSellMaliciousListing() {
+
+    var err = Test.deployContract(
+        name: "MaliciousStorefrontV2",
+        path: "../contracts/utility/test/MaliciousStorefrontV2.cdc",
+        arguments: [],
+    )
+    Test.expect(err, Test.beNil())
+
+    var code = loadCode("../tests/transactions/create_malicious_listing_v2.cdc", "transactions")
+    var tx = Test.Transaction(
+        code: code,
+        authorizers: [exampleNFTAccount.address],
+        signers: [exampleNFTAccount],
+        arguments: [],
+    )
+    var txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beSucceeded())
+
+    var typ = Type<NFTStorefrontV2.ListingAvailable>()
+    var events = Test.eventsOfType(typ)
+
+    let listingEvent = events[events.length-1] as! NFTStorefrontV2.ListingAvailable
+    let listingID = listingEvent.listingResourceID
+
+    code = loadCode("buy_item.cdc", "transactions")
+    tx = Test.Transaction(
+        code: code,
+        authorizers: [buyer.address],
+        signers: [buyer],
+        arguments: [
+            listingID, // listing resource id
+            exampleNFTAccount.address, // storefront address
+            exampleNFTAccount.address // commision recipient
+        ],
+    )
+    txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beFailed())
+    Test.assertError(
+        txResult,
+        errorMessage: "Cannot borrow a non-NFTStorefrontV2.Listing!"
+    )
+}

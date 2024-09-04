@@ -114,6 +114,18 @@
 				"testnet": "294e44e1ec6993c6"
 			}
 		},
+		"MaliciousStorefrontV1": {
+			"source": "./contracts/utility/test/MaliciousStorefrontV1.cdc",
+			"aliases": {
+				"testing": "0000000000000007"
+			}
+		},
+		"MaliciousStorefrontV2": {
+			"source": "./contracts/utility/test/MaliciousStorefrontV2.cdc",
+			"aliases": {
+				"testing": "0000000000000007"
+			}
+		},
 		"MetadataViews": {
 			"source": "./contracts/utility/MetadataViews.cdc",
 			"aliases": {
@@ -202,12 +214,11 @@
 			"address": "f8d6e0586b0a20c7",
 			"key": "ca102a35963666f3b517a903b747da4eece5e0553523cb8e59a851e162c85db2"
 		},
-        "mainnet-storefront": {
+		"mainnet-storefront": {
 			"address": "4eb8a10cb9f87357",
 			"key": {
 				"type": "google-kms",
-                "index": 1,
-                "signatureAlgorithm": "ECDSA_P256",
+				"index": 1,
 				"hashAlgorithm": "SHA2_256",
 				"resourceID": "projects/dl-flow-admin/locations/global/keyRings/flow-nft-storefront/cryptoKeys/flow-nft-storefront/cryptoKeyVersions/1"
 			}
