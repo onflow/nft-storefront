@@ -1,6 +1,8 @@
 /// This script uses the NFTMinter resource to mint a new NFT
 /// It must be run with the account that has the minter resource
 /// stored in /storage/NFTMinter
+///
+/// The royalty arguments indicies must be aligned
 
 import "NonFungibleToken"
 import "ExampleNFT"
@@ -26,16 +28,20 @@ transaction(
     prepare(signer: auth(BorrowValue) &Account) {
 
         let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
-            ?? panic("ViewResolver does not resolve NFTCollectionData view")
+            ?? panic("Could not resolve NFTCollectionData view. The ExampleNFT contract needs to implement the NFTCollectionData Metadata view in order to execute this transaction")
         
         // borrow a reference to the NFTMinter resource in storage
         self.minter = signer.storage.borrow<&ExampleNFT.NFTMinter>(from: ExampleNFT.MinterStoragePath)
-            ?? panic("Account does not store an object at the specified path")
+            ?? panic("The signer does not store an ExampleNFT.Minter object at the path "
+                     .concat(ExampleNFT.MinterStoragePath.toString())
+                     .concat("The signer must initialize their account with this minter resource first!"))
 
         // Borrow the recipient's public NFT collection reference
-        self.recipientCollectionRef = getAccount(recipient).capabilities.borrow<&{NonFungibleToken.Receiver}>(
-                collectionData.publicPath
-            ) ?? panic("Could not get receiver reference to the NFT Collection")
+        self.recipientCollectionRef = getAccount(recipient).capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
+            ?? panic("The recipient does not have a NonFungibleToken Receiver at "
+                    .concat(collectionData.publicPath.toString())
+                    .concat(" that is capable of receiving an NFT.")
+                    .concat("The recipient must initialize their account with this collection and receiver first!"))
     }
 
     pre {
@@ -44,24 +50,32 @@ transaction(
 
     execute {
 
-        // // Create the royalty details
-        // var count = 0
-        // var royalties: [MetadataViews.Royalty] = []
-        // while royaltyBeneficiaries.length > count {
-        //     let beneficiary = royaltyBeneficiaries[count]
-        //     let beneficiaryCapability = getAccount(beneficiary).capabilities.get<&{FungibleToken.Receiver}>(
-        //             MetadataViews.getRoyaltyReceiverPublicPath()
-        //         ) ?? panic("Beneficiary does not have Receiver configured at RoyaltyReceiverPublicPath")
+        // Create the royalty details
+        var count = 0
+        var royalties: [MetadataViews.Royalty] = []
+        while royaltyBeneficiaries.length > count {
+            let beneficiary = royaltyBeneficiaries[count]
+            let beneficiaryCapability = getAccount(beneficiary).capabilities.get<&{FungibleToken.Receiver}>(
+                MetadataViews.getRoyaltyReceiverPublicPath()
+            )
 
-        //     royalties.append(
-        //         MetadataViews.Royalty(
-        //             receiver: beneficiaryCapability,
-        //             cut: cuts[count],
-        //             description: royaltyDescriptions[count]
-        //         )
-        //     )
-        //     count = count + 1
-        // }
+            if !beneficiaryCapability.check() {
+                panic("The royalty beneficiary "
+                       .concat(beneficiary.toString())
+                       .concat(" does not have a FungibleToken Receiver configured at ")
+                       .concat(MetadataViews.getRoyaltyReceiverPublicPath().toString())
+                       .concat(". They should set up a FungibleTokenSwitchboard Receiver at this path to receive any type of Fungible Token"))
+            }
+
+            royalties.append(
+                MetadataViews.Royalty(
+                    receiver: beneficiaryCapability,
+                    cut: cuts[count],
+                    description: royaltyDescriptions[count]
+                )
+            )
+            count = count + 1
+        }
 
 
         // Mint the NFT and deposit it to the recipient's collection
@@ -69,7 +83,7 @@ transaction(
             name: name,
             description: description,
             thumbnail: thumbnail,
-            royalties: [] //royalties
+            royalties: royalties
         )
         self.recipientCollectionRef.deposit(token: <-mintedNFT)
     }

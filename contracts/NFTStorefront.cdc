@@ -168,7 +168,7 @@ access(all) contract NFTStorefront {
                 // Add the cut amount to the total price
                 salePrice = salePrice + cut.amount
             }
-            assert(salePrice > 0.0, message: "Listing must have non-zero price")
+            assert(salePrice > 0.0, message: "The Listing must have non-zero price")
 
             // Store the calculated sale price
             self.salePrice = salePrice
@@ -247,9 +247,15 @@ access(all) contract NFTStorefront {
         ///
         access(all) fun borrowNFT(): &{NonFungibleToken.NFT}? {
             let ref = self.nftProviderCapability.borrow()!.borrowNFT(self.getDetails().nftID)
-            assert(ref != nil, message: "Could not borrow a reference to the NFT")
-            assert(ref!.isInstance(self.getDetails().nftType), message: "token has wrong type")
-            assert(ref?.id == self.getDetails().nftID, message: "token has wrong ID")
+            assert(ref != nil, message: "NFTStorefront.Listing.borrowNFT: Could not borrow a reference to the NFT in the listing!")
+            assert(
+                ref!.isInstance(self.getDetails().nftType),
+                message: "NFTStorefront.Listing.borrowNFT: The type of the NFT provided by the owner <\(ref!.getType().toString()) does not match the type in the listing <\(self.getDetails().nftType.toString())!"
+            )
+            assert(
+                ref?.id == self.getDetails().nftID,
+                message: "NFTStorefront.Listing.borrowNFT: The ID \(ref!.id) (of the NFT provided by the owner does not match the ID \(self.getDetails().nftID) in the listing!"
+            )
             return (ref as &{NonFungibleToken.NFT}?)
         }
 
@@ -268,14 +274,16 @@ access(all) contract NFTStorefront {
         ///
         access(all) fun purchase(payment: @{FungibleToken.Vault}): @{NonFungibleToken.NFT} {
             pre {
-                self.details.purchased == false: "listing has already been purchased"
-                payment.isInstance(self.details.salePaymentVaultType): "payment vault is not requested fungible token"
-                payment.balance == self.details.salePrice: "payment vault does not contain requested price"
+                self.details.purchased == false:
+                    "NFTStorefront.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The listing has already been purchased!"
+                payment.isInstance(self.details.salePaymentVaultType):
+                    "NFTStorefront.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The fungible token used as payment <\(payment.getType()) is not the requested type <\(self.details.salePaymentVaultType)."
+                payment.balance == self.details.salePrice:
+                    "NFTStorefront.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The payment vault does not contain the requested price of \(self.details.salePrice)."
             }
 
             // Make sure the listing cannot be purchased again.
             self.details.setToPurchased()
-
 
             // Fetch the token to return to the purchaser.
             let nft <-self.nftProviderCapability.borrow()!.withdraw(withdrawID: self.details.nftID)
@@ -284,8 +292,14 @@ access(all) contract NFTStorefront {
             // to implement the functionality behind the interface in any given way.
             // Therefore we cannot trust the Collection resource behind the interface,
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
-            assert(nft.isInstance(self.details.nftType), message: "withdrawn NFT is not of specified type")
-            assert(nft.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
+            assert(
+                nft.isInstance(self.details.nftType),
+                message: "NFTStorefront.Listing.purchase: Cannot purchase listing! The type of the NFT provided by the seller <\(nft.getType()) does not match the type in the listing details <\(self.details.nftType)!"
+            )
+            assert(
+                nft.id == self.details.nftID,
+                message: "NFTStorefront.Listing.purchase: Cannot purchase listing! The ID \(nft.id) of the NFT provided by the seller does not match the ID \(self.details.nftID) in the listing details!"
+            )
 
             // Rather than aborting the transaction if any receiver is absent when we try to pay it,
             // we send the cut to the first valid receiver.
@@ -304,7 +318,10 @@ access(all) contract NFTStorefront {
                 }
             }
 
-            assert(residualReceiver != nil, message: "No valid payment receivers")
+            assert(
+                residualReceiver != nil,
+                message: "NFTStorefront.Listing.purchase: No valid payment receivers"
+            )
 
             // At this point, if all recievers were active and availabile, then the payment Vault will have
             // zero tokens left, and this will functionally be a no-op that consumes the empty vault
@@ -350,13 +367,25 @@ access(all) contract NFTStorefront {
             // We will check it again when the token is sold.
             // We cannot move this into a function because initializers cannot call member functions.
             let provider = self.nftProviderCapability.borrow()
-            assert(provider != nil, message: "cannot borrow nftProviderCapability")
+            assert(
+                provider != nil,
+                message: "NFTStorefront.Listing.init: Cannot initialize Listing! Unable to borrow NFT Provider Capability!"
+            )
 
             let nft = provider!.borrowNFT(self.details.nftID)
             // This will precondition assert if the token is not available.
-            assert(nft != nil, message: "Could not borrow a reference to the NFT")
-            assert(nft!.isInstance(self.details.nftType), message: "token is not of specified type")
-            assert(nft?.id == self.details.nftID, message: "token does not have specified ID")
+            assert(
+                nft != nil,
+                message: "NFTStorefront.Listing.init: Cannot initialize Listing! Could not borrow a reference to the NFT for sale!"
+            )
+            assert(
+                nft!.isInstance(self.details.nftType),
+                message: "NFTStorefront.Listing.init: Cannot initialize Listing! The type of the token for sale <\(nft.getType())> is not of specified type in the listing <\(self.details.nftType)>"
+            )
+            assert(
+                nft?.id == self.details.nftID,
+                message: "NFTStorefront.Listing.init: Cannot initialize Listing! The ID of the token \(nft!.id) does not have the ID specified in the listing \(self.details.nftID)"
+            )
         }
     }
 
@@ -455,7 +484,7 @@ access(all) contract NFTStorefront {
         ///
         access(RemoveListing) fun removeListing(listingResourceID: UInt64) {
             let listing <- self.listings.remove(key: listingResourceID)
-                ?? panic("missing Listing")
+                ?? panic("NFTStorefront.Storefront.removeListing: Could not find listing to remove with the given ID \(listingResourceID)")
     
             // This will emit a ListingCompleted event.
             Burner.burn(<-listing)
@@ -486,7 +515,8 @@ access(all) contract NFTStorefront {
         ///
         access(all) fun cleanup(listingResourceID: UInt64) {
             pre {
-                self.listings[listingResourceID] != nil: "could not find listing with given id"
+                self.listings[listingResourceID] != nil:
+                    "NFTStorefront.Storefront.cleanup: Could not find listing to clean up with the given id \(listingResourceID)"
             }
 
             let listing <- self.listings.remove(key: listingResourceID)!

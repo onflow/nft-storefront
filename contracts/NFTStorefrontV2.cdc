@@ -180,9 +180,10 @@ access(all) contract NFTStorefrontV2 {
 
             pre {
                 // Validate the expiry
-                expiry > UInt64(getCurrentBlock().timestamp): "Expiry should be in the future"
+                expiry > UInt64(getCurrentBlock().timestamp):
+                    "NFTStorefrontV2.ListingDetails.init: The given expiry timestamp \(expiry) must be in the future!"
                 // Validate the length of the sale cut
-                saleCuts.length > 0: "Listing must have at least one payment cut recipient"
+                saleCuts.length > 0: "NFTStorefrontV2.ListingDetails.init: Listing must have at least one payment cut recipient"
             }
 
             self.storefrontID = storefrontID
@@ -203,11 +204,14 @@ access(all) contract NFTStorefrontV2 {
                 // Make sure we can borrow the receiver.
                 // We will check this again when the token is sold.
                 cut.receiver.borrow()
-                    ?? panic("Cannot borrow receiver")
+                    ?? panic("NFTStorefrontV2.ListingDetails.init: Cannot borrow receiver")
                 // Add the cut amount to the total price
                 salePrice = salePrice + cut.amount
             }
-            assert(salePrice > 0.0, message: "Listing must have non-zero price")
+            assert(
+                salePrice > 0.0,
+                message: "NFTStorefrontV2.ListingDetails.init: The Listing must have non-zero price!"
+            )
 
             // Store the calculated sale price
             self.salePrice = salePrice
@@ -342,11 +346,16 @@ access(all) contract NFTStorefrontV2 {
         ): @{NonFungibleToken.NFT} {
 
             pre {
-                self.details.purchased == false: "listing has already been purchased"
-                payment.isInstance(self.details.salePaymentVaultType): "payment vault is not requested fungible token"
-                payment.balance == self.details.salePrice: "payment vault does not contain requested price"
-                self.details.expiry > UInt64(getCurrentBlock().timestamp): "Listing is expired"
-                self.owner != nil : "Resource doesn't have the assigned owner"
+                self.details.purchased == false:
+                    "NFTStorefrontV2.Listing.purchase: The Listing has already been purchased"
+                payment.isInstance(self.details.salePaymentVaultType):
+                    "NFTStorefrontV2.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The fungible token used as payment <\(payment.getType()) is not the requested type <\(self.details.salePaymentVaultType)."
+                payment.balance == self.details.salePrice:
+                    "NFTStorefrontV2.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The payment vault does not contain the requested price of \(self.details.salePrice)."
+                self.details.expiry > UInt64(getCurrentBlock().timestamp):
+                    "NFTStorefrontV2.Listing.purchase: Cannot purchase the listing! The Listing is expired"
+                self.owner != nil :
+                    "NFTStorefrontV2.Listing.purchase: Resource doesn't have the assigned owner"
             }
             
             // Make sure the listing cannot be purchased again.
@@ -354,7 +363,8 @@ access(all) contract NFTStorefrontV2 {
             
             if self.details.commissionAmount > 0.0 {
                 // If commission recipient is nil, Throw panic.
-                let commissionReceiver = commissionRecipient ?? panic("Commission recipient can't be nil")
+                let commissionReceiver = commissionRecipient
+                    ?? panic("NFTStorefrontV2.Listing.purchase: Commission recipient can't be nil")
                 if self.marketplacesCapability != nil {
                     var isCommissionRecipientHasValidType = false
                     var isCommissionRecipientAuthorised = false
@@ -369,11 +379,18 @@ access(all) contract NFTStorefrontV2 {
                             }
                         }
                     }
-                    assert(isCommissionRecipientHasValidType, message: "Given recipient does not has valid type")
-                    assert(isCommissionRecipientAuthorised, message: "Given recipient is not authorised to receive the commission")
+                    assert(
+                        isCommissionRecipientHasValidType,
+                        message: "NFTStorefrontV2.Listing.purchase: Cannot purchase! A given commission recipient type does not have a valid type!"
+                    )
+                    assert(
+                        isCommissionRecipientAuthorised,
+                        message: "NFTStorefrontV2.Listing.purchase: Cannot purchase! A given recipient is not authorised to receive the commission!"
+                    )
                 }
                 let commissionPayment <- payment.withdraw(amount: self.details.commissionAmount)
-                let recipient = commissionReceiver.borrow() ?? panic("Unable to borrow the recipient capability")
+                let recipient = commissionReceiver.borrow()
+                    ?? panic("NFTStorefrontV2.Listing.purchase: Unable to borrow the commission receiver recipient capability")
                 recipient.deposit(from: <- commissionPayment)
             }
             // Fetch the token to return to the purchaser.
@@ -383,14 +400,20 @@ access(all) contract NFTStorefrontV2 {
             // to implement the functionality behind the interface in any given way.
             // Therefore we cannot trust the Collection resource behind the interface,
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
-            assert(nft.getType() == self.details.nftType, message: "withdrawn NFT is not of specified type")
-            assert(nft.id == self.details.nftID, message: "withdrawn NFT does not have specified ID")
+            assert(
+                nft.getType() == self.details.nftType,
+                message: "NFTStorefrontV2.Listing.purchase: The type of the NFT provided by the seller <\(nft.getType()) does not match the type in the listing details <\(self.details.nftType)!"
+            )
+            assert(
+                nft.id == self.details.nftID,
+                message: "NFTStorefrontV2.Listing.purchase: The ID \(nft.id) of the NFT provided by the seller does not match the ID \(self.details.nftID) in the listing details!"
+            )
 
             // Fetch the duplicate listing for the given NFT
             // Access the StoreFrontManager resource reference to remove the duplicate listings if purchase would happen successfully.
             let storeFrontPublicRef = getAccount(self.owner!.address).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
                     NFTStorefrontV2.StorefrontPublicPath
-                ) ?? panic("Unable to borrow the storeFrontManager resource")
+                ) ?? panic("NFTStorefrontV2.Listing.purchase: Unable to borrow the storeFrontManager resource")
             let duplicateListings = storeFrontPublicRef.getDuplicateListingIDs(
                     nftType: self.details.nftType,
                     nftID: self.details.nftID,
@@ -422,7 +445,10 @@ access(all) contract NFTStorefrontV2 {
                 }
             }
 
-            assert(residualReceiver != nil, message: "No valid payment receivers")
+            assert(
+                residualReceiver != nil,
+                message: "NFTStorefrontV2.Listing.purchase: No valid payment receivers"
+            )
 
             // At this point, if all receivers were active and available, then the payment Vault will have
             // zero tokens left, and this will functionally be a no-op that consumes the empty vault
@@ -507,12 +533,20 @@ access(all) contract NFTStorefrontV2 {
             // We will check it again when the token is sold.
             // We cannot move this into a function because initializers cannot call member functions.
             let provider = self.nftProviderCapability.borrow()
-            assert(provider != nil, message: "cannot borrow nftProviderCapability")
+            assert(
+                provider != nil,
+                message: "NFTStorefrontV2.Listing.init: Cannot initialize Listing, the NFT Provider Capability is invalid!")
 
             // This will precondition assert if the token is not available.
             let nft = provider!.borrowNFT(self.details.nftID)
-            assert(nft!.getType() == self.details.nftType, message: "token is not of specified type")
-            assert(nft?.id == self.details.nftID, message: "token does not have specified ID")
+            assert(
+                nft!.getType() == self.details.nftType,
+                message: "NFTStorefrontV2.Listing.init: Cannot initialize Listing! The type of the token for sale <\(nft!.getType())> is not of specified type in the listing <\(self.details.nftType)>"
+            )
+            assert(
+                nft?.id == self.details.nftID,
+                message: "NFTStorefrontV2.Listing.init: Cannot initialize Listing! The ID of the token \(nft!.id) does not have the ID specified in the listing \(self.details.nftID)"
+            )
         }
     }
 
@@ -595,9 +629,9 @@ access(all) contract NFTStorefrontV2 {
             
             // let's ensure that the seller does indeed hold the NFT being listed
             let collectionRef = nftProviderCapability.borrow()
-                ?? panic("Could not borrow reference to collection")
+                ?? panic("NFTStorefrontV2.Storefront.createListing: Could not borrow a Provider reference to the collection that stores the NFT for sale")
             let nftRef = collectionRef.borrowNFT(nftID)
-                ?? panic("Could not borrow a reference to the desired NFT ID")
+                ?? panic("NFTStorefrontV2.Storefront.createListing: Could not borrow a reference to the desired NFT with ID \(nftID)")
 
             // Instead of letting an arbitrary value be set for the UUID of a given NFT, the contract
             // should fetch it itself     
@@ -685,7 +719,7 @@ access(all) contract NFTStorefrontV2 {
         ///
         access(RemoveListing) fun removeListing(listingResourceID: UInt64) {
             let listing <- self.listings.remove(key: listingResourceID)
-                ?? panic("missing Listing")
+                ?? panic("NFTStorefrontV2.Storefront.removeListing: Cannot remove listing with ID \(listingResourceID) because it doesn't exist in the storefront!")
             let listingDetails = listing.getDetails()
             self.removeDuplicateListing(nftIdentifier: listingDetails.nftType.identifier, nftID: listingDetails.nftID, listingResourceID: listingResourceID)
             // This will emit a ListingCompleted event.
@@ -715,8 +749,10 @@ access(all) contract NFTStorefrontV2 {
         ///
         access(all) fun cleanupPurchasedListings(listingResourceID: UInt64) {
             pre {
-                self.listings[listingResourceID] != nil: "could not find listing with given id"
-                self.borrowListing(listingResourceID: listingResourceID)!.getDetails().purchased == true: "listing not purchased yet"
+                self.listings[listingResourceID] != nil:
+                    "NFTStorefrontV2.Storefront.cleanupPurchasedListings: Cannot cleanup non-existent listing with ID \(listingResourceID)!"
+                self.borrowListing(listingResourceID: listingResourceID)!.getDetails().purchased == true:
+                    "NFTStorefrontV2.Storefront.cleanupPurchasedListings: Cannot cleanup listing with ID \(listingResourceID) because it has not been purchased yet!"
             }
             let listing <- self.listings.remove(key: listingResourceID)!
             let listingDetails = listing.getDetails()
@@ -753,8 +789,10 @@ access(all) contract NFTStorefrontV2 {
         ///
         access(all) fun cleanupExpiredListings(fromIndex: UInt64, toIndex: UInt64) {
             pre {
-                fromIndex <= toIndex : "Incorrect start index"
-                Int(toIndex - fromIndex) < self.getListingIDs().length : "Provided range is out of bound"
+                fromIndex <= toIndex :
+                    "NFTStorefrontV2.Storefront.cleanupExpiredListings: From index must be less than or equal to the to Index!"
+                Int(toIndex - fromIndex) < self.getListingIDs().length :
+                    "NFTStorefrontV2.Storefront.cleanupExpiredListings: Provided listing range is out of bounds!"
             }
             var index = fromIndex
             let listingsIDs = self.getListingIDs()
@@ -784,7 +822,8 @@ access(all) contract NFTStorefrontV2 {
         ///
         access(contract) fun cleanup(listingResourceID: UInt64) {
             pre {
-                self.listings[listingResourceID] != nil: "Could not find listing with given id"
+                self.listings[listingResourceID] != nil:
+                    "NFTStorefrontV2.Storefront.cleanup: Could not find listing with id \(listingResourceID)"
             }
             let listing <- self.listings.remove(key: listingResourceID)!
             let listingDetails = listing.getDetails()
@@ -801,12 +840,19 @@ access(all) contract NFTStorefrontV2 {
         /// @param listingResourceID ID of the listing resource which would get removed if it become ghost listing.
         access(all) fun cleanupGhostListings(listingResourceID: UInt64) {
             pre {
-                self.listings[listingResourceID] != nil: "Could not find listing with given id"
+                self.listings[listingResourceID] != nil:
+                    "NFTStorefrontV2.Storefront.cleanupGhostListings: Could not find listing with given id"
             }
             let listingRef = self.borrowListing(listingResourceID: listingResourceID)!
             let details = listingRef.getDetails()
-            assert(!details.purchased, message: "Given listing is already purchased")
-            assert(!listingRef.hasListingBecomeGhosted(), message: "Listing is not ghost listing")
+            assert(
+                !details.purchased,
+                message: "NFTStorefrontV2.Storefront.cleanupGhostListings: Cannot cleanup listing with id \(listingResourceID) because it is already purchased!"
+            )
+            assert(
+                !listingRef.hasListingBecomeGhosted(),
+                message: "NFTStorefrontV2.Storefront.cleanupGhostListings: Cannot cleanup listing with id \(listingResourceID) because it is not a ghost listing!"
+            )
             let listing <- self.listings.remove(key: listingResourceID)!
             let duplicateListings = self.getDuplicateListingIDs(nftType: details.nftType, nftID: details.nftID, listingID: listingResourceID)
 

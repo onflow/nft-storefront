@@ -7,24 +7,32 @@ import "ExampleNFT"
 transaction(recipient: Address, withdrawID: UInt64) {
 
     /// Reference to the withdrawer's collection
-    let withdrawRef: &ExampleNFT.Collection
+    let withdrawRef: auth(NonFungibleToken.Withdraw) &ExampleNFT.Collection
 
     /// Reference of the collection to deposit the NFT to
-    let depositRef: &{NonFungibleToken.CollectionPublic}
+    let depositRef: &{NonFungibleToken.Receiver}
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(BorrowValue) &Account) {
         // borrow a reference to the signer's NFT collection
-        self.withdrawRef = signer.borrow<&ExampleNFT.Collection>(from: ExampleNFT.CollectionStoragePath)
-            ?? panic("Account does not store an object at the specified path")
+        self.withdrawRef = signer.storage.borrow<auth(NonFungibleToken.Withdraw) &ExampleNFT.Collection>(
+                from: ExampleNFT.CollectionStoragePath)
+            ?? panic("The signer does not store a "
+                        .concat(contractName)
+                        .concat(".Collection object at the path ")
+                        .concat(collectionData.storagePath.toString())
+                        .concat("The signer must initialize their account with this collection first!"))
 
         // get the recipients public account object
         let recipient = getAccount(recipient)
 
         // borrow a public reference to the receivers collection
-        self.depositRef = recipient.getCapability<&{NonFungibleToken.CollectionPublic}>(
+        self.depositRef = recipient.capabilities.get<&{NonFungibleToken.Receiver}>(
                 ExampleNFT.CollectionPublicPath
             ).borrow()
-            ?? panic("Could not borrow a reference to the receiver's collection")
+                ?? panic("The recipient does not have a NonFungibleToken Receiver at "
+                    .concat(ExampleNFT.CollectionPublicPath.toString())
+                    .concat(" that is capable of receiving an NFT.")
+                    .concat("The recipient must initialize their account with this collection and receiver first!"))
 
     }
 

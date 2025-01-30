@@ -10,7 +10,8 @@ transaction(listingResourceID: UInt64) {
     prepare(acct: auth(BorrowValue) &Account) {
         self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.RemoveListing) &NFTStorefrontV2.Storefront>(
                 from: NFTStorefrontV2.StorefrontStoragePath
-            ) ?? panic("Missing or mis-typed NFTStorefront.Storefront")
+            ) ?? panic("The signer does not store an NFT Storefront V2 object at the path \(NFTStorefrontV2.StorefrontStoragePath). "
+                    .concat("The signer must initialize their account with this vault first!"))
     }
 
     execute {
