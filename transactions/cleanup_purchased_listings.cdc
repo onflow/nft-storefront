@@ -11,7 +11,7 @@ transaction(storefrontAddress: Address, listingResourceID: UInt64) {
         // Access the storefront public resource of the seller to purchase the listing.
         self.storefront = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
                 NFTStorefrontV2.StorefrontPublicPath
-            ) ?? panic("Could not borrow Storefront from provided address")
+            ) ?? panic("Could not get a Storefront from the provided address \(storefrontAddress)!")
     }
 
     execute {

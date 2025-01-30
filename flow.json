@@ -204,7 +204,7 @@
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
-		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"mainnet": "access-001.mainnet25.nodes.onflow.org:9000",
 		"previewnet": "access.previewnet.nodes.onflow.org:9000",
 		"testing": "127.0.0.1:3569",
 		"testnet": "access.devnet.nodes.onflow.org:9000"
