@@ -37,7 +37,7 @@ transaction(
         self.marketplacesCapability = []
 
         let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
-            ?? panic("ViewResolver does not resolve NFTCollectionData view")
+            ?? panic("Could not resolve NFTCollectionData view. The ExampleNFT contract needs to implement the NFTCollectionData Metadata view in order to execute this transaction")
 
         // Receiver for the sale cut.
         self.tokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
@@ -80,7 +80,8 @@ transaction(
 
         self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.CreateListing) &NFTStorefrontV2.Storefront>(
                 from: NFTStorefrontV2.StorefrontStoragePath
-            ) ?? panic("Missing or mis-typed NFTStorefront Storefront")
+            ) ?? panic("Could not get a Storefront from the signer's account at path \(NFTStorefrontV2.StorefrontStoragePath)!"
+                        .concat("Make sure the signer has initialized their account with a NFTStorefrontV2 storefront!"))
 
         for marketplace in marketplacesAddress {
             // Here we are making a fair assumption that all given addresses would have

@@ -37,16 +37,22 @@ transaction(
         self.marketplacesCapability = []
 
         let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
-            ?? panic("ViewResolver does not resolve NFTCollectionData view")
+            ?? panic("Could not resolve NFTCollectionData view. The ExampleNFT contract needs to implement the NFTCollectionData Metadata view in order to execute this transaction")
 
         // Receiver for the sale cut.
         self.flowReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
-        assert(self.flowReceiver.borrow() != nil, message: "Missing or mis-typed FlowToken receiver")
+        assert(
+            self.flowReceiver.borrow() != nil,
+            message: "Missing or mis-typed FlowToken receiver"
+        )
 
         self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
                 collectionData.storagePath
             )
-        assert(self.exampleNFTProvider.check(), message: "Missing or mis-typed ExampleNFT provider")
+        assert(
+            self.exampleNFTProvider.check(),
+            message: "Missing or mis-typed ExampleNFT provider"
+        )
 
         let collection = acct.capabilities.borrow<&{NonFungibleToken.Collection}>(
                 collectionData.publicPath
@@ -80,7 +86,8 @@ transaction(
 
         self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.CreateListing) &NFTStorefrontV2.Storefront>(
                 from: NFTStorefrontV2.StorefrontStoragePath
-            ) ?? panic("Missing or mis-typed NFTStorefront Storefront")
+            ) ?? panic("Could not get a Storefront from the signer's account at path \(NFTStorefrontV2.StorefrontStoragePath)!"
+                        .concat("Make sure the signer has initialized their account with a NFTStorefrontV2 storefront!"))
 
         // Here we are making a fair assumption that all given addresses would have
         // the capability to receive the `FlowToken`
