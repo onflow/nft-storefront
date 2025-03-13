@@ -21,7 +21,7 @@ jobs:
       run: sh -ci "$(curl -fsSL https://raw.githubusercontent.com/onflow/flow-cli/master/install.sh)"
     - name: Run tests
       run: flow test -f ./flow.testing.json --cover --covercode="contracts/NFTStorefrontV2.cdc" ./test/NFTStorefrontV2_test.cdc
-  V2-Integration-Tests:
+  V1-Integration-Tests:
     name: NFTStorefront V1 Integration Tests
     timeout-minutes: 10
     runs-on: ubuntu-latest
