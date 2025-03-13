@@ -43,10 +43,23 @@ transaction(
         self.flowReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
         assert(self.flowReceiver.borrow() != nil, message: "Missing or mis-typed FlowToken receiver")
 
-        self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
+        // The storage path for storing a withdraw capability to the nft collection
+        // Should preferrably be defined in the nft contract
+        let nftProviderCapPath = /storage/ExampleNFTProviderCap
+        var nftProviderCap = acct.storage.copy<Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>>(from: nftProviderCapPath)
+        if nftProviderCap == nil || !nftProviderCap!.check() {
+            self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
                 collectionData.storagePath
             )
-        assert(self.exampleNFTProvider.check(), message: "Missing or mis-typed ExampleNFT provider")
+            assert(self.exampleNFTProvider.check(), message: "Missing or mis-typed ExampleNFT provider")
+             // save capability to storage
+            acct.storage.save(
+                self.exampleNFTProvider,
+                to: nftProviderCapPath
+            )
+        } else{
+            self.exampleNFTProvider = nftProviderCap!
+        }
 
         let collection = acct.capabilities.borrow<&{NonFungibleToken.Collection}>(
                 collectionData.publicPath
