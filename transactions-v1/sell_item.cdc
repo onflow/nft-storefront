@@ -11,7 +11,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
     let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
     let storefront: auth(NFTStorefront.CreateListing) &NFTStorefront.Storefront
 
-    prepare(acct: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
+    prepare(acct: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue, StorageCapabilities) &Account) {
 
         let collectionDataOpt = ExampleNFT.resolveContractView(resourceType: Type<@ExampleNFT.NFT>(), viewType: Type<MetadataViews.NFTCollectionData>())
             ?? panic("Missing collection data")
@@ -20,10 +20,26 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
         self.exampleTokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
         assert(self.exampleTokenReceiver.check(), message: "Missing or mis-typed ExampleToken Receiver")
 
-        self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
+        var nftProviderCap: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>? = nil
+        // check if there is an existing capability/capability controller for the storage path
+        let nftCollectionControllers = acct.capabilities.storage.getControllers(forPath: collectionData.storagePath)
+        for controller in nftCollectionControllers {
+            if let maybeProviderCap = controller.capability as? Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>? {
+                nftProviderCap = maybeProviderCap
+                break
+            }
+        }
+
+        // if there are no capabilities created for that storage path
+        // or if existing capability is no longer valid, issue a new one
+        if nftProviderCap == nil || nftProviderCap?.check() ?? false {
+            nftProviderCap = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
                 collectionData.storagePath
             )
-        assert(self.exampleNFTProvider.check(), message: "Missing or mis-typed ExampleNFT provider")
+        }
+        assert(nftProviderCap?.check() ?? false, message: "Could not assign Provider Capability")
+
+        self.exampleNFTProvider = nftProviderCap!
 
         // If the account doesn't already have a Storefront
         if acct.storage.borrow<&NFTStorefront.Storefront>(from: NFTStorefront.StorefrontStoragePath) == nil {
