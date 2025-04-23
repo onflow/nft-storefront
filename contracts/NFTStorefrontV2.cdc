@@ -349,7 +349,7 @@ access(all) contract NFTStorefrontV2 {
                 self.details.purchased == false:
                     "NFTStorefrontV2.Listing.purchase: The Listing has already been purchased"
                 payment.isInstance(self.details.salePaymentVaultType):
-                    "NFTStorefrontV2.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The fungible token used as payment <\(payment.getType()) is not the requested type <\(self.details.salePaymentVaultType)."
+                    "NFTStorefrontV2.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The fungible token used as payment <\(payment.getType().identifier) is not the requested type <\(self.details.salePaymentVaultType.identifier)."
                 payment.balance == self.details.salePrice:
                     "NFTStorefrontV2.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The payment vault does not contain the requested price of \(self.details.salePrice)."
                 self.details.expiry > UInt64(getCurrentBlock().timestamp):
@@ -402,7 +402,7 @@ access(all) contract NFTStorefrontV2 {
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
             assert(
                 nft.getType() == self.details.nftType,
-                message: "NFTStorefrontV2.Listing.purchase: The type of the NFT provided by the seller <\(nft.getType()) does not match the type in the listing details <\(self.details.nftType)!"
+                message: "NFTStorefrontV2.Listing.purchase: The type of the NFT provided by the seller <\(nft.getType().identifier) does not match the type in the listing details <\(self.details.nftType.identifier)!"
             )
             assert(
                 nft.id == self.details.nftID,
@@ -541,11 +541,7 @@ access(all) contract NFTStorefrontV2 {
             let nft = provider!.borrowNFT(self.details.nftID)
             assert(
                 nft!.getType() == self.details.nftType,
-                message: "NFTStorefrontV2.Listing.init: Cannot initialize Listing! The type of the token for sale <\(nft!.getType())> is not of specified type in the listing <\(self.details.nftType)>"
-            )
-            assert(
-                nft?.id == self.details.nftID,
-                message: "NFTStorefrontV2.Listing.init: Cannot initialize Listing! The ID of the token \(nft!.id) does not have the ID specified in the listing \(self.details.nftID)"
+                message: "NFTStorefrontV2.Listing.init: Cannot initialize Listing! The type of the token for sale <\(nft!.getType().identifier)> is not of specified type in the listing <\(self.details.nftType.identifier)>"
             )
         }
     }
@@ -841,7 +837,7 @@ access(all) contract NFTStorefrontV2 {
         access(all) fun cleanupGhostListings(listingResourceID: UInt64) {
             pre {
                 self.listings[listingResourceID] != nil:
-                    "NFTStorefrontV2.Storefront.cleanupGhostListings: Could not find listing with given id"
+                    "NFTStorefrontV2.Storefront.cleanupGhostListings: Could not find listing with id \(listingResourceID)"
             }
             let listingRef = self.borrowListing(listingResourceID: listingResourceID)!
             let details = listingRef.getDetails()

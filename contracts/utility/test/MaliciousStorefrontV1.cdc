@@ -87,7 +87,7 @@ access(all) contract MaliciousStorefrontV1 {
             return self.storefrontCap.borrow()!.borrowListing(listingResourceID: self.listingResourceID)!.borrowNFT()
         }
 
-        access(all) fun getDetails(): NFTStorefront.ListingDetails {
+        access(all) view fun getDetails(): NFTStorefront.ListingDetails {
             return self.storefrontCap.borrow()!.borrowListing(listingResourceID: self.listingResourceID)!.getDetails()
         }
 

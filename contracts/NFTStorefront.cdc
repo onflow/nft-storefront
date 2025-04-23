@@ -194,7 +194,7 @@ access(all) contract NFTStorefront {
 
         /// getDetails
         ///
-        access(all) fun getDetails(): ListingDetails
+        access(all) view fun getDetails(): ListingDetails
 
     }
 
@@ -250,7 +250,7 @@ access(all) contract NFTStorefront {
             assert(ref != nil, message: "NFTStorefront.Listing.borrowNFT: Could not borrow a reference to the NFT in the listing!")
             assert(
                 ref!.isInstance(self.getDetails().nftType),
-                message: "NFTStorefront.Listing.borrowNFT: The type of the NFT provided by the owner <\(ref!.getType().toString()) does not match the type in the listing <\(self.getDetails().nftType.toString())!"
+                message: "NFTStorefront.Listing.borrowNFT: The type of the NFT provided by the owner <\(ref!.getType().identifier) does not match the type in the listing <\(self.getDetails().nftType.identifier)!"
             )
             assert(
                 ref?.id == self.getDetails().nftID,
@@ -264,7 +264,7 @@ access(all) contract NFTStorefront {
         /// This avoids having more public variables and getter methods for them, and plays
         /// nicely with scripts (which cannot return resources). 
         ///
-        access(all) fun getDetails(): ListingDetails {
+        access(all) view fun getDetails(): ListingDetails {
             return self.details
         }
         
@@ -277,7 +277,7 @@ access(all) contract NFTStorefront {
                 self.details.purchased == false:
                     "NFTStorefront.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The listing has already been purchased!"
                 payment.isInstance(self.details.salePaymentVaultType):
-                    "NFTStorefront.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The fungible token used as payment <\(payment.getType()) is not the requested type <\(self.details.salePaymentVaultType)."
+                    "NFTStorefront.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The fungible token used as payment <\(payment.getType().identifier) is not the requested type <\(self.details.salePaymentVaultType.identifier)."
                 payment.balance == self.details.salePrice:
                     "NFTStorefront.Listing.purchase: Cannot purchase the listing with ID \(self.getDetails().nftID). The payment vault does not contain the requested price of \(self.details.salePrice)."
             }
@@ -294,7 +294,7 @@ access(all) contract NFTStorefront {
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
             assert(
                 nft.isInstance(self.details.nftType),
-                message: "NFTStorefront.Listing.purchase: Cannot purchase listing! The type of the NFT provided by the seller <\(nft.getType()) does not match the type in the listing details <\(self.details.nftType)!"
+                message: "NFTStorefront.Listing.purchase: Cannot purchase listing! The type of the NFT provided by the seller <\(nft.getType().identifier) does not match the type in the listing details <\(self.details.nftType.identifier)!"
             )
             assert(
                 nft.id == self.details.nftID,
@@ -380,7 +380,7 @@ access(all) contract NFTStorefront {
             )
             assert(
                 nft!.isInstance(self.details.nftType),
-                message: "NFTStorefront.Listing.init: Cannot initialize Listing! The type of the token for sale <\(nft.getType())> is not of specified type in the listing <\(self.details.nftType)>"
+                message: "NFTStorefront.Listing.init: Cannot initialize Listing! The type of the token for sale <\(nft.getType().identifier)> is not of specified type in the listing <\(self.details.nftType.identifier)>"
             )
             assert(
                 nft?.id == self.details.nftID,

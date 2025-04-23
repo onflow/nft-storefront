@@ -197,6 +197,7 @@
 			"source": "./contracts/utility/ViewResolver.cdc",
 			"aliases": {
 				"emulator": "f8d6e0586b0a20c7",
+                "testing": "0000000000000001",
 				"mainnet": "1d7e57aa55817448",
 				"testnet": "631e88ae7f1d7c20"
 			}
