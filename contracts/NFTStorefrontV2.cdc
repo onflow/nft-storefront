@@ -402,7 +402,7 @@ access(all) contract NFTStorefrontV2 {
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
             assert(
                 nft.getType() == self.details.nftType,
-                message: "NFTStorefrontV2.Listing.purchase: The type of the NFT provided by the seller <\(nft.getType().identifier) does not match the type in the listing details <\(self.details.nftType.identifier)!"
+                message: "NFTStorefrontV2.Listing.purchase: The type of the NFT provided by the seller <\(nft.getType().identifier)> does not match the type in the listing details <\(self.details.nftType.identifier)>!"
             )
             assert(
                 nft.id == self.details.nftID,

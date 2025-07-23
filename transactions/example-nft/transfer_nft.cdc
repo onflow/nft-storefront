@@ -16,11 +16,9 @@ transaction(recipient: Address, withdrawID: UInt64) {
         // borrow a reference to the signer's NFT collection
         self.withdrawRef = signer.storage.borrow<auth(NonFungibleToken.Withdraw) &ExampleNFT.Collection>(
                 from: ExampleNFT.CollectionStoragePath)
-            ?? panic("The signer does not store a "
-                        .concat(contractName)
-                        .concat(".Collection object at the path ")
-                        .concat(collectionData.storagePath.toString())
-                        .concat("The signer must initialize their account with this collection first!"))
+                ?? panic("The signer does not store an ExampleNFT.Collection object at the path ") 
+                        .concat(ExampleNFT.CollectionStoragePath.toString())
+                        .concat("The signer must initialize their account with this collection first!")
 
         // get the recipients public account object
         let recipient = getAccount(recipient)

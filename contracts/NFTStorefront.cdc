@@ -250,7 +250,7 @@ access(all) contract NFTStorefront {
             assert(ref != nil, message: "NFTStorefront.Listing.borrowNFT: Could not borrow a reference to the NFT in the listing!")
             assert(
                 ref!.isInstance(self.getDetails().nftType),
-                message: "NFTStorefront.Listing.borrowNFT: The type of the NFT provided by the owner <\(ref!.getType().identifier) does not match the type in the listing <\(self.getDetails().nftType.identifier)!"
+                message: "NFTStorefront.Listing.borrowNFT: The type of the NFT provided by the owner <\(ref!.getType().identifier)> does not match the type in the listing <\(self.getDetails().nftType.identifier)>!"
             )
             assert(
                 ref?.id == self.getDetails().nftID,
@@ -294,7 +294,7 @@ access(all) contract NFTStorefront {
             // and we must check the NFT resource it gives us to make sure that it is the correct one.
             assert(
                 nft.isInstance(self.details.nftType),
-                message: "NFTStorefront.Listing.purchase: Cannot purchase listing! The type of the NFT provided by the seller <\(nft.getType().identifier) does not match the type in the listing details <\(self.details.nftType.identifier)!"
+                message: "NFTStorefront.Listing.purchase: Cannot purchase listing! The type of the NFT provided by the seller <\(nft.getType().identifier)> does not match the type in the listing details <\(self.details.nftType.identifier)>!"
             )
             assert(
                 nft.id == self.details.nftID,
