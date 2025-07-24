@@ -1,9 +1,9 @@
-import ExampleToken from "ExampleToken"
-import FungibleToken from "FungibleToken"
-import NonFungibleToken from "NonFungibleToken"
-import ExampleNFT from "ExampleNFT"
-import MetadataViews from "MetadataViews"
-import NFTStorefrontV2 from "NFTStorefrontV2"
+import "ExampleToken"
+import "FungibleToken"
+import "NonFungibleToken"
+import "ExampleNFT"
+import "MetadataViews"
+import "NFTStorefrontV2"
 
 /// Transaction used to facilitate the creation of the listing under the signer's owned storefront resource.
 /// It accepts the certain details from the signer,i.e. - 

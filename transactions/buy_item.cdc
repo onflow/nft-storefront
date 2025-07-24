@@ -1,9 +1,9 @@
-import ExampleToken from "ExampleToken"
-import FungibleToken from "FungibleToken"
-import NonFungibleToken from "NonFungibleToken"
-import ExampleNFT from "ExampleNFT"
-import NFTStorefrontV2 from "NFTStorefrontV2"
-import MetadataViews from "MetadataViews"
+import "ExampleToken"
+import "FungibleToken"
+import "NonFungibleToken"
+import "ExampleNFT"
+import "NFTStorefrontV2"
+import "MetadataViews"
 
 /// Transaction facilitates the purcahse of listed NFT. It takes the storefront address, listing resource that need to be
 /// purchased & a address that will takeaway the commission.

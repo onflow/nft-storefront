@@ -1,9 +1,9 @@
-import FlowToken from "FlowToken"
-import FungibleToken from "../contracts/utility/FungibleToken.cdc"
-import NonFungibleToken from "../contracts/utility/NonFungibleToken.cdc"
-import ExampleNFT from "../contracts/utility/ExampleNFT.cdc"
-import MetadataViews from "../contracts/utility/MetadataViews.cdc"
-import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
+import "FlowToken"
+import "FungibleToken"
+import "NonFungibleToken"
+import "ExampleNFT"
+import "MetadataViews"
+import "NFTStorefrontV2"
 
 /// Transaction used to facilitate the creation of the listing under the signer's owned storefront resource.
 /// It accepts the certain details from the signer,i.e. - 
