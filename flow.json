@@ -182,10 +182,10 @@
 			"source": "mainnet://49a7cda3a1eecc29.NFTCatalog",
 			"hash": "1ba539cb0dfb7a22d40cff5de89a20557d59c0298d8267343a68c69ec5002721",
 			"aliases": {
-                "emulator": "f8d6e0586b0a20c7",
+				"emulator": "f8d6e0586b0a20c7",
 				"mainnet": "49a7cda3a1eecc29",
 				"testnet": "324c34e1c517e4db"
-            }
+			}
 		},
 		"NFTCollectionFactory": {
 			"source": "mainnet://d8a7e05a7ac670c0.NFTCollectionFactory",
