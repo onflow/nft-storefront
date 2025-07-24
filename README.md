@@ -17,8 +17,8 @@ Flow.com docs: [NFT Storefront Standard](https://developers.flow.com/build/core-
 
 |Name|Emulator|Testing Framework|Testnet|Previewnet|Mainnet|
 |----|----|------|-------|------|-------|
-|[NFTStorefront](contracts/NFTStorefront.cdc)|`0xf8d6e0586b0a20c7`|[0x94b06cfca1d8a476](https://flow-view-source.com/testnet/account/0x94b06cfca1d8a476/contract/NFTStorefront)|[0x6df5e52755433994](contracts/NFTStorefront.cdc)|[0x4eb8a10cb9f87357](https://flowscan.org/contract/A.4eb8a10cb9f87357.NFTStorefront)|
-|[NFTStorefrontV2 (recommended)](contracts/NFTStorefrontV2.cdc)|`0xf8d6e0586b0a20c7`|[0x2d55b98eb200daef](https://flow-view-source.com/testnet/account/0x2d55b98eb200daef/contract/NFTStorefrontV2)|[0x6df5e52755433994](contracts/NFTStorefrontV2.cdc)|[0x4eb8a10cb9f87357](https://flowscan.org/contract/A.4eb8a10cb9f87357.NFTStorefrontV2)|
+|[NFTStorefront](contracts/NFTStorefront.cdc)| N/A | N/A |[0x94b06cfca1d8a476](https://flow-view-source.com/testnet/account/0x94b06cfca1d8a476/contract/NFTStorefront)|[0x6df5e52755433994](contracts/NFTStorefront.cdc)|[0x4eb8a10cb9f87357](https://flowscan.org/contract/A.4eb8a10cb9f87357.NFTStorefront)|
+|[NFTStorefrontV2 (recommended)](contracts/NFTStorefrontV2.cdc)|`0xf8d6e0586b0a20c7`| `0x0000000000000001` |[0x2d55b98eb200daef](https://flow-view-source.com/testnet/account/0x2d55b98eb200daef/contract/NFTStorefrontV2)|[0x6df5e52755433994](contracts/NFTStorefrontV2.cdc)|[0x4eb8a10cb9f87357](https://flowscan.org/contract/A.4eb8a10cb9f87357.NFTStorefrontV2)|
 
 # Usage
 
