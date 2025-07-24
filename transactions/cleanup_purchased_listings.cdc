@@ -1,4 +1,4 @@
-import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
+import "NFTStorefrontV2"
 
 /// Transaction to facilitate the cleanup of the purchased listings of a given storefront resource account holder.
 /// Cleanup is publicly accessible so can be executed by anyone.

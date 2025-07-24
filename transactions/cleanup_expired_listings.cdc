@@ -1,4 +1,4 @@
-import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
+import "NFTStorefrontV2"
 
 /// Transaction to facilitate the cleanup of the expired listings of a given storefront resource account holder. This
 /// transaction facilitates the cleanup in pagination model where signer of the transaction will provide the
