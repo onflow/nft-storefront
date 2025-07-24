@@ -1,39 +1,5 @@
 {
 	"contracts": {
-		"Burner": {
-			"source": "./contracts/utility/Burner.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "f233dcee88fe0abe",
-				"previewnet": "b6763b4399a888c8",
-				"testing": "0000000000000001",
-				"testnet": "9a0766d93b6608b7"
-			}
-		},
-		"CapabilityDelegator": {
-			"source": "./contracts/hybrid-custody/CapabilityDelegator.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"CapabilityFactory": {
-			"source": "./contracts/hybrid-custody/CapabilityFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"CapabilityFilter": {
-			"source": "./contracts/hybrid-custody/CapabilityFilter.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
 		"ExampleNFT": {
 			"source": "./contracts/utility/ExampleNFT.cdc",
 			"aliases": {
@@ -46,74 +12,6 @@
 				"testing": "0000000000000009"
 			}
 		},
-		"FTAllFactory": {
-			"source": "./contracts/hybrid-custody/factories/FTAllFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"FTBalanceFactory": {
-			"source": "./contracts/hybrid-custody/factories/FTBalanceFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"FTProviderFactory": {
-			"source": "./contracts/hybrid-custody/factories/FTProviderFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"FTReceiverBalanceFactory": {
-			"source": "./contracts/hybrid-custody/factories/FTReceiverBalanceFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"FTReceiverFactory": {
-			"source": "./contracts/hybrid-custody/factories/FTReceiverFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"FungibleToken": {
-			"source": "./contracts/utility/FungibleToken.cdc",
-			"aliases": {
-				"emulator": "ee82856bf20e2aa6",
-				"mainnet": "f233dcee88fe0abe",
-				"previewnet": "a0225e7000ac82a9",
-				"testing": "0000000000000002",
-				"testnet": "9a0766d93b6608b7"
-			}
-		},
-		"FungibleTokenMetadataViews": {
-			"source": "./contracts/utility/FungibleTokenMetadataViews.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "f233dcee88fe0abe",
-				"previewnet": "a0225e7000ac82a9",
-				"testing": "0000000000000002",
-				"testnet": "9a0766d93b6608b7"
-			}
-		},
-		"HybridCustody": {
-			"source": "./contracts/hybrid-custody/HybridCustody.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
 		"MaliciousStorefrontV1": {
 			"source": "./contracts/utility/test/MaliciousStorefrontV1.cdc",
 			"aliases": {
@@ -124,46 +22,6 @@
 			"source": "./contracts/utility/test/MaliciousStorefrontV2.cdc",
 			"aliases": {
 				"testing": "0000000000000007"
-			}
-		},
-		"MetadataViews": {
-			"source": "./contracts/utility/MetadataViews.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "1d7e57aa55817448",
-				"testing": "0000000000000001",
-				"testnet": "631e88ae7f1d7c20"
-			}
-		},
-		"NFTCatalog": {
-			"source": "./contracts/utility/NFTCatalog.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "49a7cda3a1eecc29",
-				"testnet": "324c34e1c517e4db"
-			}
-		},
-		"NFTCollectionPublicFactory": {
-			"source": "./contracts/hybrid-custody/factories/NFTCollectionPublicFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"NFTProviderAndCollectionFactory": {
-			"source": "./contracts/hybrid-custody/factories/NFTProviderAndCollectionFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"mainnet": "d8a7e05a7ac670c0",
-				"testnet": "294e44e1ec6993c6"
-			}
-		},
-		"NFTProviderFactory": {
-			"source": "./contracts/hybrid-custody/factories/NFTProviderFactory.cdc",
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7",
-				"testnet": "294e44e1ec6993c6"
 			}
 		},
 		"NFTStorefront": {
@@ -183,21 +41,200 @@
 				"testing": "0000000000000007",
 				"testnet": "2d55b98eb200daef"
 			}
+		}
+	},
+	"dependencies": {
+		"Burner": {
+			"source": "mainnet://f233dcee88fe0abe.Burner",
+			"hash": "71af18e227984cd434a3ad00bb2f3618b76482842bae920ee55662c37c8bf331",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "f233dcee88fe0abe",
+				"testnet": "9a0766d93b6608b7"
+			}
 		},
-		"NonFungibleToken": {
-			"source": "./contracts/utility/NonFungibleToken.cdc",
+		"CapabilityDelegator": {
+			"source": "mainnet://d8a7e05a7ac670c0.CapabilityDelegator",
+			"hash": "ad3bf8671a74a836b428da7840540c0ce419349be5f6410b18546e9a9217a9d2",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"CapabilityFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.CapabilityFactory",
+			"hash": "33d6b142c1db548a193cc06ff9828a24ca2ff8726301e292a8b6863dd0e1e73e",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"CapabilityFilter": {
+			"source": "mainnet://d8a7e05a7ac670c0.CapabilityFilter",
+			"hash": "77b59eb8245102a84a49d47a67e83eeeaafea920b120cdd6aa175d9ff120c388",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"FTAllFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.FTAllFactory",
+			"hash": "466fccb6177e9654198be366baf0fa2b3bbaddbdb1a831e7fbc591f64cfdb7f0",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"FTBalanceFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.FTBalanceFactory",
+			"hash": "7f9323b79d4e79c6b8bc4519909fa0655ee80496d1f30c0e2f44654d1633ba42",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"FTProviderFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.FTProviderFactory",
+			"hash": "a44dca96108b09cf25378dfe93b9cd66d2237d5274405b7d24323ea0b3de7649",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"FTReceiverBalanceFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.FTReceiverBalanceFactory",
+			"hash": "7861c7300caa547508e2f78c356247fd9f7bcbab2b42bbe7543205d85f31c5b3",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"FTReceiverFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.FTReceiverFactory",
+			"hash": "590bb99b9fa48867159f1b562acbcba6c738b79b406b859000d33fada7e0339b",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"FTVaultFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.FTVaultFactory",
+			"hash": "fda001cf55f6b4b30778e3e3fdd4399d50479caa1a53192c2844a2a95f833aac",
+			"aliases": {
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"FungibleToken": {
+			"source": "mainnet://f233dcee88fe0abe.FungibleToken",
+			"hash": "23c1159cf99b2b039b6b868d782d57ae39b8d784045d81597f100a4782f0285b",
+			"aliases": {
+				"emulator": "ee82856bf20e2aa6",
+				"mainnet": "f233dcee88fe0abe",
+				"testnet": "9a0766d93b6608b7"
+			}
+		},
+		"FungibleTokenMetadataViews": {
+			"source": "mainnet://f233dcee88fe0abe.FungibleTokenMetadataViews",
+			"hash": "dff704a6e3da83997ed48bcd244aaa3eac0733156759a37c76a58ab08863016a",
+			"aliases": {
+				"emulator": "ee82856bf20e2aa6",
+				"mainnet": "f233dcee88fe0abe",
+				"testnet": "9a0766d93b6608b7"
+			}
+		},
+		"FungibleTokenSwitchboard": {
+			"source": "mainnet://f233dcee88fe0abe.FungibleTokenSwitchboard",
+			"hash": "10f94fe8803bd1c2878f2323bf26c311fb4fb2beadba9f431efdb1c7fa46c695",
+			"aliases": {
+				"emulator": "ee82856bf20e2aa6",
+				"mainnet": "f233dcee88fe0abe",
+				"testnet": "9a0766d93b6608b7"
+			}
+		},
+		"HybridCustody": {
+			"source": "mainnet://d8a7e05a7ac670c0.HybridCustody",
+			"hash": "c8a129eec11c57ee25487fcce38efc54c3b12eb539ba61a52f4ee620173bb67b",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"MetadataViews": {
+			"source": "mainnet://1d7e57aa55817448.MetadataViews",
+			"hash": "10a239cc26e825077de6c8b424409ae173e78e8391df62750b6ba19ffd048f51",
 			"aliases": {
 				"emulator": "f8d6e0586b0a20c7",
 				"mainnet": "1d7e57aa55817448",
-				"testing": "0000000000000001",
+				"testnet": "631e88ae7f1d7c20"
+			}
+		},
+		"NFTCatalog": {
+			"source": "mainnet://49a7cda3a1eecc29.NFTCatalog",
+			"hash": "1ba539cb0dfb7a22d40cff5de89a20557d59c0298d8267343a68c69ec5002721",
+			"aliases": {
+                "emulator": "f8d6e0586b0a20c7",
+				"mainnet": "49a7cda3a1eecc29",
+				"testnet": "324c34e1c517e4db"
+            }
+		},
+		"NFTCollectionFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.NFTCollectionFactory",
+			"hash": "07669f4c9203645248bda9f26064814e72c1c2387e73c39f57379b8cb013227a",
+			"aliases": {
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"NFTCollectionPublicFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.NFTCollectionPublicFactory",
+			"hash": "c6321eb6a0306f2b9fdad875d8f6351f23113d4affcce1f57aa4d2bc2ae864fd",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"NFTProviderAndCollectionFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.NFTProviderAndCollectionFactory",
+			"hash": "dcd33688bee8e05fb82b7488b5ce9fa691260fa08d5841b65af9130dc00ed2e6",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "d8a7e05a7ac670c0",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"NFTProviderFactory": {
+			"source": "mainnet://d8a7e05a7ac670c0.NFTProviderFactory",
+			"hash": "d1cc434d19199958d3b98de98069d4604f606f87d3f4640a90567a82d8329010",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"testnet": "294e44e1ec6993c6"
+			}
+		},
+		"NonFungibleToken": {
+			"source": "mainnet://1d7e57aa55817448.NonFungibleToken",
+			"hash": "b63f10e00d1a814492822652dac7c0574428a200e4c26cb3c832c4829e2778f0",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "1d7e57aa55817448",
 				"testnet": "631e88ae7f1d7c20"
 			}
 		},
 		"ViewResolver": {
-			"source": "./contracts/utility/ViewResolver.cdc",
+			"source": "mainnet://1d7e57aa55817448.ViewResolver",
+			"hash": "374a1994046bac9f6228b4843cb32393ef40554df9bd9907a702d098a2987bde",
 			"aliases": {
 				"emulator": "f8d6e0586b0a20c7",
-                "testing": "0000000000000001",
 				"mainnet": "1d7e57aa55817448",
 				"testnet": "631e88ae7f1d7c20"
 			}
@@ -239,7 +276,22 @@
 				"ExampleNFT",
 				"ExampleToken",
 				"NFTStorefront",
-				"NFTStorefrontV2"
+				"NFTStorefrontV2",
+				"NFTCollectionFactory",
+				"CapabilityFactory",
+				"FTBalanceFactory",
+				"HybridCustody",
+				"CapabilityDelegator",
+				"CapabilityFilter",
+				"FTAllFactory",
+				"NFTProviderAndCollectionFactory",
+				"FTProviderFactory",
+				"NFTCollectionPublicFactory",
+				"NFTProviderFactory",
+				"FTReceiverFactory",
+				"FTReceiverBalanceFactory",
+				"FTVaultFactory",
+				"NFTCatalog"
 			]
 		},
 		"mainnet": {
