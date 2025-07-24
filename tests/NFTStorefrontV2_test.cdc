@@ -186,7 +186,10 @@ fun testBuyItem() {
     let allowedCommissionReceivers = scriptExecutor("read_allowed_commission_receivers.cdc", [seller.address, listingID])
     let listingDetails = scriptExecutor("read_listing_details.cdc", [seller.address, listingID])
     Test.assert(listingDetails != nil, message: "Received invalid result from reading listing details")
-    let duplicateListingIDs = scriptExecutor("read_duplicate_listing_ids.cdc", [seller.address, listedNFTID, listingID])
+    let duplicateListingIDs = scriptExecutor(
+        "read_duplicate_listing_ids.cdc",
+        [seller.address, listedNFTID, listingID, "A.0000000000000008.ExampleNFT.NFT"]
+    )
     Test.assertEqual((duplicateListingIDs as! [UInt64]?)!.length, 0)
 
     let code = loadCode("buy_item.cdc", "transactions")

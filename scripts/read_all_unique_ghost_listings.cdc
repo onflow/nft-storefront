@@ -1,4 +1,4 @@
-import NFTStorefrontV2 from "../contracts/NFTStorefrontV2.cdc"
+import "NFTStorefrontV2"
 
 /// This script provides the array of listing resource Id which got ghosted It automatically skips the duplicate listing
 /// as duplicate listings would get automatically delete once the primary one.
