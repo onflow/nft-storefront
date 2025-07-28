@@ -13,6 +13,11 @@ access(all) let marketplace = Test.createAccount()
 access(all) let storefrontAccount = Test.getAccount(0x0000000000000007)
 access(all) let exampleNFTAccount = Test.getAccount(0x0000000000000008)
 access(all) let exampleTokenAccount = Test.getAccount(0x0000000000000009)
+
+access(all) let nftTypeIdentifier = "A.0000000000000008.ExampleNFT.NFT"
+access(all) let ftTypeIdentifier = "A.0000000000000009.ExampleToken.Vault"
+access(all) let flowTokenTypeIdentifier = "A.0000000000000003.FlowToken.Vault"
+
 access(all) var nftCount = 1
 
 access(all)
@@ -33,6 +38,20 @@ fun mintNFTToSeller() {
 access(all)
 fun setup() {
     let serviceAccount = Test.serviceAccount()
+
+    // TODO: Remove this section once MetadataViews is updated on the emulator
+    // with the resolveViewfromIdentifier function. 
+    let metadataViewsCode = loadCode("MVbytes", "tests/transactions")
+    var tx = Test.Transaction(
+        code: loadCode("update_contract.cdc", "tests/transactions"),
+        authorizers: [serviceAccount.address],
+        signers: [serviceAccount],
+        arguments: ["MetadataViews", metadataViewsCode],
+    )
+
+    var txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beSucceeded())
+    // TODO: End of section to remove
 
     var err = Test.deployContract(
         name: "NFTStorefrontV2",
@@ -57,13 +76,13 @@ fun setup() {
 
     // Setup example token
     var code = loadCode("setup_account.cdc", "transactions/example-token")
-    var tx = Test.Transaction(
+    tx = Test.Transaction(
         code: code,
         authorizers: [buyer.address],
         signers: [buyer],
         arguments: [],
     )
-    var txResult = Test.executeTransaction(tx)
+    txResult = Test.executeTransaction(tx)
     Test.expect(txResult, Test.beSucceeded())
     
     tx = Test.Transaction(
@@ -160,7 +179,9 @@ fun testSellItem() {
             "Custom", // custom id
             0.1, // commission amount
             UInt64(2025908543), // 10 years in the future
-            [] // Marketplaces address
+            [], // Marketplaces address
+            nftTypeIdentifier, // nft type
+            ftTypeIdentifier // ft type
         ],
     )
     var txResult = Test.executeTransaction(tx)
@@ -188,7 +209,7 @@ fun testBuyItem() {
     Test.assert(listingDetails != nil, message: "Received invalid result from reading listing details")
     let duplicateListingIDs = scriptExecutor(
         "read_duplicate_listing_ids.cdc",
-        [seller.address, listedNFTID, listingID, "A.0000000000000008.ExampleNFT.NFT"]
+        [seller.address, listedNFTID, listingID, nftTypeIdentifier]
     )
     Test.assertEqual((duplicateListingIDs as! [UInt64]?)!.length, 0)
 
@@ -200,7 +221,9 @@ fun testBuyItem() {
         arguments: [
             listingID, // listing resource id
             seller.address, // storefront address
-            seller.address // commision recipient
+            seller.address, // commision recipient
+            nftTypeIdentifier, // nft type
+            ftTypeIdentifier // ft type
         ],
     )
     let txResult = Test.executeTransaction(tx)
@@ -261,7 +284,9 @@ fun testCleanupGhostListings() {
             "Custom", // custom id
             0.1, // commission amount
             UInt64(2025908543), // 10 years in the future
-            [] // Marketplaces address
+            [], // Marketplaces address
+            nftTypeIdentifier, // nft type
+            ftTypeIdentifier // ft type
         ],
     )
     var txResult = Test.executeTransaction(tx)
@@ -337,7 +362,9 @@ fun testSellItemWithMarketplaceCut() {
             "Custom1", // custom id
             UInt64(2025908543), // 10 years in the future
             seller.address, // set the buyer as the marketplace sale cut receiver
-            0.1 // Marketplaces address
+            0.1, // Marketplaces address
+            nftTypeIdentifier, // nft type
+            flowTokenTypeIdentifier // ft type
         ],
     )
     let txResult = Test.executeTransaction(tx)
@@ -378,7 +405,9 @@ fun testSellItemAndReplaceCurrentListing() {
             "Custom1", // custom id
             0.1, // commission amount
             timestamp, // way in the past (testing expired listing next)
-            [seller.address] // set the buyer as the marketplace sale cut receiver
+            [seller.address], // set the buyer as the marketplace sale cut receiver
+            nftTypeIdentifier, // nft type
+            ftTypeIdentifier // ft type
         ],
     )
     let txResult = Test.executeTransaction(tx)
@@ -458,7 +487,9 @@ fun testRemoveItem() {
             "Custom1", // custom id
             UInt64(2025908543), // 10 years in the future
             seller.address, // set the buyer as the marketplace sale cut receiver
-            0.1 // Marketplaces address
+            0.1, // Marketplaces address
+            nftTypeIdentifier, // nft type
+            flowTokenTypeIdentifier // ft type
         ],
     )
     var txResult = Test.executeTransaction(tx)
@@ -531,7 +562,9 @@ fun testSellMaliciousListing() {
         arguments: [
             listingID, // listing resource id
             exampleNFTAccount.address, // storefront address
-            exampleNFTAccount.address // commision recipient
+            exampleNFTAccount.address, // commision recipient
+            nftTypeIdentifier, // nft type
+            ftTypeIdentifier // ft type
         ],
     )
     txResult = Test.executeTransaction(tx)
