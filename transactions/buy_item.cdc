@@ -25,7 +25,8 @@ transaction(listingResourceID: UInt64,
     var commissionRecipientCap: Capability<&{FungibleToken.Receiver}>?
 
     prepare(acct: auth(BorrowValue) &Account) {
-
+        
+        // Get the metadata views for the NFT and FT types that are used in this transaction
         let collectionData = MetadataViews.resolveContractViewFromTypeIdentifier(
             resourceTypeIdentifier: nftTypeIdentifier,
             viewType: Type<MetadataViews.NFTCollectionData>()
