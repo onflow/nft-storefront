@@ -27,7 +27,7 @@ transaction(
 ) {
 
     let tokenReceiver: Capability<&{FungibleToken.Receiver}>
-    let exampleNFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
+    let NFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
     let storefront: auth(NFTStorefrontV2.CreateListing, NFTStorefrontV2.RemoveListing) &NFTStorefrontV2.Storefront
     var saleCuts: [NFTStorefrontV2.SaleCut]
     var marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]
@@ -82,7 +82,7 @@ transaction(
         }
         assert(nftProviderCap?.check() ?? false, message: "Could not assign Provider Capability")
 
-        self.exampleNFTProvider = nftProviderCap!
+        self.NFTProvider = nftProviderCap!
 
         let collection = acct.capabilities.borrow<&{NonFungibleToken.Collection}>(
                 collectionData.publicPath
@@ -115,7 +115,7 @@ transaction(
                 amount: effectiveSaleItemPrice - totalRoyaltyCut
             )
         )
-        assert(self.exampleNFTProvider.borrow() != nil, message: "Missing or mis-typed ExampleNFT.Collection provider")
+        assert(self.NFTProvider.borrow() != nil, message: "Missing or mis-typed ExampleNFT.Collection provider")
 
         self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.CreateListing, NFTStorefrontV2.RemoveListing) &NFTStorefrontV2.Storefront>(
                 from: NFTStorefrontV2.StorefrontStoragePath
@@ -143,7 +143,7 @@ transaction(
         }
         // Create listing
         self.storefront.createListing(
-            nftProviderCapability: self.exampleNFTProvider,
+            nftProviderCapability: self.NFTProvider,
             nftType: Type<@ExampleNFT.NFT>(),
             nftID: saleItemID,
             salePaymentVaultType: Type<@ExampleToken.Vault>(),
