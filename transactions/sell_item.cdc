@@ -28,7 +28,7 @@ transaction(
 ) {
     
     let tokenReceiver: Capability<&{FungibleToken.Receiver}>
-    let NFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
+    let nftProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
     let storefront: auth(NFTStorefrontV2.CreateListing) &NFTStorefrontV2.Storefront
     var saleCuts: [NFTStorefrontV2.SaleCut]
     var marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]
@@ -70,7 +70,7 @@ transaction(
 
         // Receiver for the sale cut.
         self.tokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(vaultData.receiverPath)
-        assert(self.tokenReceiver.borrow() != nil, message: "Missing or mis-typed Fungible Token receiver")
+        assert(self.tokenReceiver.borrow() != nil, message: "Missing or mis-typed Fungible Token receiver for token \(ftTypeIdentifier) at path \(vaultData.receiverPath)")
 
         var nftProviderCap: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>? = nil
         // check if there is an existing capability/capability controller for the storage path
@@ -91,7 +91,7 @@ transaction(
         }
         assert(nftProviderCap?.check() ?? false, message: "Could not assign Provider Capability")
 
-        self.NFTProvider = nftProviderCap!
+        self.nftProvider = nftProviderCap!
 
         let collection = acct.capabilities.borrow<&{NonFungibleToken.Collection}>(
                 collectionData.publicPath
@@ -144,7 +144,7 @@ transaction(
 
         // Create listing
         self.storefront.createListing(
-            nftProviderCapability: self.NFTProvider,
+            nftProviderCapability: self.nftProvider,
             nftType: nftType,
             nftID: saleItemID,
             salePaymentVaultType: ftType,

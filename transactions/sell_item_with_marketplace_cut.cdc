@@ -27,7 +27,7 @@ transaction(
     ftTypeIdentifier: String
 ) {
     let ftReceiver: Capability<&{FungibleToken.Receiver}>
-    let NFTProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
+    let nftProvider: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>
     let storefront: auth(NFTStorefrontV2.CreateListing) &NFTStorefrontV2.Storefront
     var saleCuts: [NFTStorefrontV2.SaleCut]
     var marketplacesCapability: [Capability<&{FungibleToken.Receiver}>]
@@ -71,7 +71,7 @@ transaction(
         self.ftReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(vaultData.receiverPath)
         assert(
             self.ftReceiver.borrow() != nil,
-            message: "Missing or mis-typed Fungible Token receiver"
+            message: "Missing or mis-typed Fungible Token receiver for token \(ftTypeIdentifier) at path \(vaultData.receiverPath)"
         )
 
         var nftProviderCap: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>? = nil
@@ -93,7 +93,7 @@ transaction(
         }
         assert(nftProviderCap?.check() ?? false, message: "Could not assign Provider Capability")
 
-        self.NFTProvider = nftProviderCap!
+        self.nftProvider = nftProviderCap!
 
         let collection = acct.capabilities.borrow<&{NonFungibleToken.Collection}>(
                 collectionData.publicPath
@@ -124,7 +124,7 @@ transaction(
                 amount: saleItemPrice - totalRoyaltyCut - saleItemPrice * marketPlaceSaleCutPercentage
             )
         )
-        assert(self.NFTProvider.borrow() != nil, message: "Missing or mis-typed NFT Collection provider")
+        assert(self.nftProvider.borrow() != nil, message: "Missing or mis-typed NFT Collection provider")
 
         self.storefront = acct.storage.borrow<auth(NFTStorefrontV2.CreateListing) &NFTStorefrontV2.Storefront>(
                 from: NFTStorefrontV2.StorefrontStoragePath
@@ -150,7 +150,7 @@ transaction(
 
         // Create listing
         self.storefront.createListing(
-            nftProviderCapability: self.NFTProvider,
+            nftProviderCapability: self.nftProvider,
             nftType: nftType,
             nftID: saleItemID,
             salePaymentVaultType: ftType,

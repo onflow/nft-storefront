@@ -15,29 +15,22 @@ import "MetadataViews"
 transaction(listingResourceID: UInt64,
             storefrontAddress: Address,
             commissionRecipient: Address?,
-            nftTypeIdentifier: String,
-            ftTypeIdentifier: String) {
+            nftTypeIdentifier: String) {
 
     let paymentVault: @{FungibleToken.Vault}
-    let NFTReceiver: &{NonFungibleToken.Receiver}
+    let nftReceiver: &{NonFungibleToken.Receiver}
     let storefront: &{NFTStorefrontV2.StorefrontPublic}
     let listing: &{NFTStorefrontV2.ListingPublic}
     var commissionRecipientCap: Capability<&{FungibleToken.Receiver}>?
 
     prepare(acct: auth(BorrowValue) &Account) {
-        
+
         // Get the metadata views for the NFT and FT types that are used in this transaction
         let collectionData = MetadataViews.resolveContractViewFromTypeIdentifier(
             resourceTypeIdentifier: nftTypeIdentifier,
             viewType: Type<MetadataViews.NFTCollectionData>()
         ) as? MetadataViews.NFTCollectionData
             ?? panic("Could not construct valid NFT type and view from identifier \(nftTypeIdentifier)")
-
-        let vaultData = MetadataViews.resolveContractViewFromTypeIdentifier(
-            resourceTypeIdentifier: ftTypeIdentifier,
-            viewType: Type<FungibleTokenMetadataViews.FTVaultData>()
-        ) as? FungibleTokenMetadataViews.FTVaultData
-            ?? panic("Could not construct valid FT type and view from identifier \(ftTypeIdentifier)")
 
         self.commissionRecipientCap = nil
         // Access the storefront public resource of the seller to purchase the listing.
@@ -50,13 +43,21 @@ transaction(listingResourceID: UInt64,
             ?? panic("Could not get a listing with ID \(listingResourceID) from the storefront in account \(storefrontAddress)")
         let price = self.listing.getDetails().salePrice
 
+        let vaultType = self.listing.getDetails().salePaymentVaultType
+
+        let vaultData = MetadataViews.resolveContractViewFromTypeIdentifier(
+            resourceTypeIdentifier: vaultType.identifier,
+            viewType: Type<FungibleTokenMetadataViews.FTVaultData>()
+        ) as? FungibleTokenMetadataViews.FTVaultData
+            ?? panic("Could not construct valid FT type and view from identifier \(vaultType.identifier)")
+
         // Access the vault of the buyer to pay the sale price of the listing.
         let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &{FungibleToken.Vault}>(from: vaultData.storagePath)
             ?? panic("The signer does not store an Vault object at the path \(vaultData.storagePath)"
                     .concat(". The signer must initialize their account with this vault first!"))
         self.paymentVault <- mainVault.withdraw(amount: price)
 
-        self.NFTReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
+        self.nftReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
             ?? panic("Cannot borrow an NFT collection receiver from the signer's account at path \(collectionData.publicPath).")
 
         // Fetch the commission amt.
@@ -83,6 +84,6 @@ transaction(listingResourceID: UInt64,
             commissionRecipient: self.commissionRecipientCap
         )
         // Deposit the NFT in the buyer's collection.
-        self.NFTReceiver.deposit(token: <-item)
+        self.nftReceiver.deposit(token: <-item)
     }
 }
