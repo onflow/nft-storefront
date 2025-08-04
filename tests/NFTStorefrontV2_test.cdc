@@ -222,8 +222,7 @@ fun testBuyItem() {
             listingID, // listing resource id
             seller.address, // storefront address
             seller.address, // commision recipient
-            nftTypeIdentifier, // nft type
-            ftTypeIdentifier // ft type
+            nftTypeIdentifier // nft type
         ],
     )
     let txResult = Test.executeTransaction(tx)
@@ -563,8 +562,7 @@ fun testSellMaliciousListing() {
             listingID, // listing resource id
             exampleNFTAccount.address, // storefront address
             exampleNFTAccount.address, // commision recipient
-            nftTypeIdentifier, // nft type
-            ftTypeIdentifier // ft type
+            nftTypeIdentifier // nft type
         ],
     )
     txResult = Test.executeTransaction(tx)
