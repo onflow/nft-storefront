@@ -267,10 +267,6 @@ flow test tests/
 - **Discord**: [Flow Discord](https://discord.gg/flow)
 - **Developer Portal**: [Flow Developers](https://developers.flow.com)
 
-## License
-
-The works in these files are licensed under the [Apache License 2.0](LICENSE).
-
 ## Authors & Maintainers
 
 Maintained by the Flow Foundation and community contributors.
