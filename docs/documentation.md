@@ -140,7 +140,8 @@ resource interface ListingPublic {
       ): @{NonFungibleToken.NFT}
     access(all) view fun getDetails(): ListingDetails
     access(all) fun getAllowedCommissionReceivers(): [Capability<&{FungibleToken.Receiver}>]?
-    access(all) fun hasListingBecomeGhosted(): Bool
+    access(all) fun hasListingBecomeGhosted(): Bool // DEPRECATED — see below
+    access(all) view fun isGhostListing(): Bool
 }
 ```
 An interface providing a useful public interface to a Listing.
@@ -187,13 +188,30 @@ If it returns `nil` then commission paid to the receiver by default.
 
 ---
 
-**fun `hasListingBecomeGhosted()`**
+**fun `isGhostListing()`**
+
+```cadence
+fun isGhostListing(): Bool
+```
+Returns `true` if the listing is ghosted — i.e. the underlying NFT is no longer present in the
+seller's collection and the listing cannot be purchased. Returns `false` if the NFT is still
+available. Use this function to check ghost state.
+
+---
+
+**fun `hasListingBecomeGhosted()` _(deprecated)_**
 
 ```cadence
 fun hasListingBecomeGhosted(): Bool
 ```
-Tells whether a listed NFT that was put up for sale is still available in the provided listing.
-If it returns `true` then it means the listing is "ghosted" because there is no available nft to fulfill the listing.
+**Deprecated.** The return value of this function is semantically inverted relative to its name:
+it returns `true` when the NFT **is still present** (the listing is _not_ ghosted) and `false`
+when the NFT **is absent** (the listing _is_ ghosted). This is the opposite of what the function
+name implies.
+
+The function is preserved to avoid breaking existing integrations that already compensate for
+the inversion (e.g. by calling `!hasListingBecomeGhosted()`). New code should use
+`isGhostListing()` instead.
 
 ---
 

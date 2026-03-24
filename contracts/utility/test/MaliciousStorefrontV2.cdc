@@ -123,6 +123,10 @@ access(all) contract MaliciousStorefrontV2 {
             return self.storefrontCap.borrow()!.borrowListing(listingResourceID: self.listingResourceID)!.hasListingBecomeGhosted()
         }
 
+        access(all) view fun isGhostListing(): Bool {
+            return self.storefrontCap.borrow()!.borrowListing(listingResourceID: self.listingResourceID)!.isGhostListing()
+        }
+
         // purchase will return the "wrong" nft
         access(all) fun purchase(
             payment: @{FungibleToken.Vault}, 
