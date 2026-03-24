@@ -338,6 +338,82 @@ fun testCleanupGhostListings() {
     Test.assertEqual((result.returnValue! as! [UInt64]).length, 0)
 }
 
+access(all)
+fun testIsGhostListing() {
+    // Mint a new NFT
+    mintNFTToSeller()
+
+    // Get the newly minted NFT's ID
+    var code = loadCode("get_ids.cdc", "scripts/example-nft")
+    var result = Test.executeScript(code, [seller.address, /public/exampleNFTCollection])
+    Test.expect(result, Test.beSucceeded())
+    let nftID = (result.returnValue! as! [UInt64])[0]
+
+    // Create a listing for the NFT
+    code = loadCode("sell_item.cdc", "transactions")
+    var tx = Test.Transaction(
+        code: code,
+        authorizers: [seller.address],
+        signers: [seller],
+        arguments: [
+            nftID,
+            10.0,
+            "Custom",
+            0.1,
+            UInt64(2025908543),
+            [],
+            nftTypeIdentifier,
+            ftTypeIdentifier
+        ],
+    )
+    var txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beSucceeded())
+
+    let getListingIDCode = loadCode("read_storefront_ids.cdc", "scripts")
+    result = Test.executeScript(getListingIDCode, [seller.address])
+    Test.expect(result, Test.beSucceeded())
+    let listingID = (result.returnValue! as! [UInt64])[0]
+
+    // Before burning: isGhostListing() should return false (NFT is still present)
+    var isGhost = scriptExecutor("is_ghost_listing.cdc", [seller.address, listingID])
+    Test.assertEqual(isGhost!, false)
+
+    // read_all_unique_ghost_listings_v2 should return an empty array
+    var allGhostListingIDs = scriptExecutor("read_all_unique_ghost_listings_v2.cdc", [seller.address])
+    Test.assertEqual((allGhostListingIDs as! [UInt64]?)!.length, 0)
+
+    // Burn the NFT to ghost the listing
+    let burnNFTCode = loadCode("burn_nft.cdc", "transactions/example-nft")
+    tx = Test.Transaction(
+        code: burnNFTCode,
+        authorizers: [seller.address],
+        signers: [seller],
+        arguments: [nftID]
+    )
+    txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beSucceeded())
+
+    // After burning: isGhostListing() should return true
+    isGhost = scriptExecutor("is_ghost_listing.cdc", [seller.address, listingID])
+    Test.assertEqual(isGhost!, true)
+
+    // read_all_unique_ghost_listings_v2 should now return the ghosted listing ID
+    allGhostListingIDs = scriptExecutor("read_all_unique_ghost_listings_v2.cdc", [seller.address])
+    Test.assertEqual((allGhostListingIDs as! [UInt64]?)!.length, 1)
+    Test.assertEqual((allGhostListingIDs as! [UInt64]?)![0], listingID)
+
+    // Clean up
+    let cleanupCode = loadCode("cleanup_ghost_listing.cdc", "transactions")
+    tx = Test.Transaction(
+        code: cleanupCode,
+        authorizers: [buyer.address],
+        signers: [buyer],
+        arguments: [listingID, seller.address]
+    )
+    txResult = Test.executeTransaction(tx)
+    Test.expect(txResult, Test.beSucceeded())
+}
+
 
 access(all)
 fun testSellItemWithMarketplaceCut() {
