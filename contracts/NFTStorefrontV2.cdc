@@ -252,7 +252,21 @@ access(all) contract NFTStorefrontV2 {
         /// hasListingBecomeGhosted
         /// Tells whether listed NFT is present in provided capability.
         /// If it returns `false` then it means listing becomes ghost or sold out.
+        ///
+        /// DEPRECATED: The return value of this function is semantically inverted — it returns `true`
+        /// when the NFT is still present (i.e. NOT ghosted) and `false` when the NFT is absent
+        /// (i.e. IS ghosted). This is the opposite of what the function name implies. The function
+        /// is kept as-is to avoid breaking existing integrations that already compensate for the
+        /// inversion. Use `isGhostListing()` instead, which returns `true` when the listing is
+        /// ghosted and `false` when it is still valid.
         access(all) view fun hasListingBecomeGhosted(): Bool
+
+        /// isGhostListing
+        /// Returns `true` if the listed NFT is no longer present in the seller's collection
+        /// (i.e. the listing is ghosted and cannot be purchased), and `false` if the NFT is
+        /// still available. This is the correctly-named replacement for `hasListingBecomeGhosted()`,
+        /// which has inverted return semantics.
+        access(all) view fun isGhostListing(): Bool
 
     }
 
@@ -345,11 +359,26 @@ access(all) contract NFTStorefrontV2 {
         /// hasListingBecomeGhosted
         /// Tells whether listed NFT is present in provided capability.
         /// If it returns `false` then it means listing becomes ghost or sold out.
+        ///
+        /// DEPRECATED: The return value is semantically inverted relative to the function name.
+        /// This function returns `true` when the NFT is still present (not ghosted) and `false`
+        /// when the NFT is absent (ghosted). Use `isGhostListing()` instead.
         access(all) view fun hasListingBecomeGhosted(): Bool {
             if let providerRef = self.nftProviderCapability.borrow() {
                 return providerRef.borrowNFT(self.details.nftID) != nil
             }
             return false
+        }
+
+        /// isGhostListing
+        /// Returns `true` if the listed NFT is no longer present in the seller's collection
+        /// (i.e. the listing is ghosted and cannot be purchased), and `false` if the NFT is
+        /// still available. This is the correctly-named replacement for `hasListingBecomeGhosted()`.
+        access(all) view fun isGhostListing(): Bool {
+            if let providerRef = self.nftProviderCapability.borrow() {
+                return providerRef.borrowNFT(self.details.nftID) == nil
+            }
+            return true
         }
 
         /// purchase
@@ -863,7 +892,7 @@ access(all) contract NFTStorefrontV2 {
                 message: "NFTStorefrontV2.Storefront.cleanupGhostListings: Cannot cleanup listing with id \(listingResourceID) because it is already purchased!"
             )
             assert(
-                !listingRef.hasListingBecomeGhosted(),
+                listingRef.isGhostListing(),
                 message: "NFTStorefrontV2.Storefront.cleanupGhostListings: Cannot cleanup listing with id \(listingResourceID) because it is not a ghost listing!"
             )
             let listing <- self.listings.remove(key: listingResourceID)!

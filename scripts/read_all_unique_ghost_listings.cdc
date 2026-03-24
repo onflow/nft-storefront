@@ -1,5 +1,10 @@
 import "NFTStorefrontV2"
 
+/// DEPRECATED: This script works correctly but relies on `hasListingBecomeGhosted()`, which has
+/// inverted return semantics (returns `true` when NOT ghosted, `false` when ghosted). The script
+/// compensates internally with `!`, but callers should migrate to `read_all_unique_ghost_listings_v2.cdc`,
+/// which uses `isGhostListing()` and has clearer semantics.
+///
 /// This script provides the array of listing resource Id which got ghosted It automatically skips the duplicate listing
 /// as duplicate listings would get automatically delete once the primary one.
 ///
