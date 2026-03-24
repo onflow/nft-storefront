@@ -269,6 +269,13 @@ access(all) contract NFTStorefrontV2 {
         /// This capability allows the resource to withdraw *any* NFT, so you should be careful when giving
         /// such a capability to a resource and always check its code to make sure it will use it in the
         /// way that it claims.
+        ///
+        /// The field type uses `&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}` while the
+        /// `init` parameter accepts `&{NonFungibleToken.Collection}`. These differ intentionally: callers
+        /// pass the narrower `Collection` type (which is the standard capability type issued to sellers),
+        /// and the assignment is valid because `NonFungibleToken.Collection` conforms to both `Provider`
+        /// and `CollectionPublic`. Aligning the two to the same type would be a breaking change for existing
+        /// integrations that already hold `&{NonFungibleToken.Collection}` capabilities.
         access(contract) let nftProviderCapability: Capability<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
 
         /// An optional list of marketplaces capabilities that are approved 
