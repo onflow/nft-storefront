@@ -896,9 +896,19 @@ access(all) contract NFTStorefrontV2 {
                 message: "NFTStorefrontV2.Storefront.cleanupGhostListings: Cannot cleanup listing with id \(listingResourceID) because it is not a ghost listing!"
             )
             let listing <- self.listings.remove(key: listingResourceID)!
+            // Remove the ghost listing's own entry from listedNFTs before fetching duplicates.
+            // Without this, getDuplicateListingIDs would still see the ghost listing in listedNFTs
+            // and exclude it from the returned slice, leaving a dangling entry after the loop.
+            // Every other removal path (removeListing, cleanupPurchasedListings, cleanup) already
+            // calls removeDuplicateListing for the primary listing before processing duplicates.
+            self.removeDuplicateListing(
+                nftIdentifier: details.nftType.identifier,
+                nftID: details.nftID,
+                listingResourceID: listingResourceID
+            )
             let duplicateListings = self.getDuplicateListingIDs(nftType: details.nftType, nftID: details.nftID, listingID: listingResourceID)
 
-            // Let's force removal of the listing in this storefront for the NFT that is being ghosted. 
+            // Let's force removal of the listing in this storefront for the NFT that is being ghosted.
             for listingID in duplicateListings {
                 self.cleanup(listingResourceID: listingID)
             }
