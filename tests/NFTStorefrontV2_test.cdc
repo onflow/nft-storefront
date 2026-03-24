@@ -588,9 +588,9 @@ fun testRemoveItem() {
     // Test that the proper events were emitted
     var typ = Type<NFTStorefrontV2.ListingCompleted>()
     var events = Test.eventsOfType(typ)
-    Test.assertEqual(5, events.length)
+    Test.assertEqual(6, events.length)
 
-    let completedEvent = events[4] as! NFTStorefrontV2.ListingCompleted
+    let completedEvent = events[5] as! NFTStorefrontV2.ListingCompleted
     Test.assertEqual(listingID, completedEvent.listingResourceID)
     Test.assertEqual(false, completedEvent.purchased)
     Test.assertEqual(Type<@ExampleNFT.NFT>(), completedEvent.nftType)
