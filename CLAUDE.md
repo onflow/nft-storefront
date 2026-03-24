@@ -6,14 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Pre-commit requirement for Cadence changes
 
-Any changes to `.cdc` files must pass both of the following before committing:
+Any changes to `.cdc` files must pass `make ci` before committing:
 
 ```sh
-make test
 make ci
 ```
 
-`make test` runs Go code generation, Go tests, and all Cadence tests with coverage. `make ci` skips Go generation but otherwise mirrors the CI pipeline. Both must be green.
+`make ci` runs the Go tests and all Cadence tests with coverage, mirroring the CI pipeline. It must be green before every commit.
 
 ### Run all tests
 ```sh
