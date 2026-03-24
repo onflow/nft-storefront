@@ -41,7 +41,7 @@ access(all) contract MaliciousStorefrontV2 {
             return
         }
 
-        access(all) fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64] {
+        access(all) view fun getExistingListingIDs(nftType: Type, nftID: UInt64): [UInt64] {
             return self.storefrontCap.borrow()!.getExistingListingIDs(nftType: nftType, nftID: nftID)
         }
 
