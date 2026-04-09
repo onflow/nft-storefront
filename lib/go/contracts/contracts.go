@@ -15,6 +15,8 @@ var (
 	fungibleTokenImport         = "FungibleToken from "
 	placeholderNonFungibleToken = regexp.MustCompile(`"NonFungibleToken"`)
 	nftImport                   = "NonFungibleToken from "
+	placeholderBurner           = regexp.MustCompile(`"Burner"`)
+	burnerImport                = "Burner from "
 )
 
 const (
@@ -22,11 +24,12 @@ const (
 )
 
 // NFTStorefrontV2 returns the NFTStorefrontV2 contract.
-func NFTStorefrontV2(ftAddr, nftAddr string) []byte {
+func NFTStorefrontV2(ftAddr, nftAddr, burnerAddr string) []byte {
 	code := assets.MustAssetString(filenameNFTStorefrontV2)
 
 	code = placeholderFungibleToken.ReplaceAllString(code, fungibleTokenImport+"0x"+ftAddr)
 	code = placeholderNonFungibleToken.ReplaceAllString(code, nftImport+"0x"+nftAddr)
+	code = placeholderBurner.ReplaceAllString(code, burnerImport+"0x"+burnerAddr)
 
 	return []byte(code)
 }
