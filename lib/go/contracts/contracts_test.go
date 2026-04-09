@@ -11,6 +11,6 @@ import (
 const addrA = "0A"
 
 func TestNFTStorefrontV2Contract(t *testing.T) {
-	contract := contracts.NFTStorefrontV2(addrA, addrA)
+	contract := contracts.NFTStorefrontV2(addrA, addrA, addrA)
 	assert.NotNil(t, contract)
 }
