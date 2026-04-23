@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use nft-storefront in your research or reference it, please cite it as below."
+title: "nft-storefront: Cadence marketplace contract standard for NFTs on the Flow network"
+authors:
+  - name: "Flow Foundation"
+    website: "https://flow.com"
+repository-code: "https://github.com/onflow/nft-storefront"
+url: "https://flow.com"
+license: Unlicense
+type: software
+keywords:
+  - flow
+  - flow-network
+  - cadence
+  - nft
+  - marketplace
+  - storefront
+  - royalties
